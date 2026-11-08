@@ -438,7 +438,13 @@ def mst_checksum_check(ctx: CheckContext, args: dict[str, typing.Any]) -> CheckR
 
 
 def invoice_tt78_structure(ctx: CheckContext, args: dict[str, typing.Any]) -> CheckResult:
-    """A TT78 e-invoice artifact must carry the legally required elements."""
+    """A draft e-invoice artifact must carry the elements TT78 specifies.
+
+    Passing means the artifact is structurally complete — the field set, the XML
+    data file, and a parseable date are all present. It says nothing about legal
+    issuance: that requires transmission through a TVAN licensed by the General
+    Department of Taxation, which this engine does not integrate.
+    """
     required = args.get("required_fields") or [
         "invoice_id", "invoice_series", "invoice_number", "invoice_date", "seller_name",
         "seller_tax_code", "buyer_name", "subtotal", "vat_rate", "vat_amount", "total_amount",
@@ -460,9 +466,12 @@ def invoice_tt78_structure(ctx: CheckContext, args: dict[str, typing.Any]) -> Ch
         return CheckResult("invoice_tt78_structure", "FAILED", "; ".join(problems))
     return CheckResult(
         "invoice_tt78_structure", "PASSED",
-        "e-invoice carries the TT78 mandatory elements and an XML data file",
+        "draft invoice carries the TT78-specified mandatory elements and an XML data file",
         {"fields": required, "xml_bytes": len(xml),
-         "citation": "Nghị định 123/2020/NĐ-CP; Thông tư 78/2021/TT-BTC"},
+         "note": (
+             "Structural completeness only. Legal issuance requires transmission "
+             "through a TVAN licensed by the General Department of Taxation."
+         )},
     )
 
 

@@ -49,6 +49,10 @@ VALID_VAT_RATES = {0.0, 5.0, 8.0, 10.0}
 
 # Valid Invoice Issue Statuses
 INVOICE_STATUSES = {
+    # An e-invoice is only legally issued once it is transmitted through a
+    # TVAN licensed by the General Department of Taxation, so every row this
+    # engine creates starts life as a draft.
+    "DRAFT_PENDING_TVAN",
     "ISSUED",
     "ADJUSTED",
     "REPLACED",
@@ -143,7 +147,7 @@ class TaxAdminEngine:
                     vat_amount_vnd REAL NOT NULL,
                     total_amount_vnd REAL NOT NULL,
                     tax_authority_code TEXT,
-                    issue_status TEXT NOT NULL DEFAULT 'ISSUED',
+                    issue_status TEXT NOT NULL DEFAULT 'DRAFT_PENDING_TVAN',
                     reference_invoice_code TEXT,
                     issued_at TEXT NOT NULL,
                     FOREIGN KEY (seller_tax_code) REFERENCES taxpayers(tax_code)
@@ -358,10 +362,17 @@ class TaxAdminEngine:
         buyer_name: str,
         subtotal_vnd: float,
         vat_rate_pct: float = 10.0,
-        with_tax_authority_code: bool = True,
+        with_tax_authority_code: bool = True,  # kept for call compatibility; ignored
     ) -> Dict[str, Any]:
         """
-        Issue an electronic invoice complying with Decree No. 123/2020/ND-CP and Circular No. 78/2021/TT-BTC.
+        Prepare a draft electronic invoice shaped to Decree No. 123/2020/ND-CP and Circular No. 78/2021/TT-BTC.
+
+        The row is persisted with ``issue_status="DRAFT_PENDING_TVAN"``. An
+        e-invoice becomes legally issued only on transmission through a service
+        provider licensed by the General Department of Taxation (TVAN); the
+        resulting ``Mã của cơ quan thuế`` can likewise only be assigned by the
+        Tax Authority itself. Neither happens here, so ``tax_authority_code`` is
+        left ``None`` rather than invented.
         """
         invoice_code = invoice_code.strip()
         seller_tax_code = seller_tax_code.strip()
@@ -393,12 +404,19 @@ class TaxAdminEngine:
         vat_amount = round(subtotal_vnd * (vat_rate_pct / 100.0), 2)
         total_amount = round(subtotal_vnd + vat_amount, 2)
 
-        # Generate Tax Authority E-Invoice Code (Mã của cơ quan thuế) if requested
+        # The Tax Authority code (Mã của cơ quan thuế) is issued by the General
+        # Department of Taxation when the data is transmitted via a licensed
+        # TVAN. Forging one locally would present an unregistered draft invoice
+        # as a genuinely issued, tax-authority-recognised document, so the code
+        # stays None until that transmission happens — whether or not the caller
+        # asked for one.
         tax_authority_code = None
-        if with_tax_authority_code:
-            tax_authority_code = f"CQT-{datetime.now(timezone.utc).strftime('%y%m%d')}-{uuid.uuid4().hex[:12].upper()}"
+        tax_authority_code_reason = (
+            "Mã của cơ quan thuế chỉ được cấp khi dữ liệu hóa đơn được truyền "
+            "qua nhà cung cấp hóa đơn điện tử được cấp phép (TVAN)."
+        )
 
-        invoice_id = f"INV-{uuid.uuid4().hex[:8].upper()}"
+        invoice_id = f"DRAFT-{uuid.uuid4().hex[:8].upper()}"
         now_iso = datetime.now(timezone.utc).isoformat()
 
         with self._get_connection() as conn:
@@ -416,7 +434,7 @@ class TaxAdminEngine:
                         invoice_id, invoice_code, invoice_type, seller_tax_code,
                         seller["taxpayer_name"], buyer_tax_code, buyer_name.strip(),
                         subtotal_vnd, vat_rate_pct, vat_amount, total_amount,
-                        tax_authority_code, "ISSUED", now_iso
+                        tax_authority_code, "DRAFT_PENDING_TVAN", now_iso
                     )
                 )
             except sqlite3.IntegrityError:
@@ -436,7 +454,8 @@ class TaxAdminEngine:
             "vat_amount_vnd": vat_amount,
             "total_amount_vnd": total_amount,
             "tax_authority_code": tax_authority_code,
-            "issue_status": "ISSUED",
+            "tax_authority_code_reason": tax_authority_code_reason,
+            "issue_status": "DRAFT_PENDING_TVAN",
             "issued_at": now_iso,
         }
 
@@ -495,13 +514,15 @@ class TaxAdminEngine:
                 (new_status, original_invoice_code)
             )
 
-            # Insert replacement or adjustment invoice record
-            new_id = f"INV-{uuid.uuid4().hex[:8].upper()}"
+            # Insert replacement or adjustment invoice record. The replacement
+            # draft inherits the same TVAN constraint: no tax authority code is
+            # forged here, it arrives only on transmission via a licensed TVAN.
+            new_id = f"DRAFT-{uuid.uuid4().hex[:8].upper()}"
             subtotal = orig["subtotal_vnd"] + adjusted_diff_vnd if action == "ADJUST" else orig["subtotal_vnd"]
             vat_rate = orig["vat_rate_pct"]
             vat_amt = round(subtotal * (vat_rate / 100.0), 2)
             tot_amt = round(subtotal + vat_amt, 2)
-            cqt_code = f"CQT-{datetime.now(timezone.utc).strftime('%y%m%d')}-{uuid.uuid4().hex[:12].upper()}"
+            cqt_code = None
 
             conn.execute(
                 """
@@ -528,6 +549,11 @@ class TaxAdminEngine:
             "status": new_status,
             "new_total_amount_vnd": tot_amt,
             "tax_authority_code": cqt_code,
+            "tax_authority_code_reason": (
+                "Mã của cơ quan thuế chỉ được cấp khi dữ liệu hóa đơn được truyền "
+                "qua nhà cung cấp hóa đơn điện tử được cấp phép (TVAN)."
+            ),
+            "issue_status": new_status,
             "explanation": explanation,
             "processed_at": now_iso,
         }

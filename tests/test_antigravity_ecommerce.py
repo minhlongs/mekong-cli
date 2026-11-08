@@ -175,7 +175,7 @@ class TestEcommerceEngine:
         assert f["buyer_total_payment_vnd"] == 1030000.0
 
         inv = res["electronic_invoice"]
-        assert inv["invoice_number"].startswith("INV-")
+        assert inv["invoice_number"].startswith("DRAFT-")
         assert inv["vat_rate_pct"] == 10
         assert inv["total_invoiced_amount_vnd"] == 1000000.0
 

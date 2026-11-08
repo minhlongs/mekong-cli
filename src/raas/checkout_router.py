@@ -47,6 +47,35 @@ class CheckoutRequest(BaseModel):
     email: EmailStr = Field(..., description="Customer email")
     rail: str = Field("vietqr", description="Payment rail: vietqr | nowpayments")
     org_id: str = Field("default", description="Organization identifier")
+    jurisdiction: Optional[str] = Field(
+        None, description="ISO 3166-1 alpha-2 jurisdiction; resolved from the tenant record when omitted"
+    )
+
+
+# Rails a Vietnamese licensee may settle on. Domestic Vietnamese entities
+# cannot lawfully hold or settle in crypto, so USDT is never offered to them
+# regardless of which rail a client asks for.
+_VN_ALLOWED_RAILS = ["vietqr"]
+_NON_VN_ALLOWED_RAILS = ["vietqr", "nowpayments"]
+
+
+def rails_allowed_for_jurisdiction(jurisdiction: str) -> list[str]:
+    """Return the payment rails permitted to *jurisdiction*."""
+    normalised = (jurisdiction or "").strip().upper()
+    return list(_VN_ALLOWED_RAILS) if not normalised or normalised.startswith("VN") else list(_NON_VN_ALLOWED_RAILS)
+
+
+def resolve_org_jurisdiction(req: CheckoutRequest) -> str:
+    """Resolve the jurisdiction governing a checkout request.
+
+    Order: an explicit request field, then the tenant record, then the ``org_id``
+    prefix, then ``VN``. The fallback is deliberately restrictive: a request we
+    cannot attribute to a non-Vietnamese organisation is treated as Vietnamese,
+    which denies the crypto rail rather than granting it.
+    """
+    if req.jurisdiction and req.jurisdiction.strip():
+        return req.jurisdiction.strip().upper()
+    return TenantStore().jurisdiction_for(req.org_id)
 
 
 class CheckoutResponse(BaseModel):
@@ -86,10 +115,29 @@ async def create_checkout(req: CheckoutRequest) -> CheckoutResponse:
     order_id = f"mk-{uuid.uuid4().hex[:12]}"
     app_base = os.environ.get("APP_BASE_URL", "https://mekongmind.com")
 
-    if req.rail.lower() == "nowpayments":
+    requested_rail = req.rail.strip().lower()
+    jurisdiction = resolve_org_jurisdiction(req)
+    allowed_rails = rails_allowed_for_jurisdiction(jurisdiction)
+    if requested_rail not in allowed_rails:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "rail_not_permitted_for_jurisdiction",
+                "message": (
+                    f"Rail '{requested_rail}' is not available for jurisdiction '{jurisdiction}'. "
+                    "Vietnamese licensees settle domestically via Napas 247 (rail 'vietqr')."
+                ),
+                "jurisdiction": jurisdiction,
+                "requested_rail": requested_rail,
+                "allowed_rails": allowed_rails,
+            },
+        )
+
+    if requested_rail == "nowpayments":
         from src.raas.nowpayments_checkout import create_invoice
         try:
-            inv = create_invoice(norm_tier, order_id=order_id, customer_email=str(req.email))
+            inv = create_invoice(norm_tier, order_id=order_id, customer_email=str(req.email),
+                                 jurisdiction=jurisdiction)
             checkout_url = inv.get("invoice_url") or f"{app_base}/checkout?order_id={order_id}"
         except Exception:
             checkout_url = f"{app_base}/checkout/nowpayments?order_id={order_id}"

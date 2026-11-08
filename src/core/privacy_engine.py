@@ -26,6 +26,7 @@ Pure Python standard-library-only implementation adhering strictly to ``tests/te
 
 from __future__ import annotations
 
+import contextlib
 import datetime
 import os
 import pathlib
@@ -200,6 +201,16 @@ class PrivacyEngine:
                     status TEXT NOT NULL,
                     deadline_days INTEGER NOT NULL,
                     created_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS consent_log (
+                    consent_id TEXT PRIMARY KEY,
+                    subject_id TEXT NOT NULL,
+                    purpose TEXT NOT NULL,
+                    legal_basis TEXT NOT NULL,
+                    consent_given INTEGER NOT NULL,
+                    recorded_at TEXT NOT NULL,
+                    withdrawn_at TEXT
                 );
 
                 CREATE INDEX IF NOT EXISTS idx_audit_ent ON compliance_audits(enterprise_name);
@@ -612,6 +623,31 @@ class PrivacyEngine:
                 )
                 conn.commit()
 
+        # The right to delete is only honoured when the data is actually gone.
+        # Acknowledging the request and deleting nothing would leave the subject
+        # holding a receipt for a right they never received.
+        if clean_type == "RIGHT_TO_DELETE":
+            erasure = self.erase_subject_data(
+                subject_id, exclude_request_id=request_id if save else None
+            )
+            result["erasure"] = erasure
+            # "COMPLETED" is a claim that the subject's data is gone. When the
+            # purge matched nothing there is nothing to support that claim, so
+            # the request stays open for a human to check the identifier rather
+            # than closing itself with a receipt for data that still exists.
+            result["status"] = (
+                "COMPLETED" if erasure["total_erased"] > 0 else "NO_RECORDS_FOUND"
+            )
+            if erasure["total_erased"] > 0:
+                result["completed_at"] = now.isoformat()
+            if save:
+                with self._get_connection() as conn:
+                    conn.execute(
+                        "UPDATE dsar_requests SET status = ? WHERE request_id = ?",
+                        (result["status"], request_id),
+                    )
+                    conn.commit()
+
         return result
 
     # -----------------------------------------------------------------------
@@ -641,6 +677,303 @@ class PrivacyEngine:
         with self._get_connection() as conn:
             rows = conn.execute("SELECT * FROM dsar_requests ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()
             return RecordList([dict(r) for r in rows], key="requests")
+
+    # -----------------------------------------------------------------------
+    # Consent recording & withdrawal (Điều 9.2 / 9.4)
+    # -----------------------------------------------------------------------
+
+    def record_consent(
+        self,
+        subject_id: str,
+        purpose: str,
+        legal_basis: str,
+        consent_given: bool = True,
+        save: bool = True,
+    ) -> dict[str, typing.Any]:
+        """Record a consent decision for *subject_id*.
+
+        A refusal is recorded with the same weight as a grant: the controller has
+        to be able to prove both that it asked and what the answer was.
+        """
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        consent_id = f"CONSENT-{uuid.uuid4().hex[:8].upper()}"
+        result = {
+            "ok": True,
+            "consent_id": consent_id,
+            "subject_id": subject_id,
+            "purpose": purpose,
+            "legal_basis": legal_basis,
+            "consent_given": bool(consent_given),
+            "recorded_at": now,
+            "withdrawn_at": None,
+        }
+        if save:
+            with self._get_connection() as conn:
+                conn.execute(
+                    """
+                    INSERT INTO consent_log (
+                        consent_id, subject_id, purpose, legal_basis,
+                        consent_given, recorded_at, withdrawn_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        consent_id, subject_id, purpose, legal_basis,
+                        1 if consent_given else 0, now, None,
+                    ),
+                )
+                conn.commit()
+        return result
+
+    def withdraw_consent(self, subject_or_consent_id: str, purpose: str | None = None) -> dict[str, typing.Any]:
+        """Withdraw a previously granted consent, ending its processing basis.
+
+        Withdrawing consent revokes the legal basis for future processing; it
+        does not delete data already lawfully recorded. Erasure is a separate
+        right and is requested through :meth:`handle_dsar_request`.
+
+        Args:
+            subject_or_consent_id: Either a consent id (``CONSENT-...``) or a data
+                subject id. A consent id withdraws exactly that decision; a
+                subject id withdraws every consent still open for the subject.
+            purpose: Restrict the withdrawal to one purpose. When omitted, every
+                open consent for the subject is withdrawn.
+
+        Returns:
+            Counts of withdrawn records, plus the list of ids affected. Reports
+            ``ok`` false when nothing was withdrawn, because a caller who asked
+            for a withdrawal and got silence needs to know that.
+        """
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        identifier = (subject_or_consent_id or "").strip()
+        by_consent_id = identifier.upper().startswith("CONSENT-")
+
+        with self._get_connection() as conn:
+            if by_consent_id:
+                rows = conn.execute(
+                    "SELECT consent_id, subject_id FROM consent_log "
+                    "WHERE consent_id = ? AND consent_given = 1 AND withdrawn_at IS NULL",
+                    (identifier,),
+                ).fetchall()
+            elif purpose:
+                rows = conn.execute(
+                    "SELECT consent_id, subject_id FROM consent_log "
+                    "WHERE subject_id = ? AND purpose = ? AND consent_given = 1 "
+                    "AND withdrawn_at IS NULL",
+                    (identifier, purpose),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT consent_id, subject_id FROM consent_log "
+                    "WHERE subject_id = ? AND consent_given = 1 AND withdrawn_at IS NULL",
+                    (identifier,),
+                ).fetchall()
+            consent_ids = [r["consent_id"] for r in rows]
+            subjects = sorted({str(r["subject_id"]) for r in rows})
+            for consent_id in consent_ids:
+                conn.execute(
+                    "UPDATE consent_log SET withdrawn_at = ? WHERE consent_id = ?",
+                    (now, consent_id),
+                )
+            conn.commit()
+
+        return {
+            "ok": bool(consent_ids),
+            "subject_id": subjects[0] if len(subjects) == 1 else None,
+            "subject_ids": subjects,
+            "purpose": purpose,
+            "withdrawn_count": len(consent_ids),
+            "consent_ids": consent_ids,
+            "withdrawn_at": now if consent_ids else None,
+            "detail": (
+                "Đã ghi nhận rút sự đồng ý" if consent_ids
+                else "Không tìm thấy sự đồng ý đang hiệu lực để rút"
+            ),
+        }
+
+    def list_consents(self, subject_id: str | None = None, limit: int = 50) -> RecordList:
+        """List consent records, newest first, optionally filtered by subject."""
+        with self._get_connection() as conn:
+            if subject_id:
+                rows = conn.execute(
+                    "SELECT * FROM consent_log WHERE subject_id = ? "
+                    "ORDER BY recorded_at DESC LIMIT ?",
+                    (subject_id, limit),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM consent_log ORDER BY recorded_at DESC LIMIT ?",
+                    (limit,),
+                ).fetchall()
+        consents = [dict(r) for r in rows]
+        for consent in consents:
+            # SQLite has no boolean column; callers must not have to remember that
+            # when deciding whether a legal basis is still standing.
+            consent["consent_given"] = bool(consent.get("consent_given"))
+        return RecordList(consents, key="consents")
+
+    # -----------------------------------------------------------------------
+    # Subject erasure (Điều 9.5)
+    # -----------------------------------------------------------------------
+
+    def erase_subject_data(
+        self,
+        subject_id: str,
+        exclude_request_id: str | None = None,
+        zalo_db_path: typing.Optional[typing.Union[str, pathlib.Path]] = None,
+        save: bool = True,
+    ) -> dict[str, typing.Any]:
+        """Delete every row identifying *subject_id* across the live PII stores.
+
+        The right to delete is only honoured if the deletion actually happens, so
+        this walks the concrete stores that hold subject data and reports what it
+        removed from each. A store that does not exist yet contributes a zero
+        count rather than an error — a subject has no row in a database that was
+        never created.
+
+        Args:
+            subject_id: Data subject identifier (user id, email or DSAR subject).
+            exclude_request_id: When set, a prior DSAR request row carrying this
+                identifier is kept so the audit trail for the current request
+                survives the purge.
+            zalo_db_path: Location of the Zalo store. Defaults to the sibling
+                ``zalo.db`` next to the privacy database, which is where a normal
+                install keeps them.
+            save: When false, report the counts without deleting anything.
+
+        Returns:
+            Per-store deleted counts plus a total and the stores touched.
+        """
+        if zalo_db_path is None:
+            zalo_db_path = self.db_path.parent / "zalo.db"
+        zalo_path = pathlib.Path(zalo_db_path)
+        subject_id = (subject_id or "").strip()
+
+        # A subject's Zalo rows are keyed by their Zalo UID, while a DSAR arrives
+        # under a CCCD, an email or a phone number. Matching only `user_id` would
+        # report a clean zero for exactly the subjects whose rows do exist, so
+        # resolve every Zalo UID that identifies this subject first.
+        zalo_user_ids = self._resolve_zalo_user_ids(zalo_path, subject_id)
+        # With no subject and no resolved UID there is nothing to match; the empty
+        # predicate keeps the statement valid and deletes no rows.
+        user_match = (
+            "(" + " OR ".join(["user_id = ?"] * len(zalo_user_ids)) + ")"
+            if zalo_user_ids else "1=0"
+        )
+
+        counts = {
+            "zalo_followers": self._delete_where(
+                zalo_path, "followers", user_match, tuple(zalo_user_ids), save
+            ),
+            "zalo_messages": self._delete_where(
+                zalo_path, "messages", user_match, tuple(zalo_user_ids), save
+            ),
+            "dsar_requests": self._delete_prior_requests(
+                subject_id, exclude_request_id, save
+            ),
+            "consent_log": self._delete_where(
+                self.db_path, "consent_log", "subject_id = ?", (subject_id,), save
+            ),
+        }
+        return {
+            "ok": True,
+            "subject_id": subject_id,
+            "erased_rows": counts,
+            "total_erased": sum(counts.values()),
+            "stores_touched": [k for k, v in counts.items() if v],
+            # Stores this engine cannot reach directly are named here rather than
+            # left off, so an operator never reads "COMPLETED" as a promise that
+            # every copy of the subject's data is gone.
+            "pending_external_stores": ["cloudflare_d1:mekong-d1.leads"],
+        }
+
+    def _resolve_zalo_user_ids(self, zalo_path: pathlib.Path, subject_id: str) -> list[str]:
+        """Return every Zalo UID that identifies *subject_id*.
+
+        The Zalo store keys rows by its own UID and keeps name and phone on the
+        follower row, so a subject who arrives as a phone number or a CCCD has to
+        be resolved to the UID before their messages can be found.
+        """
+        if not zalo_path.is_file() or not subject_id:
+            return []
+        with contextlib.closing(self._get_foreign_connection(zalo_path)) as conn:
+            if "followers" not in self._existing_tables(conn):
+                return []
+            rows = conn.execute(
+                "SELECT user_id FROM followers WHERE user_id = ? OR phone = ? OR name = ?",
+                (subject_id, subject_id, subject_id),
+            ).fetchall()
+            return [str(r["user_id"]) for r in rows]
+
+    def _delete_where(
+        self,
+        db_path: pathlib.Path,
+        table: str,
+        where: str,
+        params: tuple,
+        save: bool,
+    ) -> int:
+        """Delete matching rows from *table* if the database and table exist."""
+        if not db_path.is_file():
+            return 0
+        # Table names come from the literal call sites in this module, never from
+        # caller input, so composing the statement here stays injection-free.
+        table = table.replace('"', '')
+        with contextlib.closing(self._get_foreign_connection(db_path)) as conn:
+            if table not in self._existing_tables(conn):
+                return 0
+            if not save:
+                cursor = conn.execute(
+                    f'SELECT COUNT(*) AS c FROM "{table}" WHERE {where or "1=0"}', params
+                )
+                return int(cursor.fetchone()["c"])
+            if not where:
+                return 0
+            cursor = conn.execute(f'DELETE FROM "{table}" WHERE {where}', params)
+            conn.commit()
+            return int(cursor.rowcount or 0)
+
+    def _delete_prior_requests(self, subject_id: str, exclude_request_id: str | None, save: bool) -> int:
+        """Delete earlier DSAR rows for the subject, keeping the active request."""
+        with self._get_connection() as conn:
+            if exclude_request_id:
+                rows = conn.execute(
+                    "SELECT request_id FROM dsar_requests "
+                    "WHERE subject_id = ? AND request_id != ?",
+                    (subject_id, exclude_request_id),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT request_id FROM dsar_requests WHERE subject_id = ?",
+                    (subject_id,),
+                ).fetchall()
+            request_ids = [str(r["request_id"]) for r in rows]
+            # A dry run must not delete; it reports what a real run would remove.
+            if save:
+                for request_id in request_ids:
+                    conn.execute(
+                        "DELETE FROM dsar_requests WHERE request_id = ?", (request_id,)
+                    )
+                conn.commit()
+        return len(request_ids)
+
+    @staticmethod
+    def _existing_tables(conn: sqlite3.Connection) -> set[str]:
+        rows = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'"
+        ).fetchall()
+        return {r["name"] for r in rows}
+
+    def _get_foreign_connection(self, db_path: pathlib.Path) -> sqlite3.Connection:
+        """Open a connection to a sibling store without creating it.
+
+        A missing database is not an error for a delete request — the caller has
+        already checked the file exists — so no ``mode=ro`` guard is needed and
+        the deletion can commit.
+        """
+        conn = sqlite3.connect(str(db_path), timeout=10.0)
+        conn.row_factory = sqlite3.Row
+        return conn
 
     def get_status(self) -> dict[str, typing.Any]:
         """Retrieve aggregated PDPD data privacy compliance metrics."""

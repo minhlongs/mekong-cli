@@ -19,6 +19,8 @@ Implements statutory e-commerce regulatory standards, overseas supplier digital 
   * Trách nhiệm của chủ sở hữu sàn TMĐT cung cấp thông tin người bán (doanh thu, tài khoản ngân hàng, CCCD/MST) định kỳ hàng quý cho Tổng cục Thuế.
 - Nghị định 123/2020/NĐ-CP & Thông tư 78/2021/TT-BTC:
   * Xuất hóa đơn điện tử từng đơn hàng giao dịch thành công trên sàn thương mại điện tử.
+  * Hóa đơn chỉ được phát hành khi truyền qua nhà cung cấp dịch vụ hóa đơn điện tử được cấp phép (TVAN);
+    engine này không tích hợp TVAN nên chỉ lập bản nháp chờ truyền.
 - Hải quan Bưu kiện Chuyển phát nhanh TMĐT Xuyên biên giới (Cross-border Parcels):
   * Ngưỡng miễn thuế bưu kiện chuyển phát nhanh trị giá thấp (dưới 1,000,000 VND).
 - Lưu trữ SQLite WAL tại ``.mekong/ecommerce.db``.
@@ -435,10 +437,12 @@ class EcommerceEngine:
         # Seller net payout = GMV - Commission Fee - Payment Fee - Shop Voucher
         seller_net_payout_vnd = round(gmv_gross_vnd - commission_fee_vnd - payment_processing_fee_vnd - shop_voucher_vnd)
 
-        # E-Invoice under Decree 123 & Circular 78
+        # E-Invoice draft under Decree 123 & Circular 78. A draft, not a legally
+        # issued invoice: issuance requires transmission through a TVAN licensed
+        # by the General Department of Taxation, which is not integrated here.
         net_taxable_goods = round(gmv_gross_vnd / (1.0 + (vat_rate_pct / 100.0)))
         vat_amount_vnd = round(gmv_gross_vnd - net_taxable_goods)
-        einvoice_no = f"INV-{datetime.datetime.now().strftime('%Y%m')}-{uuid.uuid4().hex[:6].upper()}"
+        einvoice_no = f"DRAFT-{datetime.datetime.now().strftime('%Y%m')}-{uuid.uuid4().hex[:6].upper()}"
 
         order_id = f"ORD-{uuid.uuid4().hex[:8].upper()}"
         now = datetime.datetime.now(datetime.timezone.utc)
@@ -464,12 +468,15 @@ class EcommerceEngine:
             },
             "electronic_invoice": {
                 "invoice_number": einvoice_no,
-                "invoice_schema": "Thông tư 78/2021/TT-BTC & Nghị định 123/2020/NĐ-CP",
+                "invoice_schema": (
+                    "BẢN NHÁP theo Thông tư 78/2021/TT-BTC & Nghị định 123/2020/NĐ-CP — "
+                    "cần truyền qua TVAN được cấp phép để phát hành hợp lệ"
+                ),
                 "vat_rate_pct": vat_rate_pct,
                 "pre_tax_amount_vnd": net_taxable_goods,
                 "vat_amount_vnd": vat_amount_vnd,
                 "total_invoiced_amount_vnd": gmv_gross_vnd,
-                "invoice_status": "ISSUED_AUTHENTICATED",
+                "invoice_status": "DRAFT_PENDING_TVAN",
             },
             "settled_at": now.isoformat(),
         }

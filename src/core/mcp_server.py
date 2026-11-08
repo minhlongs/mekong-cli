@@ -10056,7 +10056,12 @@ class MekongMcpServer:
 
         @app.tool(
             name="mekong_taxadmin_invoice",
-            description="Issue an electronic invoice with or without tax authority code under Decree 123/2020/ND-CP.",
+            description=(
+                "Prepare a DRAFT electronic invoice shaped to Decree 123/2020/ND-CP. "
+                "It is not legally issued until transmitted through a TVAN licensed by "
+                "the General Department of Taxation, and the tax authority code is "
+                "assigned by the Tax Authority on that transmission, never by this tool."
+            ),
         )
         def mekong_taxadmin_invoice(
             invoice_code: str,
@@ -10068,6 +10073,9 @@ class MekongMcpServer:
             vat_rate_pct: float = 10.0,
             with_tax_authority_code: bool = True,
         ) -> str:
+            # Accepted for call compatibility and ignored: the Tax Authority
+            # assigns the code on TVAN transmission, so a tool argument cannot
+            # request one. See TaxAdminEngine.issue_electronic_invoice.
             return self._handle_taxadmin_invoice(
                 invoice_code=invoice_code,
                 seller_tax_code=seller_tax_code,

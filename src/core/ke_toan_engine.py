@@ -3,11 +3,17 @@
 
 """Vietnamese Accounting Standard (VAS), Circular 78 Electronic Invoices & Journal Entry Engine.
 
-Provides offline, deterministic electronic invoicing, general ledger postings,
-and XML generation compliant with Vietnamese accounting frameworks:
+Provides offline, deterministic **draft** electronic invoices, general ledger
+postings, and XML generation shaped to Vietnamese accounting frameworks:
 - Thông tư 78/2021/TT-BTC & Nghị định 123/2020/NĐ-CP (Electronic Invoices schema)
 - Thông tư 200/2014/TT-BTC & Thông tư 133/2016/TT-BTC (VAS Chart of Accounts)
 - Double-entry bookkeeping balance validation (Total Debit == Total Credit)
+
+An e-invoice becomes legally issued only when it is transmitted through a
+service provider licensed by the General Department of Taxation (TVAN — e.g.
+MISA meInvoice, Viettel S-Invoice, Sapo Invoice). This engine implements no TVAN
+integration, so every artifact it produces is a **draft** awaiting that
+transmission, never a legally issued invoice. See :data:`DRAFT_DISCLAIMER`.
 
 Pure Python standard-library-only implementation adhering to ``tests/test_core_boundary.py``.
 """
@@ -32,6 +38,14 @@ VAT_RATES: dict[int, Decimal] = {
 }
 
 DISCLAIMER = "Tư vấn AI — không thay thế kế toán có chứng chỉ hành nghề."
+
+# Under TT78 an invoice is legally issued only on transmission through a TVAN
+# licensed by the General Department of Taxation. No TVAN is integrated here, so
+# the artifact is a draft awaiting that transmission — never an issued invoice.
+DRAFT_DISCLAIMER = (
+    "BẢN NHÁP — chưa phát hành. Hóa đơn điện tử chỉ có giá trị pháp lý khi được "
+    "truyền qua nhà cung cấp dịch vụ hóa đơn điện tử được cấp phép (TVAN)."
+)
 
 # Canonical VAS Chart of Accounts (Thông tư 200 & 133)
 CANONICAL_ACCOUNTS = [
@@ -150,7 +164,13 @@ class KeToanEngine:
         invoice_series: str = "C25TAA",
         save: bool = True,
     ) -> dict[str, typing.Any]:
-        """Create a TT78-compliant electronic invoice with VAT calculations."""
+        """Create a TT78-shaped **draft** invoice with VAT calculations.
+
+        The result carries the field set and XML data file that TT78 specifies,
+        but it is not a legally issued e-invoice: issuance requires transmission
+        through a TVAN licensed by the General Department of Taxation, and no
+        TVAN is integrated here.
+        """
         subtotal_dec = Decimal(str(amount)).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
         vat_factor = VAT_RATES.get(vat_rate, Decimal("0.10"))
         vat_dec = (subtotal_dec * vat_factor).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
@@ -168,7 +188,7 @@ class KeToanEngine:
             )
             invoice_num = cursor.fetchone()["next_num"]
 
-        invoice_id = f"INV-{invoice_series}-{invoice_num:06d}"
+        invoice_id = f"DRAFT-{invoice_series}-{invoice_num:06d}"
 
         items = [
             {
@@ -206,6 +226,8 @@ class KeToanEngine:
                 "total": format_vnd(total_dec),
             },
             "created_at": now_iso,
+            "issue_status": "DRAFT_PENDING_TVAN",
+            "draft_disclaimer": DRAFT_DISCLAIMER,
         }
 
         xml_output = self._generate_xml_from_data(invoice_dict)
@@ -262,7 +284,12 @@ class KeToanEngine:
             return data
 
     def _generate_xml_from_data(self, data: dict[str, typing.Any]) -> str:
-        """Serialize invoice data to Circular 78 / Decree 123 XML format."""
+        """Serialize draft invoice data to the Circular 78 / Decree 123 XML shape.
+
+        The output is the TT78 XML **data file** for a draft. It carries a header
+        comment stating that the artifact is not yet legally issued, because
+        issuance requires transmission through a licensed TVAN.
+        """
         root = Element("HDon")
 
         tt_chung = SubElement(root, "TTChung")
@@ -272,6 +299,9 @@ class KeToanEngine:
         SubElement(tt_chung, "NLap").text = data.get("invoice_date", datetime.date.today().isoformat())
         SubElement(tt_chung, "DVTTe").text = "VND"
         SubElement(tt_chung, "TGia").text = "1"
+        # Carry the status in the payload, not only in a comment, so a reader
+        # of the file sees the draft state without parsing anything.
+        SubElement(tt_chung, "TrangThai").text = "DRAFT_PENDING_TVAN"
 
         nd_hdon = SubElement(root, "NDHDon")
 
@@ -304,7 +334,14 @@ class KeToanEngine:
         SubElement(tt_toan, "TgTTTBSo").text = str(data.get("total_amount", 0))
 
         xml_str = tostring(root, encoding="unicode")
-        return xml.dom.minidom.parseString(xml_str).toprettyxml(indent="  ")
+        pretty = xml.dom.minidom.parseString(xml_str).toprettyxml(indent="  ")
+        # State the draft status inside the artifact itself so a downstream reader
+        # cannot mistake this data file for a legally issued e-invoice.
+        return pretty.replace(
+            "?>",
+            f"?>\n<!-- {DRAFT_DISCLAIMER} -->",
+            1,
+        )
 
     def create_vas_journal(
         self,
@@ -369,6 +406,8 @@ class KeToanEngine:
             "balanced": True,
             "entries": entries,
             "disclaimer": DISCLAIMER,
+            "invoice_issue_status": "DRAFT_PENDING_TVAN",
+            "draft_disclaimer": DRAFT_DISCLAIMER,
             "created_at": now_iso,
         }
 
@@ -451,8 +490,11 @@ class KeToanEngine:
             "recent_invoices": recent_invs,
             "recent_journals": recent_jrns,
             "standards_compliance": {
-                "electronic_invoices": "Thông tư 78/2021/TT-BTC & Nghị định 123/2020/NĐ-CP",
+                "electronic_invoices": (
+                    "DRAFT_PENDING_TVAN — shaped to Thông tư 78/2021/TT-BTC & "
+                    "Nghị định 123/2020/NĐ-CP; issuance requires a licensed TVAN"
+                ),
                 "accounting_framework": "Thông tư 200/2014/TT-BTC & Thông tư 133/2016/TT-BTC (VAS)",
-                "schema_validation": "TCT XML Schema",
+                "schema_validation": "TCT XML Schema (draft data file)",
             },
         }

@@ -27,6 +27,15 @@ VAS_ACCOUNTS = {
 
 DISCLAIMER = "Tư vấn AI — không thay thế kế toán có chứng chỉ hành nghề."
 
+# Under TT78 an invoice becomes legally issued only once it is transmitted
+# through a TVAN licensed by the General Department of Taxation. No TVAN is
+# integrated here, so every artifact built below is a draft awaiting that
+# transmission rather than an issued invoice.
+DRAFT_DISCLAIMER = (
+    "BẢN NHÁP — chưa phát hành. Hóa đơn điện tử chỉ có giá trị pháp lý khi được "
+    "truyền qua nhà cung cấp dịch vụ hóa đơn điện tử được cấp phép (TVAN)."
+)
+
 
 @dataclass
 class InvoiceItem:
@@ -56,7 +65,7 @@ class Invoice:
     buyer_tax_code: str = ""
     invoice_date: date = field(default_factory=date.today)
     items: list[InvoiceItem] = field(default_factory=list)
-    invoice_series: str = "C25TAA"  # Ký hiệu mẫu hóa đơn
+    invoice_series: str = "C25TAA"  # Ký hiệu mẫu hóa đơn; chưa phải số hóa đơn đã cấp
     invoice_number: int = 1
 
     @property
@@ -121,8 +130,13 @@ class Invoice:
         SubElement(tt_toan, "TgTThue").text = str(self.total_vat)
         SubElement(tt_toan, "TgTTTBSo").text = str(self.total_amount)
 
+        # The status element travels with the file, so anyone opening the XML
+        # outside this tool still sees that nothing has been transmitted.
+        SubElement(tt_chung, "TrangThai").text = "DRAFT_PENDING_TVAN"
+
         xml_str = tostring(root, encoding="unicode")
-        return xml.dom.minidom.parseString(xml_str).toprettyxml(indent="  ")
+        pretty = xml.dom.minidom.parseString(xml_str).toprettyxml(indent="  ")
+        return f"<!-- {DRAFT_DISCLAIMER} -->\n" + pretty
 
     def to_journal_entry(self) -> dict:
         """Bút toán kế toán VAS."""
@@ -138,12 +152,14 @@ class Invoice:
                  "note": "Thuế GTGT phải nộp"},
             ],
             "disclaimer": DISCLAIMER,
+            "issue_status": "DRAFT_PENDING_TVAN",
+            "draft_disclaimer": DRAFT_DISCLAIMER,
         }
 
     def to_summary(self) -> str:
         """Human-readable invoice summary."""
         lines = [
-            "=== HÓA ĐƠN ĐIỆN TỬ ===",
+            "=== HÓA ĐƠN ĐIỆN TỬ NHÁP (CHỜ TRUYỀN QUA TVAN) ===",
             f"Số: {self.invoice_series}{self.invoice_number:06d}",
             f"Ngày: {self.invoice_date.strftime('%d/%m/%Y')}",
             f"Người bán: {self.seller_name} (MST: {self.seller_tax_code})",
@@ -161,6 +177,7 @@ class Invoice:
             "",
             f"BÚT TOÁN: Nợ TK {VAS_ACCOUNTS['receivable']} / Có TK {VAS_ACCOUNTS['revenue']}, {VAS_ACCOUNTS['vat_output']}",
             "",
+            f"⚠️  {DRAFT_DISCLAIMER}",
             f"⚠️  {DISCLAIMER}",
         ]
         return "\n".join(lines)

@@ -135,10 +135,11 @@ def issue_invoice_cmd(
     buyer_name: str = typer.Option(..., "--buyer-name", help="Tên đơn vị người mua"),
     amount: float = typer.Option(..., "--amount", "-a", help="Tổng tiền hàng chưa thuế (VND)"),
     vat_rate: float = typer.Option(10.0, "--vat-rate", help="Thuế suất GTGT (0.0, 5.0, 8.0, 10.0)"),
-    cqt_code: bool = typer.Option(True, "--cqt-code/--no-cqt-code", help="Cấp mã xác thực của cơ quan thuế"),
+    cqt_code: bool = typer.Option(False, "--cqt-code/--no-cqt-code", hidden=True,
+                                  help="(không còn hiệu lực) Chỉ cơ quan thuế mới cấp mã hóa đơn điện tử"),
     json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả JSON"),
 ) -> None:
-    """Phát hành Hóa đơn điện tử có mã hoặc không có mã của cơ quan thuế (Nghị định 123/2020/NĐ-CP)."""
+    """Soạn hóa đơn điện tử NHÁP theo Nghị định 123/2020/NĐ-CP — chưa phát hành cho tới khi truy qua TVAN được cấp phép."""
     from src.core.taxadmin_engine import TaxAdminEngine
 
     engine = TaxAdminEngine()
@@ -163,18 +164,18 @@ def issue_invoice_cmd(
 
     console.print(
         Panel(
-            f"[bold green]PHÁT HÀNH HÓA ĐƠN ĐIỆN TỬ THÀNH CÔNG (NGHỊ ĐỊNH 123/2020/NĐ-CP)[/]\n\n"
+            f"[bold yellow]HÓA ĐƠN ĐIỆN TỬ NHÁP — CHỜ TRUYỀN QUA TVAN (NGHỊ ĐỊNH 123/2020/NĐ-CP)[/]\n\n"
             f"  Ký hiệu hóa đơn:         [bold yellow]{res['invoice_code']}[/]\n"
             f"  Loại hóa đơn:            [bold cyan]{res['invoice_type']}[/]\n"
-            f"  Mã CQT cấp:              [bold green]{res['tax_authority_code'] or 'KHÔNG MÃ (ĐIỀU 91)'}[/]\n"
+            f"  Mã CQT:                   [bold yellow]{res['tax_authority_code'] or 'CHƯA CẤP (chỉ cơ quan thuế cấp sau khi truyền qua TVAN)'}[/]\n"
             f"  Người bán (MST):         [bold]{res['seller_name']}[/] ({res['seller_tax_code']})\n"
             f"  Người mua (MST):         [bold]{res['buyer_name']}[/] ({res['buyer_tax_code']})\n"
             f"  Tiền hàng chưa thuế:     [bold]{res['subtotal_vnd']:,.0f} VND[/]\n"
             f"  Thuế GTGT ({res['vat_rate_pct']:.0f}%):       [bold magenta]{res['vat_amount_vnd']:,.0f} VND[/]\n"
             f"  Tổng tiền thanh toán:    [bold yellow]{res['total_amount_vnd']:,.0f} VND[/]\n"
-            f"  Trạng thái phát hành:    [bold green]{res['issue_status']}[/]",
-            title="[bold blue]Electronic Invoice Authenticated[/]",
-            border_style="green",
+            f"  Trạng thái:              [bold yellow]{res['issue_status']}[/]",
+            title="[bold blue]Electronic Invoice Draft — Pending TVAN Transmission[/]",
+            border_style="yellow",
         )
     )
 
@@ -318,7 +319,7 @@ def list_cmd(
         console.print(table)
 
     if "invoices" in records and records["invoices"]:
-        table = Table(title="Hóa Đơn Điện Tử Đã Phát Hành (Nghị định 123/2020/NĐ-CP)")
+        table = Table(title="Hóa Đơn Điện Tử Nháp — Chờ Truyền Qua TVAN (Nghị định 123/2020/NĐ-CP)")
         table.add_column("Ký Hiệu", style="cyan", no_wrap=True)
         table.add_column("Loại HĐ", style="magenta")
         table.add_column("Người Bán", style="white")
@@ -356,7 +357,7 @@ def status_cmd(
             f"[bold green]HỆ THỐNG QUẢN LÝ THUẾ & HÓA ĐƠN ĐIỆN TỬ QUỐC GIA (LUẬT 38/2019/QH14)[/]\n\n"
             f"  Số lượng NNT đăng ký:         [bold yellow]{telemetry['taxpayer_count']}[/]\n"
             f"  Số thông báo thuế phát hành:   [bold cyan]{telemetry['assessment_count']}[/]\n"
-            f"  Số hóa đơn điện tử đã cấp mã:  [bold green]{telemetry['invoice_count']}[/]\n"
+            f"  Số hóa đơn điện tử đã soạn:    [bold green]{telemetry['invoice_count']}[/]\n"
             f"  Số hồ sơ thanh tra kết luận:   [bold magenta]{telemetry['audit_count']}[/]\n\n"
             f"  Tổng số thuế ấn định/tự khai:  [bold]{telemetry['total_assessed_vnd']:,.0f} VND[/]\n"
             f"  Tổng số thuế đã nộp vào NSNN:  [bold green]{telemetry['total_paid_vnd']:,.0f} VND[/] (Tỷ lệ thu: [bold green]{telemetry['collection_rate_pct']}%[/])\n"

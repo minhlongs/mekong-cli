@@ -105,27 +105,43 @@ async def onboard_tenant(req: OnboardRequest) -> OnboardResponse:
 @router.post("/webhook/polar")
 async def polar_webhook(_request: Request) -> dict:
     """Decommissioned endpoint: Polar.sh rail is prohibited (Step 11c)."""
+    from src.raas.checkout_router import rails_allowed_for_jurisdiction
+
     raise HTTPException(
         status_code=410,
         detail={
             "error": "polar_rail_decommissioned",
             "message": "Polar.sh rail is decommissioned. Use VietQR (/v1/checkout) or NOWPayments (/webhooks/nowpayments).",
-            "allowed_rails": ["vietqr", "nowpayments"],
+            # The rail set is jurisdiction-filtered here too; an unidentifiable
+            # caller is treated as Vietnamese and sees only the domestic rail.
+            "allowed_rails": rails_allowed_for_jurisdiction("VN"),
         },
     )
 
 
 @router.get("/v1/pricing")
 async def get_pricing(tenant: str | None = None) -> dict:
-    """Return canonical commercial pricing tiers with Dual-Rail checkout paths."""
+    """Return canonical commercial pricing tiers with the checkout rails this caller may use.
+
+    Advertising a rail the caller cannot settle on is what leads them to ask
+    for it, so the rail list is resolved per jurisdiction — failing closed to
+    the Vietnamese rail set when the caller cannot be attributed elsewhere.
+    """
     from src.api.tenant_config_loader import get_tenant_config
+    from src.raas.checkout_router import rails_allowed_for_jurisdiction
 
     tenant_config = get_tenant_config(tenant) if tenant else None
     checkout_base = "/v1/checkout"
+    jurisdiction = TenantStore().jurisdiction_for(tenant) if tenant else "VN"
+    allowed_rails = rails_allowed_for_jurisdiction(jurisdiction)
 
+    # Each tier advertises the same jurisdiction-filtered rail list rather than
+    # a superset, so a Vietnamese licensee is never shown the crypto rail as a
+    # checkout option for a tier it cannot buy with it.
     tiers_with_urls = [
         {
             **tier_info,
+            "rails": allowed_rails,
             "checkout_url": f"/v1/checkout?tier={tier_info['tier']}",
         }
         for tier_info in _PRICING_TIERS
@@ -134,7 +150,8 @@ async def get_pricing(tenant: str | None = None) -> dict:
     result: dict = {
         "tiers": tiers_with_urls,
         "checkout_url": checkout_base,
-        "allowed_rails": ["vietqr", "nowpayments"],
+        "allowed_rails": allowed_rails,
+        "jurisdiction": jurisdiction,
     }
     if tenant_config:
         result["tenant"] = tenant_config["slug"]

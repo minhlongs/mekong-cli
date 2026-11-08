@@ -198,7 +198,11 @@ def cond_invoice_issued(store: EvidenceStore, ws: str, params: dict[str, typing.
     inv_rows = _evidence_of_type(store, ws, "TT78_INVOICE")
     return _cond(
         "invoice_linked_to_revenue", bool(tx_rows) and bool(inv_rows),
-        "the reconciled transaction must reference an issued e-invoice (TT78/Circular 78)",
+        # The evidence is a TT78-shaped draft invoice, not a legally issued
+        # e-invoice: issuance requires TVAN transmission, so the gate must
+        # demand a linked draft run rather than claim issuance.
+        "the reconciled transaction must reference a TT78-shaped draft e-invoice run "
+        "(issuance requires TVAN transmission)",
         {"transactions_with_invoice": len(tx_rows), "invoice_runs": len(inv_rows)},
         "revenue recorded without a linked invoice run" if tx_rows and not inv_rows
         else ("no reconciled transaction with invoice reference" if not tx_rows else "invoice linked"),
@@ -344,7 +348,7 @@ GATES: tuple[GateDefinition, ...] = (
         "first-revenue", "L3", "Dòng Doanh Thu Lặp Lại & Quyết Toán Thuế (L3)",
         "sales-revenue", "business-analyst", "state/evidence/first-revenue.json",
         "RECONCILED_BANKING_TRANSACTION",
-        "Doanh thu thực tế, hóa đơn TT78, sổ sách kế toán và quyết toán thuế.",
+        "Doanh thu thực tế, hóa đơn TT78 (nháp chờ TVAN), sổ sách kế toán và quyết toán thuế.",
         ("reconciled_transaction", "invoice_linked_to_revenue", "tax_accounting_recorded"),
     ),
     GateDefinition(

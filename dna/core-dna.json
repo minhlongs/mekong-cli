@@ -272,6 +272,24 @@
         ],
         "verdict": "reviewed",
         "note": "Issue #136 final release certification hardening; top-level command surface unchanged (dna/command-surface.json not modified)."
+      },
+      {
+        "pr": 138,
+        "branch": "fix/vn-legal-compliance-rail-and-draft-invoice",
+        "feature_surface_changes": [
+          "src/raas/checkout_router.py — CheckoutRequest gains an explicit jurisdiction field and a 403 rail_not_permitted_for_jurisdiction gate before the rail branch: a Vietnamese tenant is denied the USDT rail, and an unresolvable jurisdiction fails closed instead of being granted it",
+          "src/raas/tenant.py — tenants gains a jurisdiction column plus jurisdiction_for(); an organisation label is no longer read as a nationality declaration",
+          "src/core/ke_toan_engine.py, src/core/ecommerce_engine.py, src/core/taxadmin_engine.py — invoices are drafts awaiting TVAN transmission: the fabricated Tax Authority code is gone, issue_status is DRAFT_PENDING_TVAN, and the DRAFT- prefix plus an in-artifact disclaimer mark the artifact as unissued",
+          "src/core/promise/checks_finance.py — invoice_tt78_structure reports structural completeness only and cites no statute in its pass message",
+          "src/core/promise/gates.py, src/core/promise/ops/finance_vn.py — the first-revenue gate and the create-invoice contract demand a TT78-shaped draft run rather than a legally issued e-invoice",
+          "src/core/privacy_engine.py — consent_log table with grant/withdraw/list, and erase_subject_data() that actually deletes subject rows from the Zalo follower, message, DSAR and consent stores with per-store counts; a RIGHT_TO_DELETE DSAR is only marked COMPLETED after a real purge, and the receipt names the stores it cannot reach",
+          "src/cli/commands/privacy_command.py — new consent (grant/withdraw/list) and erase subcommands under the existing privacy group",
+          "src/cli/commands/taxadmin_command.py, src/commands/ke_toan.py — CLI and legacy-invoice banners, panel titles, list headers and XML payloads present the artifact as a draft pending TVAN transmission; --cqt-code is deprecated and ignored",
+          "src/raas/revenue_router.py, src/raas/nowpayments_checkout.py — GET /v1/pricing, the Polar 410 payload, create_invoice() and get_subscription_link() all resolve rails per jurisdiction and fail closed to the Vietnamese set",
+          "src/core/mcp_server.py — the mekong_taxadmin_invoice tool advertises draft preparation and documents that the tax-authority-code flag is ignored"
+        ],
+        "verdict": "pending",
+        "note": "Vietnamese legal-compliance closure: jurisdiction gating on the crypto rail, draft-only e-invoicing without a licensed TVAN, and real DSAR erasure. No new top-level CLI command group; dna/command-surface.json unchanged."
       }
     ]
   }

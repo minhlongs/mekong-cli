@@ -317,21 +317,36 @@ class TestCheckoutValidation:
         with pytest.raises(ValueError, match="Unknown tier"):
             self.mod.create_invoice("platinum", "ws-001")
 
+    def test_create_invoice_rejects_vietnamese_jurisdiction(self):
+        # The crypto rail is denied to Vietnamese licensees, and that guard has
+        # to hold here too — a caller reaching this helper directly must not get
+        # a checkout URL the router would have refused.
+        with pytest.raises(ValueError, match="crypto rail"):
+            self.mod.create_invoice("premium", "ws-001", jurisdiction="VN")
+
+    def test_create_invoice_fails_closed_without_a_jurisdiction(self):
+        with pytest.raises(ValueError, match="crypto rail"):
+            self.mod.create_invoice("premium", "ws-001")
+
     def test_get_subscription_link_rejects_unknown_tier(self):
         with pytest.raises(ValueError, match="Unknown tier"):
             self.mod.get_subscription_link("freeforever")
 
+    def test_get_subscription_link_fails_closed_without_a_jurisdiction(self):
+        with pytest.raises(ValueError, match="crypto rail"):
+            self.mod.get_subscription_link("premium")
+
     def test_known_tiers_pass_validation(self):
-        """All four known tiers must not raise on validation."""
+        """All four known tiers must not raise on validation for an allowed jurisdiction."""
         for tier in ("starter", "pro", "growth", "enterprise"):
             # Should not raise — will fail at HTTP step, which we mock
             with patch.object(self.mod, "_api_request", return_value={"invoice_url": "https://x"}):
-                result = self.mod.create_invoice(tier, f"ws-{tier}")
+                result = self.mod.create_invoice(tier, f"ws-{tier}", jurisdiction="SG")
             assert result is not None
 
     def test_get_subscription_link_returns_nowpayments_url(self):
         """Subscription link format: https://nowpayments.io/payment/?iid={plan_id}"""
-        link = self.mod.get_subscription_link("pro")
+        link = self.mod.get_subscription_link("pro", jurisdiction="SG")
         assert "nowpayments.io/payment/" in link
         assert "iid=" in link
 
