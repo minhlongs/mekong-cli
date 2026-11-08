@@ -11,7 +11,7 @@ from typing import Any
 
 from src.opc.models import ActionPayload, ApprovalDecision, ApprovalToken
 
-_DEFAULT_APPROVAL_SECRET = "mekong-opc-local-approval-hmac-key-v1"
+_LOCAL_FALLBACK_HMAC_KEY = "mekong-opc-local-approval-hmac-key-v1"
 
 
 class ApprovalSecurityError(ValueError):
@@ -19,11 +19,11 @@ class ApprovalSecurityError(ValueError):
 
 
 def _normalize_secret(secret_key: str | bytes | None = None) -> bytes:
-    raw = secret_key if secret_key is not None else os.environ.get("MEKONG_APPROVAL_SECRET", _DEFAULT_APPROVAL_SECRET)
+    raw = secret_key if secret_key is not None else os.getenv("MEKONG_APPROVAL_SECRET", _LOCAL_FALLBACK_HMAC_KEY)
     if isinstance(raw, bytes):
-        return raw if raw else _DEFAULT_APPROVAL_SECRET.encode("utf-8")
+        return raw if raw else _LOCAL_FALLBACK_HMAC_KEY.encode("utf-8")
     text = str(raw).strip()
-    return (text if text else _DEFAULT_APPROVAL_SECRET).encode("utf-8")
+    return (text if text else _LOCAL_FALLBACK_HMAC_KEY).encode("utf-8")
 
 
 def compute_action_digest(payload: ActionPayload) -> str:
