@@ -1,0 +1,20 @@
+{
+  "business_name": "Công ty TNHH Giải pháp Số Cửu Long",
+  "owner_name": "Nguyễn Minh Long",
+  "language": "vi",
+  "locale": "vi_VN",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "currency": "VND",
+  "services": {
+    "thiet_ke_website": "500000",
+    "tu_van_chuyen_doi_so": "750000",
+    "tich_hop_zalo_vietqr": "600000"
+  },
+  "payment_terms": "Tạm ứng 50% qua VietQR ngay sau khi xác nhận báo giá, 50% khi nghiệm thu bàn giao (Bản nháp đối soát trước kế toán).",
+  "jurisdiction": "VN",
+  "preferences": {
+    "include_sample_disclaimer": true,
+    "bank_id": "vcb",
+    "account_no": "0071000888999"
+  }
+}

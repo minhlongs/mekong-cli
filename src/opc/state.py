@@ -30,13 +30,16 @@ class StateStore:
             conn.executescript(
                 """
                 CREATE TABLE IF NOT EXISTS opc_runs (run_id TEXT PRIMARY KEY, pack_id TEXT NOT NULL, status TEXT NOT NULL, business_profile_json TEXT NOT NULL, proposal_input_json TEXT NOT NULL, proposal_draft_json TEXT, action_payload_json TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
-                CREATE TABLE IF NOT EXISTS opc_approvals (token_id TEXT PRIMARY KEY, run_id TEXT NOT NULL REFERENCES opc_runs(run_id), action_digest TEXT NOT NULL, principal TEXT NOT NULL, decision TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, consumed INTEGER NOT NULL DEFAULT 0, revoked INTEGER NOT NULL DEFAULT 0, revision_notes TEXT DEFAULT '');
+                CREATE TABLE IF NOT EXISTS opc_approvals (token_id TEXT PRIMARY KEY, run_id TEXT NOT NULL REFERENCES opc_runs(run_id), action_digest TEXT NOT NULL, principal TEXT NOT NULL, decision TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, consumed INTEGER NOT NULL DEFAULT 0, revoked INTEGER NOT NULL DEFAULT 0, revision_notes TEXT DEFAULT '', signature TEXT DEFAULT '');
                 CREATE TABLE IF NOT EXISTS opc_actions (idempotency_key TEXT PRIMARY KEY, run_id TEXT NOT NULL REFERENCES opc_runs(run_id), capability TEXT NOT NULL, connector TEXT NOT NULL, status TEXT NOT NULL, payload_json TEXT NOT NULL, response_json TEXT, error_message TEXT, created_at INTEGER NOT NULL, completed_at INTEGER);
                 """
             )
             cols = {r["name"] for r in conn.execute("PRAGMA table_info(opc_runs)").fetchall()}
             if "action_payload_json" not in cols:
                 conn.execute("ALTER TABLE opc_runs ADD COLUMN action_payload_json TEXT")
+            appr_cols = {r["name"] for r in conn.execute("PRAGMA table_info(opc_approvals)").fetchall()}
+            if "signature" not in appr_cols:
+                conn.execute("ALTER TABLE opc_approvals ADD COLUMN signature TEXT DEFAULT ''")
 
     def save_run(
         self, run_id: str, pack_id: str, status: WorkflowStatus,
@@ -87,15 +90,16 @@ class StateStore:
         with self._get_connection() as conn:
             conn.execute(
                 """
-                INSERT INTO opc_approvals (token_id, run_id, action_digest, principal, decision, created_at, expires_at, consumed, revoked, revision_notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO opc_approvals (token_id, run_id, action_digest, principal, decision, created_at, expires_at, consumed, revoked, revision_notes, signature)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(token_id) DO UPDATE SET
-                    consumed=excluded.consumed, revoked=excluded.revoked, decision=excluded.decision, revision_notes=excluded.revision_notes
+                    consumed=MAX(opc_approvals.consumed, excluded.consumed), revoked=MAX(opc_approvals.revoked, excluded.revoked), decision=excluded.decision, revision_notes=excluded.revision_notes, signature=excluded.signature
                 """,
                 (
                     token.token_id, token.run_id, token.action_digest, token.principal,
                     token.decision.value, token.created_at, token.expires_at,
                     1 if token.consumed else 0, 1 if token.revoked else 0, token.revision_notes,
+                    token.signature,
                 ),
             )
 
@@ -111,13 +115,14 @@ class StateStore:
                 created_at=row["created_at"], expires_at=row["expires_at"],
                 consumed=bool(row["consumed"]), revoked=bool(row["revoked"]),
                 revision_notes=row["revision_notes"] or "",
+                signature=row["signature"] or "",
             )
 
     def consume_approval_atomic(self, token_id: str, action_digest: str, now: int) -> bool:
         """Atomically mark token consumed in SQLite to prevent multi-worker race conditions."""
         with self._get_connection() as conn:
             cur = conn.execute(
-                "UPDATE opc_approvals SET consumed = 1 WHERE token_id = ? AND action_digest = ? AND consumed = 0 AND revoked = 0 AND expires_at >= ? AND decision = 'approve'",
+                "UPDATE opc_approvals SET consumed = 1 WHERE token_id = ? AND action_digest = ? AND consumed = 0 AND revoked = 0 AND expires_at >= ? AND decision = 'approve' AND signature != ''",
                 (token_id, action_digest, now),
             )
             return cur.rowcount == 1
@@ -145,9 +150,14 @@ class StateStore:
         self, idempotency_key: str, status: str,
         response_data: dict[str, Any] | None, error_message: str | None, now: int,
     ) -> None:
-        """Update action with final or intermediate execution outcome."""
+        """Update action and parent workflow run with final or intermediate execution outcome."""
+        run_status = "reconciliation_required" if status == "uncertain" else ("completed" if status == "completed" else "failed")
         with self._get_connection() as conn:
             conn.execute(
                 "UPDATE opc_actions SET status = ?, response_json = ?, error_message = ?, completed_at = ? WHERE idempotency_key = ?",
                 (status, json.dumps(response_data) if response_data else None, error_message, now, idempotency_key),
+            )
+            conn.execute(
+                "UPDATE opc_runs SET status = ?, updated_at = ? WHERE run_id = (SELECT run_id FROM opc_actions WHERE idempotency_key = ?)",
+                (run_status, now, idempotency_key),
             )

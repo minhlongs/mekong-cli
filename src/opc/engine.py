@@ -53,11 +53,8 @@ class OPCEngine:
         for cap_id in self.manifest.capabilities:
             bus.register(
                 Capability(
-                    id=cap_id,
-                    name=f"{self.manifest.pack_id}:{cap_id}",
-                    description=f"OPC pack capability {cap_id}",
-                    risk_level=risk,
-                    source=CapabilitySource.CUSTOM,
+                    id=cap_id, name=f"{self.manifest.pack_id}:{cap_id}",
+                    description=f"OPC pack capability {cap_id}", risk_level=risk, source=CapabilitySource.CUSTOM,
                 )
             )
 
@@ -145,17 +142,19 @@ class OPCEngine:
         return active_run_id, draft, action_payload
 
     def execute_approved_action(
-        self, token: ApprovalToken, payload: ActionPayload, idempotency_key: str, hard_budget_limit: str | None = None,
+        self, token: ApprovalToken, payload: ActionPayload, idempotency_key: str,
+        hard_budget_limit: str | None = None, now: int | None = None,
     ) -> dict[str, Any]:
         """Goal 2: Verify approval, reserve budget, and dispatch external connector effect."""
-        now = int(time.time())
+        now = int(time.time()) if now is None else now
         self._assert_manifest_allows(payload.capability, payload.connector)
-        self.approval_engine.verify_and_consume(token, payload, now=now)
-        if self.state.get_approval(token.token_id) is not None:
-            if not self.state.consume_approval_atomic(token.token_id, token.action_digest, now):
-                raise ApprovalSecurityError(f"Atomic SQLite approval lock failed for token '{token.token_id}'.")
-        else:
+        if (stored := self.state.get_approval(token.token_id)) is not None:
+            self.approval_engine.verify_and_consume(stored, payload, now=now)
+        elif not token.consumed and not token.revoked:
             self.state.save_approval(token)
+        self.approval_engine.verify_and_consume(token, payload, now=now)
+        if not self.state.consume_approval_atomic(token.token_id, token.action_digest, now):
+            raise ApprovalSecurityError(f"Atomic SQLite approval lock failed for token '{token.token_id}'.")
 
         connector = self.connectors.get(payload.connector)
         if not connector:
