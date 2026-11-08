@@ -115,7 +115,7 @@ class QuarantinedInput:
 def _sanitize_boundary(text: str) -> str:
     """Neutralize any attempt to close, forge, or open a second untrusted boundary tag."""
     return re.sub(
-        r"<\s*(/?)\s*untrusted_customer_input([^<>]*?)(/?\s*)>?",
+        r"<\s*(/?)\s*untrusted_customer_input[^<>]*>?",
         r"[neutralized_tag:\1untrusted_customer_input]",
         text,
         flags=re.IGNORECASE,
