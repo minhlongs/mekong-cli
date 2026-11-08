@@ -198,3 +198,13 @@ class TestDraftNotIssued:
         # authority issues on transmission; the artifact must not imply one.
         xml_str = simple_invoice.to_xml()
         assert "MCQT" not in xml_str
+
+    def test_xml_is_well_formed_with_the_disclaimer_in_it(self, simple_invoice: Invoice) -> None:
+        # In XML 1.0 the declaration must be the first thing in the document, so
+        # the disclaimer has to follow it rather than lead. A strict parser
+        # rejects the whole file otherwise, which would make the draft marking
+        # unreadable to exactly the reader it was added for.
+        xml_str = simple_invoice.to_xml()
+        ET.fromstring(xml_str)
+        assert xml_str.lstrip().startswith("<?xml")
+        assert xml_str.index("<!--") > xml_str.index("?>")

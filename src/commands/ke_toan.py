@@ -136,7 +136,14 @@ class Invoice:
 
         xml_str = tostring(root, encoding="unicode")
         pretty = xml.dom.minidom.parseString(xml_str).toprettyxml(indent="  ")
-        return f"<!-- {DRAFT_DISCLAIMER} -->\n" + pretty
+        # In XML 1.0 the declaration, when the writer emits one, has to be the
+        # very first thing in the document — a comment ahead of it is a
+        # well-formedness error and every strict parser rejects the whole file.
+        # So the disclaimer follows the declaration instead of preceding it.
+        head, separator, tail = pretty.partition("?>")
+        if separator:
+            return f"{head}{separator}\n<!-- {DRAFT_DISCLAIMER} -->\n{tail.lstrip()}"
+        return f"<!-- {DRAFT_DISCLAIMER} -->\n{pretty}"
 
     def to_journal_entry(self) -> dict:
         """Bút toán kế toán VAS."""
