@@ -173,11 +173,11 @@ class PilotAWorkflow:
         idempotency_key: str | None = None, *, now: int | None = None,
     ) -> dict[str, Any]:
         """Verify HMAC approval token and dispatch quote + VietQR to Zalo OA sandbox."""
-        # A card held past the 48h Zalo customer-service window cannot be sent even if its
-        # approval token had a longer TTL, because the platform rejects the outbound message.
         last_ts = int(card.action_payload.parameters.get("last_user_interaction_ts", 0))
-        if now is not None and (now - last_ts < 0 or now - last_ts > ZALO_INTERACTION_WINDOW_SECONDS):
-            raise ZaloInteractionWindowError(f"Zalo OA interaction window expired at dispatch (age={now - last_ts}s).")
+        intake_age = int(card.action_payload.parameters.get("interaction_age_seconds", 0))
+        window_age = (now - last_ts) if now is not None else (int(time.time()) - card.approval_token.created_at + intake_age)
+        if window_age < 0 or window_age > ZALO_INTERACTION_WINDOW_SECONDS:
+            raise ZaloInteractionWindowError(f"Zalo OA interaction window expired at dispatch (age={window_age}s).")
         return self.engine.execute_approved_action(
-            token or card.approval_token, card.action_payload, idempotency_key=idempotency_key or f"pilot_a_{card.run_id}",
+            token or card.approval_token, card.action_payload, idempotency_key=idempotency_key or f"pilot_a_{card.run_id}", now=now,
         )

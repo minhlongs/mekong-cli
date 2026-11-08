@@ -93,7 +93,7 @@ class StateStore:
                 INSERT INTO opc_approvals (token_id, run_id, action_digest, principal, decision, created_at, expires_at, consumed, revoked, revision_notes, signature)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(token_id) DO UPDATE SET
-                    consumed=excluded.consumed, revoked=excluded.revoked, decision=excluded.decision, revision_notes=excluded.revision_notes, signature=excluded.signature
+                    consumed=MAX(opc_approvals.consumed, excluded.consumed), revoked=MAX(opc_approvals.revoked, excluded.revoked), decision=excluded.decision, revision_notes=excluded.revision_notes, signature=excluded.signature
                 """,
                 (
                     token.token_id, token.run_id, token.action_digest, token.principal,
@@ -150,9 +150,14 @@ class StateStore:
         self, idempotency_key: str, status: str,
         response_data: dict[str, Any] | None, error_message: str | None, now: int,
     ) -> None:
-        """Update action with final or intermediate execution outcome."""
+        """Update action and parent workflow run with final or intermediate execution outcome."""
+        run_status = "reconciliation_required" if status == "uncertain" else ("completed" if status == "completed" else "failed")
         with self._get_connection() as conn:
             conn.execute(
                 "UPDATE opc_actions SET status = ?, response_json = ?, error_message = ?, completed_at = ? WHERE idempotency_key = ?",
                 (status, json.dumps(response_data) if response_data else None, error_message, now, idempotency_key),
+            )
+            conn.execute(
+                "UPDATE opc_runs SET status = ?, updated_at = ? WHERE run_id = (SELECT run_id FROM opc_actions WHERE idempotency_key = ?)",
+                (run_status, now, idempotency_key),
             )

@@ -60,6 +60,7 @@ def compute_token_hmac(
         "decision": token.decision.value,
         "created_at": token.created_at,
         "expires_at": token.expires_at,
+        "revision_notes": token.revision_notes,
     }
     canonical = json.dumps(envelope, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hmac.new(_normalize_secret(secret_key), canonical, hashlib.sha256).hexdigest()

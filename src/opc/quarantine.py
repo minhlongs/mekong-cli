@@ -9,6 +9,9 @@ from typing import Final
 from src.opc.models import ProposalInput
 
 _BOUNDARY_TAG: Final[str] = "untrusted_customer_input"
+_INVISIBLE_CHARS_RE: Final[re.Pattern[str]] = re.compile(
+    f"[{chr(0x00AD)}{chr(0x200B)}-{chr(0x200F)}{chr(0x202A)}-{chr(0x202E)}{chr(0x2060)}-{chr(0x206F)}{chr(0xFEFF)}]"
+)
 
 _INJECTION_RULES: Final[tuple[tuple[str, re.Pattern[str], float], ...]] = (
     (
@@ -112,7 +115,7 @@ class QuarantinedInput:
 def _sanitize_boundary(text: str) -> str:
     """Neutralize any attempt to close, forge, or open a second untrusted boundary tag."""
     return re.sub(
-        r"<\s*(/?)\s*untrusted_customer_input(\s[^<>]*)?(/?\s*)>?",
+        r"<\s*(/?)\s*untrusted_customer_input([^<>]*?)(/?\s*)>?",
         r"[neutralized_tag:\1untrusted_customer_input]",
         text,
         flags=re.IGNORECASE,
@@ -124,10 +127,9 @@ class QuarantineFloor:
 
     def inspect(self, text: str, source: str = "zalo_message") -> QuarantinedInput:
         """Inspect untrusted text, wrap it in neutralized boundary tags, and compute safety."""
-        # Vietnamese diacritics arrive decomposed (NFD) from iOS/macOS keyboards and
-        # clipboard pastes, and a decomposed letter never matches an NFC literal in a
-        # rule pattern, so the whole corpus would silently pass.
-        raw = unicodedata.normalize("NFC", text or "")
+        # Normalize decomposed Vietnamese diacritics (NFD -> NFC) and strip zero-width/invisible
+        # formatting characters so obfuscated keywords or boundary tags cannot evade regex rules.
+        raw = _INVISIBLE_CHARS_RE.sub("", unicodedata.normalize("NFC", text or ""))
         safe_source = re.sub(r"[^a-zA-Z0-9_.:-]", "_", source or "untrusted")
         matched: list[str] = []
         max_score = 0.0
@@ -160,6 +162,7 @@ class QuarantineFloor:
                 intake.client_contact,
                 intake.project_title,
                 intake.notes,
+                " ".join(intake.requested_services),
                 " ".join(intake.attachments),
             )
             if part

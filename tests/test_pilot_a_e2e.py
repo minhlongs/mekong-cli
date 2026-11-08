@@ -92,7 +92,7 @@ def test_pilot_a_happy_path_quote_vietqr_crc_and_approved_dispatch(tmp_path: Pat
     assert sent["vietqr_emvco"] == emv
 
 
-def test_pilot_a_48h_zalo_interaction_window_enforced(tmp_path: Path) -> None:
+def test_pilot_a_48h_zalo_interaction_window_enforced(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Messages older than 48 hours (172,800s) are rejected before quote or connector execution."""
     workflow = PilotAWorkflow(db_path=tmp_path / "pilot_a_window.db", profile=_make_vn_profile())
     expired_event = _make_event(
@@ -103,11 +103,14 @@ def test_pilot_a_48h_zalo_interaction_window_enforced(tmp_path: Path) -> None:
         workflow.handle_webhook(expired_event)
     assert len(workflow.zalo_connector.dispatched) == 0
 
-    # A card held past the 48h window is also rejected at approve_and_send time
+    # A card held past the 48h window is rejected both with explicit `now` and default `now=None`
     fresh_card = workflow.handle_webhook(_make_event(event_id="zalo_evt_late_approve", age_seconds=60))
     late_now = fresh_card.action_payload.parameters["last_user_interaction_ts"] + ZALO_INTERACTION_WINDOW_SECONDS + 10
     with pytest.raises(ZaloInteractionWindowError, match="window expired at dispatch"):
         workflow.approve_and_send(fresh_card, now=late_now)
+    monkeypatch.setattr("src.opc.pilot_a.time.time", lambda: float(fresh_card.approval_token.created_at + ZALO_INTERACTION_WINDOW_SECONDS))
+    with pytest.raises(ZaloInteractionWindowError, match="window expired at dispatch"):
+        workflow.approve_and_send(fresh_card)
     assert len(workflow.zalo_connector.dispatched) == 0
 
 
@@ -152,13 +155,18 @@ def test_pilot_a_tampered_payload_or_hmac_rejected_and_idempotency_deduplicated(
         workflow.approve_and_send(card, token=flipped_token, idempotency_key="idem_flipped")
     assert len(workflow.zalo_connector.dispatched) == 0
 
-    # First valid approval succeeds
+    # First valid approval succeeds and updates run status to COMPLETED
     first = workflow.approve_and_send(card, idempotency_key="idem_pilot_01")
     assert first["status"] == "completed"
+    stored_run = workflow.state.get_run(card.run_id)
+    assert stored_run is not None and stored_run["status"].value == "completed"
 
-    # Second call with a fresh token but same idempotency_key deduplicates without second dispatch
-    fresh_token = workflow.engine.approval_engine.issue_token(card.run_id, card.action_payload)
-    workflow.state.save_approval(fresh_token)
-    second = workflow.approve_and_send(card, token=fresh_token, idempotency_key="idem_pilot_01")
-    assert second["status"] == "deduplicated"
+    # A second call with a fresh token but same idempotency_key deduplicates without second dispatch
+    extra_token = workflow.engine.approval_engine.issue_token(card.run_id, card.action_payload)
+    unconsumed_clone = replace(extra_token)
+    assert workflow.approve_and_send(card, token=extra_token, idempotency_key="idem_pilot_01")["status"] == "deduplicated"
+
+    # An unconsumed clone of a token whose durable row is already consumed is rejected by the store
+    with pytest.raises(ApprovalSecurityError, match="already been consumed"):
+        workflow.approve_and_send(card, token=unconsumed_clone, idempotency_key="idem_pilot_02")
     assert len(workflow.zalo_connector.dispatched) == 1
