@@ -1,0 +1,15 @@
+{
+  "request_id": "req_vn_sme_2026_001",
+  "client_name": "Công ty Cổ phần Thương mại Đồng Bằng",
+  "client_contact": "zalo:84901234567",
+  "project_title": "Tự động hóa Báo giá Zalo OA & Thanh toán VietQR",
+  "requested_services": [
+    "thiet_ke_website",
+    "tich_hop_zalo_vietqr"
+  ],
+  "estimated_hours": 10,
+  "currency": "VND",
+  "language": "vi",
+  "notes": "Khách hàng cần nhận báo giá và mã QR thanh toán tự động qua Zalo OA sau khi chủ doanh nghiệp phê duyệt.",
+  "attachments": []
+}

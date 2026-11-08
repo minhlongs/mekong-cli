@@ -116,6 +116,7 @@ class ApprovalToken:
     consumed: bool = False
     revoked: bool = False
     revision_notes: str = ""
+    signature: str = ""
 
 
 @dataclass(frozen=True)

@@ -151,7 +151,8 @@ class OPCEngine:
         now = int(time.time())
         self._assert_manifest_allows(payload.capability, payload.connector)
         self.approval_engine.verify_and_consume(token, payload, now=now)
-        if self.state.get_approval(token.token_id) is not None:
+        if (stored := self.state.get_approval(token.token_id)) is not None:
+            self.approval_engine.verify_and_consume(stored, payload, now=now)
             if not self.state.consume_approval_atomic(token.token_id, token.action_digest, now):
                 raise ApprovalSecurityError(f"Atomic SQLite approval lock failed for token '{token.token_id}'.")
         else:

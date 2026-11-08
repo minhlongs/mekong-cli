@@ -6,14 +6,18 @@
   "license": "MIT",
   "compatible_runtime": "mekong-runtime>=6.0",
   "workflow_id": "opc.country.vn_sme_operations",
-  "entrypoint": "src.opc.packs.vn:VnSmePack",
+  "entrypoint": "src.opc.engine:OPCEngine",
   "jurisdiction": "VN",
   "legal_references": {
     "circular": "Circular 78/2021/TT-BTC",
     "decree": "Decree 123/2020/ND-CP",
     "tax_laws": "TNCN 04/2007/QH12, TNDN 14/2008/QH12",
     "reviewed_at": "2026-10-26",
-    "maintainer": "Binh Phap Legal Ops"
+    "maintainer": "Binh Phap Legal Ops",
+    "scope_note_vi": "Gói này chỉ chuẩn bị dữ liệu nháp trước khi kế toán (pre-accounting draft): báo giá, phiếu đề xuất và mã VietQR",
+    "scope_note_en": "This pack produces pre-accounting draft artifacts only (quote, proposal, VietQR string); it does not file or certify tax documents",
+    "compliance_boundary_vi": "Mọi tờ khai thuế, hóa đơn điện tử và chứng từ kế toán phải do kế toán/DV kế toán có giấy phép thực hiện",
+    "compliance_boundary_en": "Every tax return, e-invoice and accounting voucher must be produced and certified by a licensed accountant/accounting service"
   },
   "input_schema": {
     "type": "object",
@@ -32,11 +36,24 @@
       "report_id": { "type": "string" }
     }
   },
-  "connectors": ["vietqr_billing", "zalo_oa_gateway"],
-  "credential_refs": ["VIETQR_CLIENT_SECRET", "ZALO_OA_ACCESS_TOKEN"],
-  "capabilities": ["vn.tax_compliance", "vn.zalo_notification"],
-  "permissions": ["state:read_write", "connector:vietqr_billing"],
-  "external_effects": ["send_vietqr_invoice"],
+  "connectors": ["mock_followup_draft", "zalo_oa_sandbox"],
+  "credential_refs": [],
+  "capabilities": [
+    "proposal.generate_draft",
+    "followup.create_draft",
+    "vn.vietqr_payment_draft",
+    "vn.zalo_oa_followup"
+  ],
+  "permissions": [
+    "state:read_write",
+    "connector:mock_followup_draft",
+    "connector:zalo_oa_sandbox"
+  ],
+  "external_effects": [
+    "create_followup_draft",
+    "create_vietqr_payment_draft",
+    "queue_zalo_oa_followup"
+  ],
   "approval_required": true,
   "cost_policy": {
     "mode": "honest_ledger",

@@ -52,7 +52,8 @@
     }
   },
   "connectors": [
-    "mock_followup_draft"
+    "mock_followup_draft",
+    "zalo_oa_sandbox"
   ],
   "credential_refs": [],
   "capabilities": [
@@ -61,7 +62,8 @@
   ],
   "permissions": [
     "state:read_write",
-    "connector:mock_followup_draft"
+    "connector:mock_followup_draft",
+    "connector:zalo_oa_sandbox"
   ],
   "external_effects": [
     "create_followup_draft"

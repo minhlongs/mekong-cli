@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from src.opc.approval import ApprovalSecurityError
+from src.opc.approval import ApprovalSecurityError, PayloadBoundApprovalEngine
 from src.opc.connectors.mock import MockConnector
 from src.opc.engine import OPCEngine
 from src.opc.manifest import load_pack_manifest
@@ -144,3 +144,36 @@ def test_criterion_j_budget_reservation_and_honest_unknown_usage(tmp_path: Path)
     assert usage.record_usage(rec_unknown) is False
     summary = usage.aggregate_run_costs("run_econ_01")
     assert summary["has_unknown_costs"] is True and "USD" not in summary["known_amounts"]
+
+
+def test_hmac_signature_binding_and_token_tampering(tmp_path: Path) -> None:
+    """HMAC-SHA256 binds token identity/lifecycle to payload and rejects forged or mutated tokens."""
+    engine, mock_conn, _ = _make_engine(tmp_path)
+    profile, intake = _sample_inputs()
+    run_id, _, payload = engine.generate_draft(profile, intake)
+
+    rejected = engine.approval_engine.issue_token(run_id, payload, decision=ApprovalDecision.REJECT)
+    flipped = replace(rejected, decision=ApprovalDecision.APPROVE)
+    with pytest.raises(ApprovalSecurityError, match="HMAC signature mismatch"):
+        engine.execute_approved_action(flipped, payload, idempotency_key="k_hmac_flip")
+
+    valid = engine.approval_engine.issue_token(run_id, payload)
+    for idx, tok_update in enumerate([
+        {"expires_at": valid.expires_at + 3600},
+        {"run_id": "run_other_hijacked"},
+        {"principal": "attacker_principal"},
+        {"signature": "0" * 64},
+        {"signature": ""},
+    ]):
+        mutated_tok = replace(valid, **tok_update)
+        with pytest.raises(ApprovalSecurityError, match="HMAC signature mismatch"):
+            engine.execute_approved_action(mutated_tok, payload, idempotency_key=f"k_hmac_{idx}")
+
+    forged = PayloadBoundApprovalEngine(secret_key="attacker-secret").issue_token(run_id, payload)
+    with pytest.raises(ApprovalSecurityError, match="HMAC signature mismatch"):
+        engine.execute_approved_action(forged, payload, idempotency_key="k_hmac_forged")
+
+    engine.state.save_approval(valid)
+    loaded = engine.state.get_approval(valid.token_id)
+    assert loaded is not None and loaded.signature == valid.signature and len(loaded.signature) == 64
+    assert len(mock_conn.dispatched) == 0
