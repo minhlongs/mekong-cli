@@ -290,6 +290,18 @@
         ],
         "verdict": "pending",
         "note": "Vietnamese legal-compliance closure: jurisdiction gating on the crypto rail, draft-only e-invoicing without a licensed TVAN, and real DSAR erasure. No new top-level CLI command group; dna/command-surface.json unchanged."
+      },
+      {
+        "pr": 143,
+        "branch": "feat/opc-production-callers-and-fourth-doors",
+        "feature_surface_changes": [
+          "src/opc/engine.py — enforce QuarantineFloor.guard_proposal_input() inside OPCEngine.generate_draft() before quote draft creation, state persistence, or usage recording",
+          "src/core/promise/service.py — enforce PayloadBoundApprovalEngine.verify_and_consume() HMAC-SHA256 verification inside PromiseRunService._require_approval() and invoke _require_approval() on the decide_approval(decision='approve') path before resuming job execution",
+          "src/cli/commands/opc_command.py — add quarantine, pilot-a, and bench subcommands under mekong opc; resolve run pack_id and register ZaloSandboxConnector in mekong opc decide while preserving proposal_draft and action_payload in SQLite state",
+          "src/core/cli_domain_handlers.py — wire _handle_opc to discover packs from src/opc/packs and dispatch list_packs, quarantine, pilot_a, and bench actions"
+        ],
+        "verdict": "reviewed",
+        "note": "Issue #142 OPC production-caller and fourth-door closure for QuarantineFloor, HMAC approval verification, PilotAWorkflow, and MekongBenchRunner; top-level command surface unchanged (opc group grandfathered in dna/command-surface.json, 189 CLI groups preserved)."
       }
     ]
   }
