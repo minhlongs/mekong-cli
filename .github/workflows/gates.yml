@@ -73,6 +73,18 @@ jobs:
             tests/test_durian_grab_honest_diagnosis.py \
             tests/test_github_content_25_step_sync.py \
             tests/test_dashboard_opencore_sync.py \
+            tests/test_opc_platform_contract.py \
+            tests/test_opc_production_callers.py \
+            tests/test_opc_approval_security.py \
+            tests/test_quarantine_floor.py \
+            tests/test_pilot_a_e2e.py \
+            tests/test_mekong_bench.py \
+            tests/test_promise_spine_wave1.py \
+            tests/test_promise_finance_ops.py \
+            tests/test_promise_opc_zalo_ops.py \
+            tests/test_product_promise_fullstack.py \
+            tests/test_core_dna.py \
+            tests/test_core_dna_workflow.py \
             -v --tb=short
         env:
           PYTHONPATH: ${{ github.workspace }}
