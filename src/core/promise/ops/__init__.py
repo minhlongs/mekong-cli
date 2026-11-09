@@ -17,6 +17,9 @@ Wave 2 (delivered): OPC business packs and Zalo Official Account operations.
 Wave 3 (delivered): C-Suite & Business Operations (founder, marketing, sales,
 cto, ops, billing) and Vietnamese Legal & Statutory Operations (corporate,
 labor, contract).
+Wave 4 (delivered): Department & C-Suite Operations (build, code, support,
+collab, memory, recall, benchmark, eval-agent, company, cfo, cmo, cso) and
+Vietnamese Digital, E-Commerce & IP Legal Operations (privacy, ecom, ip).
 """
 
 from __future__ import annotations
@@ -24,7 +27,9 @@ from __future__ import annotations
 from src.core.promise import checks_finance as _checks_finance  # noqa: F401  (registers finance checks)
 from src.core.promise.contracts import REGISTRY
 from src.core.promise.ops.csuite_bizops_vn import CSUITE_BIZOPS_OPERATIONS
+from src.core.promise.ops.departments_wave4_vn import DEPARTMENTS_WAVE4_OPERATIONS
 from src.core.promise.ops.finance_vn import FINANCE_OPERATIONS
+from src.core.promise.ops.legal_digital_vn import LEGAL_DIGITAL_VN_OPERATIONS
 from src.core.promise.ops.legal_vn import LEGAL_VN_OPERATIONS
 from src.core.promise.ops.opc_zalo_vn import OPC_ZALO_OPERATIONS
 
@@ -32,17 +37,23 @@ REGISTRY.register_all(FINANCE_OPERATIONS)
 REGISTRY.register_all(OPC_ZALO_OPERATIONS)
 REGISTRY.register_all(CSUITE_BIZOPS_OPERATIONS)
 REGISTRY.register_all(LEGAL_VN_OPERATIONS)
+REGISTRY.register_all(DEPARTMENTS_WAVE4_OPERATIONS)
+REGISTRY.register_all(LEGAL_DIGITAL_VN_OPERATIONS)
 
 WAVES: tuple[str, ...] = (
-    "finance_vn",        # thue, ke-toan, bhxh, payroll, vietqr, adminsanction, taxadmin
-    "opc_zalo_vn",       # opc, zalo-oa
-    "csuite_bizops_vn",  # founder, marketing, sales, cto, ops, billing
-    "legal_vn",          # corporate, labor, contract
+    "finance_vn",            # thue, ke-toan, bhxh, payroll, vietqr, adminsanction, taxadmin
+    "opc_zalo_vn",           # opc, zalo-oa
+    "csuite_bizops_vn",      # founder, marketing, sales, cto, ops, billing
+    "legal_vn",              # corporate, labor, contract
+    "departments_wave4_vn",  # build, code, support, collab, memory, recall, benchmark, eval-agent, company, cfo, cmo, cso
+    "legal_digital_vn",      # privacy, ecom, ip
 )
 
 __all__ = [
     "CSUITE_BIZOPS_OPERATIONS",
+    "DEPARTMENTS_WAVE4_OPERATIONS",
     "FINANCE_OPERATIONS",
+    "LEGAL_DIGITAL_VN_OPERATIONS",
     "LEGAL_VN_OPERATIONS",
     "OPC_ZALO_OPERATIONS",
     "REGISTRY",

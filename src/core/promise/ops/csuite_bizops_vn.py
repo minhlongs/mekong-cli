@@ -349,7 +349,10 @@ SALES_OPS: tuple[OperationSpec, ...] = (
                 },
             ),
             Postcondition("enum_member", {"path": "stage", "allowed": ["won"]}),
-            Postcondition("record_persisted", {"table": "deals", "id_path": "deal_id"}),
+            Postcondition(
+                "record_persisted",
+                {"table": "deals", "id_path": "deal_id", "id_column": "id"},
+            ),
         ),
         sop_steps=("close-deal-won", "generate-onboarding", "record-client-acceptance"),
         department_id="sales-revenue",
@@ -522,7 +525,10 @@ OPS_OPS: tuple[OperationSpec, ...] = (
                 {"path": "overall_status", "allowed": ["HEALTHY", "DEGRADED", "CRITICAL"]},
             ),
             Postcondition("value_bounds", {"path": "score", "min": 0, "max": 100}),
-            Postcondition("record_persisted", {"table": "health_sweeps", "id_path": "sweep_id"}),
+            Postcondition(
+                "record_persisted",
+                {"table": "health_sweeps", "id_path": "sweep_id", "id_column": "id"},
+            ),
         ),
         sop_steps=("probe-runtime", "verify-sqlite-integrity", "score-health", "persist-sweep"),
         department_id="reliability-ops",
@@ -689,7 +695,7 @@ BILLING_OPS: tuple[OperationSpec, ...] = (
             Postcondition("enum_member", {"path": "status", "allowed": ["clean", "variance_detected"]}),
             Postcondition(
                 "record_persisted",
-                {"table": "reconciliations", "id_path": "reconciliation_id"},
+                {"table": "reconciliations", "id_path": "reconciliation_id", "id_column": "id"},
             ),
         ),
         sop_steps=("aggregate-usage", "detect-anomalies", "persist-reconciliation"),

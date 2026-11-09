@@ -215,13 +215,25 @@ def check_enum_member(ctx: CheckContext, params: dict[str, typing.Any]) -> Check
     return CheckResult("enum_member", "PASSED", f"{path}='{actual}' is a legal value")
 
 
+_SQL_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
 def check_record_persisted(ctx: CheckContext, params: dict[str, typing.Any]) -> CheckResult:
     """Prove the write really landed in the engine's own database."""
     db_path = params.get("db_path") or ctx.engine_db_path
     if not db_path:
         return CheckResult("record_persisted", "FAILED", "no database path available for the engine")
     table = str(params.get("table", ""))
-    match = _resolve_placeholders(dict(params.get("match", {})), ctx)
+    if not _SQL_IDENT_RE.match(table):
+        return CheckResult("record_persisted", "FAILED", f"invalid table identifier '{table}'")
+    raw_match = dict(params.get("match", {}))
+    if not raw_match and params.get("id_path"):
+        col = str(params.get("id_column") or params.get("id_path"))
+        raw_match = {col: f"{{result.{params['id_path']}}}"}
+    for col in raw_match:
+        if not _SQL_IDENT_RE.match(str(col)):
+            return CheckResult("record_persisted", "FAILED", f"invalid column identifier '{col}'")
+    match = _resolve_placeholders(raw_match, ctx)
     path = pathlib.Path(str(db_path))
     if not path.exists():
         return CheckResult("record_persisted", "FAILED", f"engine database '{path}' does not exist")
