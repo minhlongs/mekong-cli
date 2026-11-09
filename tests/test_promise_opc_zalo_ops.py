@@ -71,10 +71,10 @@ def assert_passed(outcome, *names):
 
 
 def test_capabilities_report_9_executable_commands_and_27_operations(service):
-    """Capabilities ledger marks both opc and zalo-oa as EXECUTABLE alongside Wave 1–4 ops."""
+    """Capabilities ledger marks both opc and zalo-oa as EXECUTABLE alongside Wave 1–5 ops."""
     caps = service.capabilities(FOUNDER)
-    assert caps["executable_commands"] == 33
-    assert caps["executable_operations"] == 78
+    assert caps["executable_commands"] == 51
+    assert caps["executable_operations"] == 114
     by_id = {c["name"]: c for c in caps["items"]}
     assert by_id["opc"]["execution_status"] == "EXECUTABLE"
     assert by_id["opc"]["operation_count"] == 3

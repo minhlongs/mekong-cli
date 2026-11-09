@@ -74,14 +74,14 @@ def assert_passed(outcome, *names):
 
 
 def test_wave4_capabilities_33_commands_78_ops_and_all_10_departments_executable(service):
-    """All 10 departments have >= 2 executable commands, totaling 33 commands and 78 operations."""
+    """All 10 departments have >= 2 executable commands, totaling 51 commands and 114 operations."""
     registry = load_default_registry()
-    assert len(registry.commands()) == 33
-    assert len(registry) == 78
+    assert len(registry.commands()) == 51
+    assert len(registry) == 114
 
     caps = service.capabilities(FOUNDER)
-    assert caps["executable_commands"] == 33
-    assert caps["executable_operations"] == 78
+    assert caps["executable_commands"] == 51
+    assert caps["executable_operations"] == 114
     by_id = {c["name"]: c for c in caps["items"]}
 
     wave4_expected = {

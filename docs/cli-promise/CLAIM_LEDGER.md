@@ -30,10 +30,10 @@ Column meanings:
 | --- | --- |
 | advertised command groups (denominator) | 197 |
 | ledger integrity valid | True |
-| commands with a bound operation | 33 |
-| advertised commands still NOT_IMPLEMENTED | 164 |
-| bound operations (`OperationSpec`) | 78 |
-| operations with an acceptance test | 78 |
+| commands with a bound operation | 51 |
+| advertised commands still NOT_IMPLEMENTED | 146 |
+| bound operations (`OperationSpec`) | 114 |
+| operations with an acceptance test | 114 |
 | clusters | 4 |
 | departments | 10 |
 | layers (L0–L5) | 6 |
@@ -43,14 +43,14 @@ Column meanings:
 
 | department | claims | executable | not implemented |
 | --- | --- | --- | --- |
-| `quality-compliance` — Quality & Compliance | 48 | 2 | 46 |
+| `quality-compliance` — Quality & Compliance | 48 | 5 | 43 |
 | `engineering-factory` — B — Autonomous SDRC / Engineering Factory | 32 | 2 | 30 |
-| `platform-operations` — Platform Operations | 24 | 2 | 22 |
-| `product-strategy` — Product & Strategy | 24 | 5 | 19 |
-| `sales-revenue` — C — Business Department Ops / Sales & Revenue | 23 | 10 | 13 |
+| `platform-operations` — Platform Operations | 24 | 5 | 19 |
+| `product-strategy` — Product & Strategy | 24 | 6 | 18 |
+| `sales-revenue` — C — Business Department Ops / Sales & Revenue | 23 | 15 | 8 |
 | `customer-success` — Customer Success | 13 | 2 | 11 |
-| `growth-marketing` — Growth & Marketing | 13 | 4 | 9 |
-| `ceo-command` — A — C-Suite Command (CEO/COO/CFO/CTO…) | 10 | 2 | 8 |
+| `growth-marketing` — Growth & Marketing | 13 | 6 | 7 |
+| `ceo-command` — A — C-Suite Command (CEO/COO/CFO/CTO…) | 10 | 6 | 4 |
 | `knowledge-memory` — Knowledge & Memory | 5 | 2 | 3 |
 | `market-intelligence` — Market Intelligence | 5 | 2 | 3 |
 
@@ -67,13 +67,13 @@ Column meanings:
 
 ## Per-claim binding matrix
 
-### `quality-compliance` — Quality & Compliance (48 claims, 2 executable)
+### `quality-compliance` — Quality & Compliance (48 claims, 5 executable)
 
 | claim_id | command | layer | gate | execution | bound operations | proof |
 | --- | --- | --- | --- | --- | --- | --- |
 | `CLAIM-BIZOPS-L2-008` | `mekong agy` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-BIZOPS-L2-104` | `mekong kit` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
-| `CLAIM-CSUITE-L2-058` | `mekong csuite` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
+| `CLAIM-CSUITE-L2-058` | `mekong csuite` | L2 | `mvp-live` | EXECUTABLE | `csuite.convene-council`<br>`csuite.ratify-directive` | `tests/test_promise_wave5_ops.py::test_csuite_convene_council_and_founder_ratified_directive`<br>`tests/test_promise_wave5_ops.py::test_csuite_convene_council_and_founder_ratified_directive` |
 | `CLAIM-CSUITE-L2-059` | `mekong cto` | L2 | `mvp-live` | EXECUTABLE | `cto.create-adr`<br>`cto.security-review` | `tests/test_promise_wave3_ops.py::test_cto_adr_and_security_review_seal_l2_and_l5_gates`<br>`tests/test_promise_wave3_ops.py::test_cto_adr_and_security_review_seal_l2_and_l5_gates` |
 | `CLAIM-SDLC-L2-010` | `mekong analyze` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-SDLC-L2-018` | `mekong autonomous` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
@@ -88,7 +88,7 @@ Column meanings:
 | `CLAIM-VN_STATUTORY-L2-001` | `mekong adminlaw` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L2-002` | `mekong adminsanction` | L2 | `mvp-live` | EXECUTABLE | `adminsanction.calculate-fine`<br>`adminsanction.record-case`<br>`adminsanction.statute-of-limitations` | `tests/test_promise_finance_ops.py::test_adminsanction_fine_respects_frame`<br>`tests/test_promise_finance_ops.py::test_adminsanction_record_case_persists`<br>`tests/test_promise_finance_ops.py::test_adminsanction_limitation_period` |
 | `CLAIM-VN_STATUTORY-L2-003` | `mekong admiralty` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
-| `CLAIM-VN_STATUTORY-L2-009` | `mekong aml` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
+| `CLAIM-VN_STATUTORY-L2-009` | `mekong aml` | L2 | `mvp-live` | EXECUTABLE | `aml.file-str-report`<br>`aml.perform-cdd` | `tests/test_promise_wave5_ops.py::test_aml_perform_cdd_and_founder_confirmed_str_filing`<br>`tests/test_promise_wave5_ops.py::test_aml_perform_cdd_and_founder_confirmed_str_filing` |
 | `CLAIM-VN_STATUTORY-L2-011` | `mekong anticorruption` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L2-012` | `mekong antiterrorism` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L2-013` | `mekong arbitration` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
@@ -100,7 +100,7 @@ Column meanings:
 | `CLAIM-VN_STATUTORY-L2-038` | `mekong civildefense` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L2-041` | `mekong coastguard` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L2-055` | `mekong court` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
-| `CLAIM-VN_STATUTORY-L2-060` | `mekong customs` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
+| `CLAIM-VN_STATUTORY-L2-060` | `mekong customs` | L2 | `mvp-live` | EXECUTABLE | `customs.create-declaration`<br>`customs.verify-origin-co` | `tests/test_promise_wave5_ops.py::test_customs_create_declaration_and_verify_origin_co`<br>`tests/test_promise_wave5_ops.py::test_customs_create_declaration_and_verify_origin_co` |
 | `CLAIM-VN_STATUTORY-L2-063` | `mekong defense` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L2-072` | `mekong enforcement` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L2-081` | `mekong forensic` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
@@ -157,14 +157,14 @@ Column meanings:
 | `CLAIM-VN_STATUTORY-L2-192` | `mekong water` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L2-193` | `mekong waterway` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 
-### `platform-operations` — Platform Operations (24 claims, 2 executable)
+### `platform-operations` — Platform Operations (24 claims, 5 executable)
 
 | claim_id | command | layer | gate | execution | bound operations | proof |
 | --- | --- | --- | --- | --- | --- | --- |
 | `CLAIM-BIZOPS-L2-111` | `mekong marketplace` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-BIZOPS-L2-124` | `mekong ops` | L2 | `mvp-live` | EXECUTABLE | `ops.create-incident`<br>`ops.health-sweep` | `tests/test_promise_wave3_ops.py::test_ops_health_sweep_and_incident_persist_to_workspace_db`<br>`tests/test_promise_wave3_ops.py::test_ops_health_sweep_and_incident_persist_to_workspace_db` |
 | `CLAIM-BIZOPS-L2-134` | `mekong plugin` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
-| `CLAIM-BIZOPS-L2-188` | `mekong vendor` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
+| `CLAIM-BIZOPS-L2-188` | `mekong vendor` | L2 | `mvp-live` | EXECUTABLE | `vendor.audit-partner`<br>`vendor.onboard-partner` | `tests/test_promise_wave5_ops.py::test_vendor_onboard_and_security_audit_partner`<br>`tests/test_promise_wave5_ops.py::test_vendor_onboard_and_security_audit_partner` |
 | `CLAIM-SDLC-L2-064` | `mekong deploy` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-SDLC-L2-084` | `mekong gateway` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-SDLC-L2-117` | `mekong metrics` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
@@ -177,8 +177,8 @@ Column meanings:
 | `CLAIM-SDLC-L2-177` | `mekong telemetry` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-SDLC-L2-191` | `mekong watch` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-SDLC-L2-195` | `mekong worktree` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
-| `CLAIM-VN_STATUTORY-L2-061` | `mekong cyber` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
-| `CLAIM-VN_STATUTORY-L2-075` | `mekong etransaction` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
+| `CLAIM-VN_STATUTORY-L2-061` | `mekong cyber` | L2 | `mvp-live` | EXECUTABLE | `cyber.assess-system-level`<br>`cyber.audit-data-localization` | `tests/test_promise_wave5_ops.py::test_cyber_assess_system_level_and_audit_data_localization`<br>`tests/test_promise_wave5_ops.py::test_cyber_assess_system_level_and_audit_data_localization` |
+| `CLAIM-VN_STATUTORY-L2-075` | `mekong etransaction` | L2 | `mvp-live` | EXECUTABLE | `etransaction.certify-ceca`<br>`etransaction.create-contract` | `tests/test_promise_wave5_ops.py::test_etransaction_create_and_ceca_certify_contract`<br>`tests/test_promise_wave5_ops.py::test_etransaction_create_and_ceca_certify_contract` |
 | `CLAIM-VN_STATUTORY-L2-085` | `mekong geodesy` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L2-092` | `mekong hitech` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L2-139` | `mekong privacy` | L2 | `mvp-live` | EXECUTABLE | `privacy.assess-dpia`<br>`privacy.process-dsar` | `tests/test_promise_wave4_ops.py::test_wave4b_privacy_dpia_and_founder_gated_dsar`<br>`tests/test_promise_wave4_ops.py::test_wave4b_privacy_dpia_and_founder_gated_dsar` |
@@ -186,7 +186,7 @@ Column meanings:
 | `CLAIM-VN_STATUTORY-L2-164` | `mekong standards` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L2-175` | `mekong telecom` | L2 | `mvp-live` | **NOT_IMPLEMENTED** | — | — |
 
-### `product-strategy` — Product & Strategy (24 claims, 5 executable)
+### `product-strategy` — Product & Strategy (24 claims, 6 executable)
 
 | claim_id | command | layer | gate | execution | bound operations | proof |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -205,7 +205,7 @@ Column meanings:
 | `CLAIM-VN_STATUTORY-L1-049` | `mekong consumer` | L1 | `offer-validated` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L1-051` | `mekong contract` | L1 | `offer-validated` | EXECUTABLE | `contract.draft`<br>`contract.review`<br>`contract.sign` | `tests/test_promise_wave3_ops.py::test_contract_draft_review_and_founder_gated_signature`<br>`tests/test_promise_wave3_ops.py::test_contract_draft_review_and_founder_gated_signature`<br>`tests/test_promise_wave3_ops.py::test_contract_draft_review_and_founder_gated_signature` |
 | `CLAIM-VN_STATUTORY-L1-054` | `mekong corporate` | L1 | `offer-validated` | EXECUTABLE | `corporate.generate-charter`<br>`corporate.generate-resolution`<br>`corporate.incorporate` | `tests/test_promise_wave3_ops.py::test_corporate_charter_resolution_and_incorporation_persist`<br>`tests/test_promise_wave3_ops.py::test_corporate_charter_resolution_and_incorporation_persist`<br>`tests/test_promise_wave3_ops.py::test_corporate_charter_resolution_and_incorporation_persist` |
-| `CLAIM-VN_STATUTORY-L1-077` | `mekong fdi` | L1 | `offer-validated` | **NOT_IMPLEMENTED** | — | — |
+| `CLAIM-VN_STATUTORY-L1-077` | `mekong fdi` | L1 | `offer-validated` | EXECUTABLE | `fdi.evaluate-foreign-loan`<br>`fdi.generate-irc-dossier` | `tests/test_promise_wave5_ops.py::test_fdi_generate_irc_dossier_and_evaluate_foreign_loan`<br>`tests/test_promise_wave5_ops.py::test_fdi_generate_irc_dossier_and_evaluate_foreign_loan` |
 | `CLAIM-VN_STATUTORY-L1-095` | `mekong immigration` | L1 | `offer-validated` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L1-097` | `mekong inheritance` | L1 | `offer-validated` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L1-100` | `mekong ip` | L1 | `offer-validated` | EXECUTABLE | `ip.assess-trademark`<br>`ip.register-copyright` | `tests/test_promise_wave4_ops.py::test_wave4b_ip_trademark_and_software_copyright`<br>`tests/test_promise_wave4_ops.py::test_wave4b_ip_trademark_and_software_copyright` |
@@ -215,20 +215,20 @@ Column meanings:
 | `CLAIM-VN_STATUTORY-L1-142` | `mekong pubinvestment` | L1 | `offer-validated` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L1-178` | `mekong tender` | L1 | `offer-validated` | **NOT_IMPLEMENTED** | — | — |
 
-### `sales-revenue` — C — Business Department Ops / Sales & Revenue (23 claims, 10 executable)
+### `sales-revenue` — C — Business Department Ops / Sales & Revenue (23 claims, 15 executable)
 
 | claim_id | command | layer | gate | execution | bound operations | proof |
 | --- | --- | --- | --- | --- | --- | --- |
 | `CLAIM-BIZOPS-L3-025` | `mekong billing` | L3 | `first-revenue` | EXECUTABLE | `billing.reconcile-usage`<br>`billing.record-usage` | `tests/test_promise_wave3_ops.py::test_billing_record_and_reconcile_usage_persist_to_workspace_db`<br>`tests/test_promise_wave3_ops.py::test_billing_record_and_reconcile_usage_persist_to_workspace_db` |
-| `CLAIM-BIZOPS-L3-048` | `mekong consulting` | L3 | `first-revenue` | **NOT_IMPLEMENTED** | — | — |
-| `CLAIM-BIZOPS-L3-153` | `mekong revenue` | L3 | `first-revenue` | **NOT_IMPLEMENTED** | — | — |
+| `CLAIM-BIZOPS-L3-048` | `mekong consulting` | L3 | `first-revenue` | EXECUTABLE | `consulting.create-engagement`<br>`consulting.generate-proposal` | `tests/test_promise_wave5_ops.py::test_consulting_create_engagement_and_generate_proposal`<br>`tests/test_promise_wave5_ops.py::test_consulting_create_engagement_and_generate_proposal` |
+| `CLAIM-BIZOPS-L3-153` | `mekong revenue` | L3 | `first-revenue` | EXECUTABLE | `revenue.reconcile-mrr`<br>`revenue.record-subscription` | `tests/test_promise_wave5_ops.py::test_revenue_record_subscription_and_reconcile_mrr`<br>`tests/test_promise_wave5_ops.py::test_revenue_record_subscription_and_reconcile_mrr` |
 | `CLAIM-BIZOPS-L3-155` | `mekong sales` | L3 | `first-revenue` | EXECUTABLE | `sales.add-deal`<br>`sales.close-deal` | `tests/test_promise_wave3_ops.py::test_sales_add_and_close_deal_seal_l4_fulfillment_gate`<br>`tests/test_promise_wave3_ops.py::test_sales_add_and_close_deal_seal_l4_fulfillment_gate` |
-| `CLAIM-BIZOPS-L3-187` | `mekong usage` | L3 | `first-revenue` | **NOT_IMPLEMENTED** | — | — |
+| `CLAIM-BIZOPS-L3-187` | `mekong usage` | L3 | `first-revenue` | EXECUTABLE | `usage.enforce-quota-cap`<br>`usage.meter-consumption` | `tests/test_promise_wave5_ops.py::test_usage_meter_consumption_and_founder_enforced_quota_cap`<br>`tests/test_promise_wave5_ops.py::test_usage_meter_consumption_and_founder_enforced_quota_cap` |
 | `CLAIM-CSUITE-L3-033` | `mekong cfo` | L3 | `first-revenue` | EXECUTABLE | `cfo.approve-budget`<br>`cfo.forecast-runway` | `tests/test_promise_wave4_ops.py::test_wave4a_csuite_company_cfo_cmo_cso_ops`<br>`tests/test_promise_wave4_ops.py::test_wave4a_csuite_company_cfo_cmo_cso_ops` |
 | `CLAIM-CSUITE-L3-057` | `mekong cso` | L3 | `first-revenue` | EXECUTABLE | `cso.qualify-lead`<br>`cso.review-pipeline` | `tests/test_promise_wave4_ops.py::test_wave4a_csuite_company_cfo_cmo_cso_ops`<br>`tests/test_promise_wave4_ops.py::test_wave4a_csuite_company_cfo_cmo_cso_ops` |
-| `CLAIM-CSUITE-L3-197` | `mekong zenpay` | L3 | `first-revenue` | **NOT_IMPLEMENTED** | — | — |
+| `CLAIM-CSUITE-L3-197` | `mekong zenpay` | L3 | `first-revenue` | EXECUTABLE | `zenpay.allocate-budget`<br>`zenpay.settle-disbursement` | `tests/test_promise_wave5_ops.py::test_zenpay_allocate_budget_and_founder_settled_disbursement`<br>`tests/test_promise_wave5_ops.py::test_zenpay_allocate_budget_and_founder_settled_disbursement` |
 | `CLAIM-VN_STATUTORY-L3-016` | `mekong audit` | L3 | `first-revenue` | **NOT_IMPLEMENTED** | — | — |
-| `CLAIM-VN_STATUTORY-L3-021` | `mekong banking` | L3 | `first-revenue` | **NOT_IMPLEMENTED** | — | — |
+| `CLAIM-VN_STATUTORY-L3-021` | `mekong banking` | L3 | `first-revenue` | EXECUTABLE | `banking.audit-capital-adequacy`<br>`banking.classify-credit-debt` | `tests/test_promise_wave5_ops.py::test_banking_audit_car_and_classify_credit_debt`<br>`tests/test_promise_wave5_ops.py::test_banking_audit_car_and_classify_credit_debt` |
 | `CLAIM-VN_STATUTORY-L3-024` | `mekong bhxh` | L3 | `first-revenue` | EXECUTABLE | `bhxh.add-employee`<br>`bhxh.calculate`<br>`bhxh.declaration-d02lt` | `tests/test_promise_finance_ops.py::test_bhxh_add_employee_returns_stored_id`<br>`tests/test_promise_finance_ops.py::test_bhxh_contribution_uses_period_ceiling`<br>`tests/test_promise_finance_ops.py::test_bhxh_d02lt_rejects_unknown_employee` |
 | `CLAIM-VN_STATUTORY-L3-099` | `mekong insurance` | L3 | `first-revenue` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L3-103` | `mekong ke-toan` | L3 | `first-revenue` | EXECUTABLE | `ke-toan.create-invoice`<br>`ke-toan.journal` | `tests/test_promise_finance_ops.py::test_ke_toan_invoice_is_persisted_and_structured`<br>`tests/test_promise_finance_ops.py::test_ke_toan_journal_balances` |
@@ -261,12 +261,12 @@ Column meanings:
 | `CLAIM-VN_STATUTORY-L4-131` | `mekong pharma` | L4 | `fulfillment-stable` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L4-189` | `mekong veterinary` | L4 | `fulfillment-stable` | **NOT_IMPLEMENTED** | — | — |
 
-### `growth-marketing` — Growth & Marketing (13 claims, 4 executable)
+### `growth-marketing` — Growth & Marketing (13 claims, 6 executable)
 
 | claim_id | command | layer | gate | execution | bound operations | proof |
 | --- | --- | --- | --- | --- | --- | --- |
-| `CLAIM-BIZOPS-L3-050` | `mekong content` | L3 | `repeatable-channel` | **NOT_IMPLEMENTED** | — | — |
-| `CLAIM-BIZOPS-L3-053` | `mekong copywriting` | L3 | `repeatable-channel` | **NOT_IMPLEMENTED** | — | — |
+| `CLAIM-BIZOPS-L3-050` | `mekong content` | L3 | `repeatable-channel` | EXECUTABLE | `content.produce-asset`<br>`content.schedule-publication` | `tests/test_promise_wave5_ops.py::test_content_produce_asset_and_schedule_publication`<br>`tests/test_promise_wave5_ops.py::test_content_produce_asset_and_schedule_publication` |
+| `CLAIM-BIZOPS-L3-053` | `mekong copywriting` | L3 | `repeatable-channel` | EXECUTABLE | `copywriting.audit-conversion-copy`<br>`copywriting.generate-campaign-copy` | `tests/test_promise_wave5_ops.py::test_copywriting_generate_and_audit_conversion_copy`<br>`tests/test_promise_wave5_ops.py::test_copywriting_generate_and_audit_conversion_copy` |
 | `CLAIM-BIZOPS-L3-110` | `mekong marketing` | L3 | `repeatable-channel` | EXECUTABLE | `marketing.create-campaign`<br>`marketing.seo-audit` | `tests/test_promise_wave3_ops.py::test_marketing_campaign_and_seo_audit_seal_l1_and_repeatable_channel_gates`<br>`tests/test_promise_wave3_ops.py::test_marketing_campaign_and_seo_audit_seal_l1_and_repeatable_channel_gates` |
 | `CLAIM-BIZOPS-L3-176` | `mekong telegram` | L3 | `repeatable-channel` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-CSUITE-L3-040` | `mekong cmo` | L3 | `repeatable-channel` | EXECUTABLE | `cmo.audit-channel-cac`<br>`cmo.plan-funnel` | `tests/test_promise_wave4_ops.py::test_wave4a_csuite_company_cfo_cmo_cso_ops`<br>`tests/test_promise_wave4_ops.py::test_wave4a_csuite_company_cfo_cmo_cso_ops` |
@@ -279,16 +279,16 @@ Column meanings:
 | `CLAIM-VN_STATUTORY-L3-182` | `mekong tourism` | L3 | `repeatable-channel` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-VN_STATUTORY-L3-196` | `mekong zalo-oa` | L3 | `repeatable-channel` | EXECUTABLE | `zalo-oa.add-follower`<br>`zalo-oa.broadcast`<br>`zalo-oa.generate-caption`<br>`zalo-oa.send-message` | `tests/test_promise_opc_zalo_ops.py::test_zalo_add_follower_and_generate_caption_persist_to_workspace_db`<br>`tests/test_promise_opc_zalo_ops.py::test_zalo_send_message_and_broadcast_require_approval_and_persist`<br>`tests/test_promise_opc_zalo_ops.py::test_zalo_add_follower_and_generate_caption_persist_to_workspace_db`<br>`tests/test_promise_opc_zalo_ops.py::test_zalo_send_message_and_broadcast_require_approval_and_persist` |
 
-### `ceo-command` — A — C-Suite Command (CEO/COO/CFO/CTO…) (10 claims, 2 executable)
+### `ceo-command` — A — C-Suite Command (CEO/COO/CFO/CTO…) (10 claims, 6 executable)
 
 | claim_id | command | layer | gate | execution | bound operations | proof |
 | --- | --- | --- | --- | --- | --- | --- |
-| `CLAIM-CSUITE-L0-026` | `mekong binh-phap` | L0 | `company-blueprint` | **NOT_IMPLEMENTED** | — | — |
+| `CLAIM-CSUITE-L0-026` | `mekong binh-phap` | L0 | `company-blueprint` | EXECUTABLE | `binh-phap.assess-terrain`<br>`binh-phap.commit-maneuver` | `tests/test_promise_wave5_ops.py::test_binh_phap_assess_terrain_and_founder_committed_maneuver`<br>`tests/test_promise_wave5_ops.py::test_binh_phap_assess_terrain_and_founder_committed_maneuver` |
 | `CLAIM-CSUITE-L0-044` | `mekong company` | L0 | `company-blueprint` | EXECUTABLE | `company.audit-readiness`<br>`company.init-blueprint` | `tests/test_promise_wave4_ops.py::test_wave4a_csuite_company_cfo_cmo_cso_ops`<br>`tests/test_promise_wave4_ops.py::test_wave4a_csuite_company_cfo_cmo_cso_ops` |
 | `CLAIM-CSUITE-L0-083` | `mekong founder` | L0 | `company-blueprint` | EXECUTABLE | `founder.analyze-profile`<br>`founder.assess-profile` | `tests/test_promise_wave3_ops.py::test_founder_assess_and_analyze_profile_seal_l0_gate`<br>`tests/test_promise_wave3_ops.py::test_founder_assess_and_analyze_profile_seal_l0_gate` |
-| `CLAIM-CSUITE-L0-086` | `mekong goal` | L0 | `company-blueprint` | **NOT_IMPLEMENTED** | — | — |
-| `CLAIM-CSUITE-L0-087` | `mekong governance` | L0 | `company-blueprint` | **NOT_IMPLEMENTED** | — | — |
-| `CLAIM-CSUITE-L0-093` | `mekong idea` | L0 | `company-blueprint` | **NOT_IMPLEMENTED** | — | — |
+| `CLAIM-CSUITE-L0-086` | `mekong goal` | L0 | `company-blueprint` | EXECUTABLE | `goal.decompose-mission`<br>`goal.lock-quarterly-targets` | `tests/test_promise_wave5_ops.py::test_goal_decompose_mission_and_founder_locked_targets`<br>`tests/test_promise_wave5_ops.py::test_goal_decompose_mission_and_founder_locked_targets` |
+| `CLAIM-CSUITE-L0-087` | `mekong governance` | L0 | `company-blueprint` | EXECUTABLE | `governance.propose-amendment`<br>`governance.tally-ballot` | `tests/test_promise_wave5_ops.py::test_governance_propose_amendment_and_ballot_tally`<br>`tests/test_promise_wave5_ops.py::test_governance_propose_amendment_and_ballot_tally` |
+| `CLAIM-CSUITE-L0-093` | `mekong idea` | L0 | `company-blueprint` | EXECUTABLE | `idea.approve-charter`<br>`idea.synthesize-blueprint` | `tests/test_promise_wave5_ops.py::test_idea_synthesize_blueprint_and_founder_gated_charter`<br>`tests/test_promise_wave5_ops.py::test_idea_synthesize_blueprint_and_founder_gated_charter` |
 | `CLAIM-SDLC-L0-028` | `mekong bootstrap` | L0 | `company-blueprint` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-SDLC-L0-062` | `mekong daily` | L0 | `company-blueprint` | **NOT_IMPLEMENTED** | — | — |
 | `CLAIM-SDLC-L0-098` | `mekong init` | L0 | `company-blueprint` | **NOT_IMPLEMENTED** | — | — |
@@ -321,27 +321,25 @@ These claims stay in the denominator. Each one is answered at runtime with
 needs an `OperationSpec` (schema, handler, effects, postconditions, proof test)
 before it may be counted as delivered.
 
-- `adminlaw`, `admiralty`, `adoption`, `advertising`, `agent`, `agi`, `agy`, `aml`
-- `analyze`, `anticorruption`, `antiterrorism`, `arbitration`, `archives`, `auction`, `audit`, `automotive`
-- `autonomous`, `aviation`, `bailiff`, `banking`, `bankruptcy`, `binh-phap`, `bmad`, `bootstrap`
-- `borderguard`, `browse`, `cell`, `chemical`, `cinema`, `cipher`, `civil-status`, `civildefense`
-- `civilstatus`, `coastguard`, `competition`, `consensus`, `construction`, `consulting`, `consumer`, `content`
-- `cook`, `copywriting`, `court`, `crop`, `csuite`, `customs`, `cyber`, `daily`
-- `defense`, `deploy`, `design`, `dev`, `disaster`, `doctor`, `education`, `energy`
-- `enforcement`, `environment`, `esg`, `etransaction`, `fdi`, `fire`, `fishery`, `food`
-- `forensic`, `forestry`, `gateway`, `geodesy`, `goal`, `governance`, `graph`, `guardianship`
-- `harness-eval`, `heritage`, `hitech`, `idea`, `identity`, `immigration`, `implement`, `inheritance`
-- `init`, `insurance`, `judicialassist`, `judicialrecord`, `kit`, `lawyer`, `legalaid`, `livestock`
-- `maritime`, `marketplace`, `marriage`, `mediation`, `medtech`, `memory-mesh`, `metrics`, `mining`
-- `nationality`, `nationalreserve`, `notary`, `ocop`, `package`, `palette`, `particle`, `petrol`
-- `pev`, `pharma`, `pipeline`, `plan`, `plugin`, `police`, `postal`, `press`
-- `price`, `procuracy`, `prosecution`, `pubinvestment`, `publicdebt`, `publishing`, `queue`, `quick-start`
-- `radiation`, `railway`, `re`, `realestate`, `recipe`, `revenue`, `run`, `sandbox`
-- `schedule`, `securedtransactions`, `securities`, `ship`, `spec`, `specify`, `sports`, `standards`
-- `stateaudit`, `statebudget`, `statesecret`, `supplychain`, `swarm`, `system`, `tasks`, `team`
-- `telecom`, `telegram`, `telemetry`, `tender`, `tools`, `tort`, `tourism`, `traffic`
-- `transport`, `tui`, `ui`, `usage`, `vendor`, `veterinary`, `watch`, `water`
-- `waterway`, `workflow`, `worktree`, `zenpay`
+- `adminlaw`, `admiralty`, `adoption`, `advertising`, `agent`, `agi`, `agy`, `analyze`
+- `anticorruption`, `antiterrorism`, `arbitration`, `archives`, `auction`, `audit`, `automotive`, `autonomous`
+- `aviation`, `bailiff`, `bankruptcy`, `bmad`, `bootstrap`, `borderguard`, `browse`, `cell`
+- `chemical`, `cinema`, `cipher`, `civil-status`, `civildefense`, `civilstatus`, `coastguard`, `competition`
+- `consensus`, `construction`, `consumer`, `cook`, `court`, `crop`, `daily`, `defense`
+- `deploy`, `design`, `dev`, `disaster`, `doctor`, `education`, `energy`, `enforcement`
+- `environment`, `esg`, `fire`, `fishery`, `food`, `forensic`, `forestry`, `gateway`
+- `geodesy`, `graph`, `guardianship`, `harness-eval`, `heritage`, `hitech`, `identity`, `immigration`
+- `implement`, `inheritance`, `init`, `insurance`, `judicialassist`, `judicialrecord`, `kit`, `lawyer`
+- `legalaid`, `livestock`, `maritime`, `marketplace`, `marriage`, `mediation`, `medtech`, `memory-mesh`
+- `metrics`, `mining`, `nationality`, `nationalreserve`, `notary`, `ocop`, `package`, `palette`
+- `particle`, `petrol`, `pev`, `pharma`, `pipeline`, `plan`, `plugin`, `police`
+- `postal`, `press`, `price`, `procuracy`, `prosecution`, `pubinvestment`, `publicdebt`, `publishing`
+- `queue`, `quick-start`, `radiation`, `railway`, `re`, `realestate`, `recipe`, `run`
+- `sandbox`, `schedule`, `securedtransactions`, `securities`, `ship`, `spec`, `specify`, `sports`
+- `standards`, `stateaudit`, `statebudget`, `statesecret`, `supplychain`, `swarm`, `system`, `tasks`
+- `team`, `telecom`, `telegram`, `telemetry`, `tender`, `tools`, `tort`, `tourism`
+- `traffic`, `transport`, `tui`, `ui`, `veterinary`, `watch`, `water`, `waterway`
+- `workflow`, `worktree`
 
 ---
 
