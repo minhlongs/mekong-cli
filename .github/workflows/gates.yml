@@ -98,6 +98,12 @@ jobs:
       - name: Python unit tests
         run: |
           pytest tests/core/ tests/cli/ tests/seed/ tests/commands/ tests/auth/ tests/unit/ tests/daemon/ tests/vn/ \
+            tests/test_promise_spine_wave1.py \
+            tests/test_promise_finance_ops.py \
+            tests/test_promise_opc_zalo_ops.py \
+            tests/test_promise_wave3_ops.py \
+            tests/test_promise_wave4_ops.py \
+            tests/test_promise_wave5_ops.py \
             -v --tb=short \
             --cov=src \
             --cov-report=xml \
@@ -176,6 +182,12 @@ jobs:
       - name: Python coverage check
         run: |
           pytest tests/core/ tests/cli/ tests/seed/ tests/commands/ tests/auth/ tests/unit/ tests/daemon/ tests/vn/ \
+            tests/test_promise_spine_wave1.py \
+            tests/test_promise_finance_ops.py \
+            tests/test_promise_opc_zalo_ops.py \
+            tests/test_promise_wave3_ops.py \
+            tests/test_promise_wave4_ops.py \
+            tests/test_promise_wave5_ops.py \
             --cov=src \
             --cov-report=xml \
             --cov-fail-under=25 \
