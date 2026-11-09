@@ -13,21 +13,38 @@ delivered promise.
 
 Wave 1 (delivered): Vietnamese finance, tax, social insurance, payroll,
 VietQR payments, administrative sanctions and tax administration.
+Wave 2 (delivered): OPC business packs and Zalo Official Account operations.
+Wave 3 (delivered): C-Suite & Business Operations (founder, marketing, sales,
+cto, ops, billing) and Vietnamese Legal & Statutory Operations (corporate,
+labor, contract).
 """
 
 from __future__ import annotations
 
 from src.core.promise import checks_finance as _checks_finance  # noqa: F401  (registers finance checks)
 from src.core.promise.contracts import REGISTRY
+from src.core.promise.ops.csuite_bizops_vn import CSUITE_BIZOPS_OPERATIONS
 from src.core.promise.ops.finance_vn import FINANCE_OPERATIONS
+from src.core.promise.ops.legal_vn import LEGAL_VN_OPERATIONS
 from src.core.promise.ops.opc_zalo_vn import OPC_ZALO_OPERATIONS
 
 REGISTRY.register_all(FINANCE_OPERATIONS)
 REGISTRY.register_all(OPC_ZALO_OPERATIONS)
+REGISTRY.register_all(CSUITE_BIZOPS_OPERATIONS)
+REGISTRY.register_all(LEGAL_VN_OPERATIONS)
 
 WAVES: tuple[str, ...] = (
-    "finance_vn",  # thue, ke-toan, bhxh, payroll, vietqr, adminsanction, taxadmin
-    "opc_zalo_vn",  # opc, zalo-oa
+    "finance_vn",        # thue, ke-toan, bhxh, payroll, vietqr, adminsanction, taxadmin
+    "opc_zalo_vn",       # opc, zalo-oa
+    "csuite_bizops_vn",  # founder, marketing, sales, cto, ops, billing
+    "legal_vn",          # corporate, labor, contract
 )
 
-__all__ = ["FINANCE_OPERATIONS", "OPC_ZALO_OPERATIONS", "REGISTRY", "WAVES"]
+__all__ = [
+    "CSUITE_BIZOPS_OPERATIONS",
+    "FINANCE_OPERATIONS",
+    "LEGAL_VN_OPERATIONS",
+    "OPC_ZALO_OPERATIONS",
+    "REGISTRY",
+    "WAVES",
+]

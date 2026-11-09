@@ -82,6 +82,7 @@ jobs:
             tests/test_promise_spine_wave1.py \
             tests/test_promise_finance_ops.py \
             tests/test_promise_opc_zalo_ops.py \
+            tests/test_promise_wave3_ops.py \
             tests/test_product_promise_fullstack.py \
             tests/test_core_dna.py \
             tests/test_core_dna_workflow.py \

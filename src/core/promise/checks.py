@@ -131,13 +131,22 @@ def check_output_fields(ctx: CheckContext, params: dict[str, typing.Any]) -> Che
 def check_echoes_input(ctx: CheckContext, params: dict[str, typing.Any]) -> CheckResult:
     """Prove the payload was derived from *this* input (defeats canned samples)."""
     pairs = params.get("pairs") or []
-    if not pairs and params.get("result_path"):
-        pairs = [{"result_path": params["result_path"], "param_path": params.get("param_path")}]
+    result_path = params.get("result_path") or params.get("output_path")
+    param_path = params.get("param_path") or params.get("input_key")
+    if not pairs and result_path:
+        pairs = [{"result_path": result_path, "param_path": param_path}]
+    if not pairs:
+        return CheckResult(
+            "echoes_input",
+            "FAILED",
+            "echoes_input postcondition declared without pairs or result_path/param_path",
+            {"checked": 0},
+        )
     mismatches: list[dict[str, typing.Any]] = []
     checked = 0
     for pair in pairs:
-        r_path = str(pair.get("result_path", ""))
-        p_path = pair.get("param_path")
+        r_path = str(pair.get("result_path") or pair.get("output_path") or "")
+        p_path = pair.get("param_path") or pair.get("input_key")
         expected = resolve_path(ctx.params, str(p_path)) if p_path else pair.get("value")
         actual = resolve_path(ctx.result, r_path)
         checked += 1
