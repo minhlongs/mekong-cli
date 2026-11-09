@@ -73,10 +73,10 @@ def assert_passed(outcome, *names):
 
 
 def test_capabilities_report_18_executable_commands_and_48_operations(service):
-    """Capabilities ledger marks all 18 Wave 1–3 commands and 48 operations as EXECUTABLE."""
+    """Capabilities ledger marks all Wave 1–4 commands (33) and operations (78) as EXECUTABLE."""
     caps = service.capabilities(FOUNDER)
-    assert caps["executable_commands"] == 18
-    assert caps["executable_operations"] == 48
+    assert caps["executable_commands"] == 33
+    assert caps["executable_operations"] == 78
     by_id = {c["name"]: c for c in caps["items"]}
     expected_counts = {
         "founder": 2,
