@@ -84,6 +84,7 @@ jobs:
             tests/test_promise_opc_zalo_ops.py \
             tests/test_promise_wave3_ops.py \
             tests/test_promise_wave4_ops.py \
+            tests/test_promise_wave5_ops.py \
             tests/test_product_promise_fullstack.py \
             tests/test_core_dna.py \
             tests/test_core_dna_workflow.py \
