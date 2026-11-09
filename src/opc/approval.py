@@ -89,6 +89,11 @@ class PayloadBoundApprovalEngine:
         digest = compute_action_digest(payload)
         now = int(time.time())
         ttl = custom_ttl if custom_ttl is not None else self.default_ttl
+        expires_at = (
+            payload.expires_at
+            if custom_ttl is None and payload.expires_at > 0
+            else now + ttl
+        )
         token = ApprovalToken(
             token_id=f"appr_{uuid.uuid4().hex[:16]}",
             run_id=run_id,
@@ -96,7 +101,7 @@ class PayloadBoundApprovalEngine:
             principal=payload.principal,
             decision=decision,
             created_at=now,
-            expires_at=now + ttl,
+            expires_at=expires_at,
             consumed=False,
             revoked=False,
             revision_notes=revision_notes,

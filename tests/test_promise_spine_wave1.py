@@ -384,14 +384,28 @@ def test_approval_token_cannot_be_replayed(service):
     assert_completed(approved, "revenue_fact_is_verifiable")
     assert len(revenue_rows(service, WS_A)) == 1
 
-    reuse = run(service, FOUNDER, "vietqr", "reconcile_payment", {
+    reusable = run(service, FOUNDER, "vietqr", "reconcile_payment", {
         "bank_tx_id": "MB-SPINE-0002", "amount_vnd": 20_000_000, "memo": "HD SPINE 000002",
         "provider": "MBBANK", "provider_reference": "STMT-20261027-MB-00002",
         "invoice_ref": invoice_id,
     }, approval_token_id=token_id)
-    assert reuse["status"] == STATUS_FAILED
-    assert reuse["error_code"] in {"APPROVAL_REPLAY_OR_EXPIRED", "APPROVAL_PAYLOAD_MISMATCH"}
+    assert reusable["status"] == STATUS_FAILED
+    assert reusable["error_code"] in {"APPROVAL_REPLAY_OR_EXPIRED", "APPROVAL_PAYLOAD_MISMATCH"}
     assert len(revenue_rows(service, WS_A)) == 1
+
+
+def test_approval_survives_second_boundary_between_payload_and_token_issue(service, monkeypatch):
+    """A 1s clock tick between building ActionPayload and issuing ApprovalToken must not break digest verification."""
+    invoice_id = issue_invoice(service)
+    base_ts = int(time.time())
+    ticks = iter([base_ts + 0.999, base_ts + 0.999, base_ts + 1.001, base_ts + 1.001, base_ts + 1.001])
+    monkeypatch.setattr(time, "time", lambda: next(ticks, base_ts + 1.5))
+
+    paused = pause_reconciliation(service, invoice_id, bank_tx_id="MB-SPINE-BOUNDARY")
+    approved = decide(service, FOUNDER, paused)
+    assert_completed(approved, "revenue_fact_is_verifiable")
+    assert approved["receipt"]["handler_ran"] is True
+
 
 
 def test_expired_approval_token_is_refused(service):
