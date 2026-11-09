@@ -24,6 +24,7 @@ from src.opc.models import (
     UsageStage,
     WorkflowStatus,
 )
+from src.opc.quarantine import QuarantineFloor
 from src.opc.state import StateStore
 from src.opc.usage import UsageLedger
 
@@ -32,17 +33,14 @@ class OPCEngine:
     """End-to-end orchestrator for OPC business packs integrated with MekongCoreRuntimeImpl."""
 
     def __init__(
-        self,
-        pack_manifest: PackManifest,
-        state_store: StateStore,
-        usage_ledger: UsageLedger,
-        connectors: dict[str, ConnectorProtocol] | None = None,
-        capability_bus: CapabilityBus | None = None,
+        self, pack_manifest: PackManifest, state_store: StateStore, usage_ledger: UsageLedger,
+        connectors: dict[str, ConnectorProtocol] | None = None, capability_bus: CapabilityBus | None = None,
     ) -> None:
         self.manifest = pack_manifest
         self.state = state_store
         self.usage = usage_ledger
         self.approval_engine = PayloadBoundApprovalEngine()
+        self.quarantine = QuarantineFloor()
         self.connectors: dict[str, ConnectorProtocol] = connectors or {"mock_followup_draft": MockConnector()}
         self.bus = capability_bus or InMemoryCapabilityBus(Governance())
         self.register_pack_capabilities(self.bus)
@@ -87,8 +85,9 @@ class OPCEngine:
     def generate_draft(
         self, profile: BusinessProfile, intake: ProposalInput, run_id: str | None = None,
     ) -> tuple[str, ProposalDraft, ActionPayload]:
-        """Goal 1: Generate structured proposal draft and payload-bound action."""
+        """Goal 1: Quarantine untrusted intake, generate structured proposal draft and payload-bound action."""
         self._assert_manifest_allows("proposal.generate_draft")
+        self.quarantine.enforce_before_tool(self.quarantine.guard_proposal_input(intake))
         active_run_id = run_id or f"run_{uuid.uuid4().hex[:12]}"
         now = int(time.time())
         line_items: list[dict[str, Any]] = []

@@ -393,10 +393,11 @@ class PromiseRunService:
         if token is None:
             return self._fail_job(job, principal, spec, params, "APPROVAL_TOKEN_UNKNOWN",
                                   f"approval token '{approval_token_id}' does not exist")
-        payload = self._action_payload(job, spec, ttl=max(1, token.expires_at - int(_time.time())))
+        now_ts = int(_time.time())
+        payload = self._action_payload(job, spec, ttl=max(1, token.expires_at - now_ts))
         payload = dataclasses.replace(payload, expires_at=token.expires_at)
         try:
-            from src.opc.approval import compute_action_digest
+            from src.opc.approval import ApprovalSecurityError, compute_action_digest
 
             if compute_action_digest(payload) != token.action_digest:
                 raise PromiseError(
@@ -404,8 +405,22 @@ class PromiseRunService:
                     "the submitted payload no longer matches the approved payload digest",
                     http_status=409,
                 )
+            if token.consumed or token.revoked or now_ts > token.expires_at:
+                raise PromiseError(
+                    "APPROVAL_REPLAY_OR_EXPIRED",
+                    "approval token was already consumed, revoked or has expired",
+                    http_status=409,
+                )
+            try:
+                self.approvals.verify_and_consume(token, payload, now=now_ts)
+            except ApprovalSecurityError as exc:
+                raise PromiseError(
+                    "APPROVAL_SECURITY_VIOLATION",
+                    str(exc),
+                    http_status=409,
+                ) from exc
             if not self.opc_state.consume_approval_atomic(
-                approval_token_id, token.action_digest, int(_time.time())
+                approval_token_id, token.action_digest, now_ts
             ):
                 raise PromiseError(
                     "APPROVAL_REPLAY_OR_EXPIRED",
@@ -456,12 +471,18 @@ class PromiseRunService:
             return self._outcome_from_job(rejected)
 
         entry = self.ledger.resolve_command(job["command_id"]) or {}
-        self.jobs.append_event(run_id, approver.workspace_id, "APPROVAL_GRANTED",
-                               job["status"], job["status"],
-                               {"token_id": token_id, "approver": approver.principal_id})
         resumed = self.jobs.transition(run_id, approver.workspace_id, STATUS_QUEUED,
-                                       event_type="RESUMED_AFTER_APPROVAL",
-                                       detail={"approver": approver.principal_id})
+                                       event_type="APPROVAL_GRANTED",
+                                       detail={"token_id": token_id, "approver": approver.principal_id})
+        gate_failure = self._require_approval(
+            approver, resumed, spec, dict(resumed.get("params") or {}), token_id
+        )
+        if gate_failure is not None:
+            self._save_opc_run(approver, resumed, spec, status_name="FAILED")
+            return gate_failure
+        self.jobs.append_event(run_id, approver.workspace_id, "RESUMED_AFTER_APPROVAL",
+                               resumed["status"], resumed["status"],
+                               {"approver": approver.principal_id})
         self._save_opc_run(approver, resumed, spec, status_name="APPROVED")
         outcome = self._execute_job(approver, resumed, spec, entry, resumed["params"],
                                     approval_token_id=token_id)

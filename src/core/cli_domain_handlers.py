@@ -393,8 +393,51 @@ def _handle_metrics(params: dict[str, Any]) -> tuple[dict[str, Any], dict[str, A
 
 
 def _handle_opc(params: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    import dataclasses
+    import tempfile
+    from pathlib import Path
     from src.opc.manifest import PackRegistry, SUPPORTED_RUNTIMES, SUPPORTED_SCHEMA_VERSIONS
+    from src.opc.mekong_bench import MekongBenchRunner, _bench_event, _bench_profile
+    from src.opc.pilot_a import PilotAWorkflow
+    from src.opc.quarantine import QuarantineFloor
+
+    action = str(params.get("action", "list_packs")).lower()
+    if action == "quarantine":
+        floor = QuarantineFloor()
+        text = str(params.get("text", ""))
+        source = str(params.get("source", "domain:opc"))
+        return _safe(lambda: dataclasses.asdict(floor.inspect(text, source=source)), "OPC_QUARANTINE_FLOOR_VERIFIER")
+    if action == "pilot_a":
+        def _run_pilot_a() -> dict[str, Any]:
+            db_arg = params.get("db_path")
+            if db_arg:
+                wf = PilotAWorkflow(db_path=Path(str(db_arg)), profile=_bench_profile())
+                card = wf.handle_webhook(_bench_event("dom_pilot_a", str(params.get("message", "Nhờ báo giá gói tư vấn AI và VietQR 10 giờ."))))
+                dispatch_res = wf.approve_and_send(card) if bool(params.get("approve", False)) else None
+            else:
+                with tempfile.TemporaryDirectory(prefix="opc_pilot_a_") as td:
+                    wf = PilotAWorkflow(db_path=Path(td) / "pilot_a.db", profile=_bench_profile())
+                    card = wf.handle_webhook(_bench_event("dom_pilot_a", str(params.get("message", "Nhờ báo giá gói tư vấn AI và VietQR 10 giờ."))))
+                    dispatch_res = wf.approve_and_send(card) if bool(params.get("approve", False)) else None
+            return {
+                "run_id": card.run_id,
+                "total_amount_vnd": card.total_amount_vnd,
+                "currency": card.currency,
+                "vietqr_emvco": card.vietqr_emvco,
+                "dispatch": dispatch_res,
+            }
+        return _safe(_run_pilot_a, "OPC_PILOT_A_WORKFLOW_VERIFIER")
+    if action == "bench":
+        runner = MekongBenchRunner()
+        return _safe(lambda: {
+            **dataclasses.asdict(res := runner.run_all()),
+            "markdown_table": runner.format_markdown_table(res),
+        }, "OPC_MEKONG_BENCH_VERIFIER")
+
     registry = PackRegistry()
+    packs_dir = Path(__file__).resolve().parent.parent / "opc" / "packs"
+    if packs_dir.is_dir():
+        registry.discover_from_dir(packs_dir)
     return _safe(lambda: {
         "packs": registry.list_packs(),
         "supported_runtimes": sorted(list(SUPPORTED_RUNTIMES)),
