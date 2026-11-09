@@ -20,11 +20,14 @@ from __future__ import annotations
 from src.core.promise import checks_finance as _checks_finance  # noqa: F401  (registers finance checks)
 from src.core.promise.contracts import REGISTRY
 from src.core.promise.ops.finance_vn import FINANCE_OPERATIONS
+from src.core.promise.ops.opc_zalo_vn import OPC_ZALO_OPERATIONS
 
 REGISTRY.register_all(FINANCE_OPERATIONS)
+REGISTRY.register_all(OPC_ZALO_OPERATIONS)
 
 WAVES: tuple[str, ...] = (
-    "finance_vn",  # wave 1: thue, ke-toan, bhxh, payroll, vietqr, adminsanction, taxadmin
+    "finance_vn",  # thue, ke-toan, bhxh, payroll, vietqr, adminsanction, taxadmin
+    "opc_zalo_vn",  # opc, zalo-oa
 )
 
-__all__ = ["FINANCE_OPERATIONS", "REGISTRY", "WAVES"]
+__all__ = ["FINANCE_OPERATIONS", "OPC_ZALO_OPERATIONS", "REGISTRY", "WAVES"]
