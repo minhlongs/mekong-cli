@@ -297,10 +297,10 @@ class PromiseRunService:
             raise PromiseError("NO_OPERATION_BINDING", f"run '{run_id}' has no bound operation")
         payload = self._action_payload(job, spec, ttl_seconds)
         self._save_opc_run(principal, job, spec, status_name="PENDING_APPROVAL", payload=payload)
-        # ``custom_ttl`` binds the token's own expiry to the requested window:
-        # without it every approval silently lived for the engine default, so a
-        # caller asking for a five-minute window got an hour.
-        token = self.approvals.issue_token(run_id, payload, custom_ttl=ttl_seconds)
+        # Keep ``token.expires_at`` aligned with ``payload.expires_at`` so a
+        # second-boundary tick between ``_action_payload`` and ``issue_token``
+        # never invalidates ``token.action_digest`` upon ``decide_approval``.
+        token = self.approvals.issue_token(run_id, payload)
         self.opc_state.save_approval(token)
         if job["status"] == STATUS_QUEUED:
             job = self.jobs.transition(
