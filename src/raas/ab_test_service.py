@@ -172,7 +172,7 @@ class ABTestService:
             Integer hash value (0-99).
         """
         key = f"{user_id}:{experiment_name}"
-        hash_bytes = hashlib.md5(key.encode()).hexdigest()
+        hash_bytes = hashlib.md5(key.encode(), usedforsecurity=False).hexdigest()
         return int(hash_bytes[:8], 16) % 100
 
     def create_experiment(

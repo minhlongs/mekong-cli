@@ -69,8 +69,10 @@ def assert_zalo_oa_tier_allowed(oa_tier: str) -> str:
 
 
 def _stdlib_http_post(url: str, headers: dict[str, str], body: bytes, timeout_s: float) -> tuple[int, bytes]:
+    if not url.lower().startswith("https://"):
+        raise urllib.error.URLError(f"Zalo OpenAPI requires https:// scheme, got '{url}'.")
     req = urllib.request.Request(url, data=body, headers=headers, method="POST")
-    with urllib.request.urlopen(req, timeout=timeout_s) as resp:  # noqa: S310
+    with urllib.request.urlopen(req, timeout=timeout_s) as resp:  # noqa: S310  # nosec B310
         return int(resp.status), resp.read()
 
 

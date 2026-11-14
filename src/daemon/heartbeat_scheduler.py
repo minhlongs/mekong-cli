@@ -20,6 +20,7 @@ Usage:
 import asyncio
 import json
 import re
+import shlex
 import subprocess
 import logging
 import os
@@ -28,6 +29,8 @@ from pathlib import Path
 from datetime import datetime
 from dataclasses import dataclass, field
 from typing import Optional
+
+from src.core.command_sanitizer import CommandSanitizer
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [HEARTBEAT] %(message)s")
 logger = logging.getLogger("heartbeat")
@@ -245,34 +248,116 @@ class HeartbeatScheduler:
 
         return True
 
+    @staticmethod
+    def _parse_tier1_chain(command: str) -> list[list[list[str]]]:
+        """Parse a Tier 1 command into &&-chained pipelines of argv stages (zero shell).
+
+        Rejects newlines, unclosed quotes, `;`, `||`, `&`, redirections (`<`, `>`),
+        and any stage flagged by `CommandSanitizer(strict_mode=True)`.
+        """
+        if not command or not command.strip() or "\n" in command or "\r" in command:
+            raise ValueError("Empty or multiline Tier 1 command")
+        lex = shlex.shlex(command, posix=True, punctuation_chars=";&|<>")
+        lex.whitespace_split = True
+        tokens = list(lex)
+        if not tokens:
+            raise ValueError("Empty Tier 1 command")
+
+        forbidden_ops = {";", "||", "&", "<", ">", ">>", "<<", "<>", "|&"}
+        sanitizer = CommandSanitizer(strict_mode=True)
+        chains: list[list[list[str]]] = []
+        current_pipeline: list[list[str]] = []
+        current_argv: list[str] = []
+
+        for tok in tokens:
+            if tok in forbidden_ops or (
+                set(tok) <= set(";&|<>") and tok not in {"&&", "|"}
+            ):
+                raise ValueError(f"Unsupported shell operator in Tier 1 command: {tok!r}")
+            if tok == "|":
+                if not current_argv:
+                    raise ValueError("Empty stage before '|'")
+                current_pipeline.append(current_argv)
+                current_argv = []
+            elif tok == "&&":
+                if not current_argv:
+                    raise ValueError("Empty stage before '&&'")
+                current_pipeline.append(current_argv)
+                chains.append(current_pipeline)
+                current_pipeline = []
+                current_argv = []
+            else:
+                current_argv.append(tok)
+
+        if not current_argv:
+            raise ValueError("Trailing operator in Tier 1 command")
+        current_pipeline.append(current_argv)
+        chains.append(current_pipeline)
+
+        for pipeline in chains:
+            for argv in pipeline:
+                # Chaining/piping metacharacters inside argv tokens are inert under shell=False,
+                # so normalize literal [;&|] inside arguments before CommandSanitizer regexes,
+                # while keeping command-substitution ($(...), `...`, ${...}) and binary checks intact.
+                scrubbed_args = [re.sub(r"[;&|]+", "_", arg) for arg in argv]
+                stage_str = " ".join(scrubbed_args)
+                verdict = sanitizer.sanitize(stage_str)
+                if not verdict.is_safe:
+                    raise ValueError(f"Unsafe Tier 1 stage: {verdict.blocked_patterns}")
+                if Path(argv[0]).name in sanitizer.STRICT_MODE_COMMANDS:
+                    raise ValueError(f"Blocked destructive Tier 1 binary: {argv[0]!r}")
+        return chains
+
+    def _run_tier1_chain(self, chains: list[list[list[str]]]) -> tuple[int, str]:
+        """Execute validated &&-chained argv pipelines with shell=False."""
+        run_env = {**os.environ, "PYTHONPATH": str(self.root)}
+        last_stderr = ""
+        for pipeline in chains:
+            input_text: Optional[str] = None
+            rc = 0
+            for argv in pipeline:
+                res = subprocess.run(
+                    argv,
+                    shell=False,
+                    input=input_text,
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                    cwd=str(self.root),
+                    env=run_env,
+                )
+                rc = res.returncode
+                input_text = res.stdout
+                last_stderr = res.stderr
+            if rc != 0:
+                return rc, last_stderr
+        return 0, last_stderr
+
     async def execute_task(self, task: ScheduledTask) -> bool:
         """Execute task — two-tier processing."""
         logger.info(f"[{task.workspace}] Executing: {task.description}")
         task.last_run = datetime.now()
 
         if task.tier == 1 and task.command:
-            # SECURITY NOTE: shell=True is intentional here.
-            # Tier 1 commands originate exclusively from local .mekong/loops/*.json
-            # files controlled by the machine owner. They legitimately use shell
-            # features (pipes `|`, `&&` chaining). No user-supplied or network-
-            # derived strings reach this path. If that invariant ever changes,
-            # migrate to multi-step subprocess.PIPE chaining and remove shell=True.
             try:
-                result = subprocess.run(
-                    task.command, shell=True, capture_output=True, text=True,
-                    timeout=300, cwd=str(self.root),
-                    env={**os.environ, "PYTHONPATH": str(self.root)},
-                )
-                if result.returncode == 0:
+                chains = self._parse_tier1_chain(task.command)
+            except ValueError as exc:
+                logger.error(f"[{task.workspace}] Blocked unsafe Tier 1 command: {exc}")
+                return False
+            try:
+                returncode, stderr_out = self._run_tier1_chain(chains)
+                if returncode == 0:
                     logger.info(f"[{task.workspace}] ✅ {task.description}")
                     return True
                 else:
-                    logger.warning(f"[{task.workspace}] ⚠️ {task.description}: exit {result.returncode}")
+                    logger.warning(f"[{task.workspace}] ⚠️ {task.description}: exit {returncode}")
                     if self.config.alert_on_failure:
-                        self._alert(task, result.stderr[:200])
+                        self._alert(task, stderr_out[:200])
                     return False
-            except subprocess.TimeoutExpired:
-                logger.error(f"[{task.workspace}] ❌ {task.description}: timeout 300s")
+            except (subprocess.TimeoutExpired, OSError) as exc:
+                logger.error(f"[{task.workspace}] ❌ {task.description}: {exc}")
+                if self.config.alert_on_failure:
+                    self._alert(task, str(exc)[:200])
                 return False
         else:
             # Tier 2: LLM agent loop — call local LLM with tool use

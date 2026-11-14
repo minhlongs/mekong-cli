@@ -13,7 +13,7 @@ infrastructure (MIT Open-Core) or via the managed Cloud RaaS Control Plane.
 ## Component map (text diagram)
 
 ```text
- External callers                CLI surface (39 Typer groups via build_app())
+ External callers                CLI surface (189 Typer groups via build_app())
  ───────────────                 ─────────────────────────────────────────────
  Buzz / webhook payload ──┐      mekong run --goal "..."  [src/commands/run.py]
                           │                  │

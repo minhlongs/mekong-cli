@@ -6,11 +6,11 @@
 from __future__ import annotations
 
 import json
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
 
 from src.command_fabric.package_build_editor_verifiers import (
+    parse_safe_xml_root,
     verify_eclipse_package,
     verify_helix_package,
     verify_lightweight_editor_package,
@@ -73,7 +73,7 @@ def _verify_jetbrains(root: Path) -> PackageBuildCheck:
         root / "src" / "main" / "kotlin" / "com" / "mekong" / "commandfabric" / "MekongCommandAction.kt"
     ).read_text(encoding="utf-8")
     build_script = (root / "build-package.sh").read_text(encoding="utf-8")
-    plugin = ET.parse(plugin_path).getroot()
+    plugin = parse_safe_xml_root(plugin_path)
     actions = plugin.findall(".//action")
 
     if "org.jetbrains.intellij" not in gradle or 'kotlin("jvm")' not in gradle:

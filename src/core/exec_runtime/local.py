@@ -139,7 +139,7 @@ class LocalExecutionRuntime:
 
         start = time.monotonic()
         try:
-            proc = subprocess.Popen(  # noqa: S603 — argv/sanitizer validated above
+            proc = subprocess.Popen(  # noqa: S603 — argv/sanitizer validated above  # nosec B602
                 args,
                 shell=use_shell,
                 cwd=str(self._root),

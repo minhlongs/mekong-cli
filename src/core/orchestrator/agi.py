@@ -198,7 +198,7 @@ class AGIComponents:
                 import hashlib
                 from ..vector_memory_store import VectorMemoryStore
                 vec = VectorMemoryStore.text_to_hash_vector(goal)
-                goal_id = hashlib.md5(goal.encode()).hexdigest()[:12]
+                goal_id = hashlib.md5(goal.encode(), usedforsecurity=False).hexdigest()[:12]
                 self.vector_memory.get_or_create_collection("goal_history")
                 self.vector_memory.upsert(
                     collection="goal_history",

@@ -13,7 +13,7 @@ Core funnels:
 
 ## Commands
 
-Run from repo root. 39 command groups wired via `build_app()`
+Run from repo root. 189 command groups wired via `build_app()`
 (`python3 -c "from src.cli.app_setup import build_app; print(len(build_app().registered_groups))"`).
 
 - Design intelligence: `mekong ui {audit,study,redesign,build,approve,benchmark}`
@@ -29,7 +29,7 @@ Run from repo root. 39 command groups wired via `build_app()`
 mekong (CLI) / api-gateway (FastAPI:8000)
 - `src/core/` — autonomous runtime core: lifecycle (`runtime_adapter`), Governance, capability bus, protocols, MCU billing, `exec_runtime` sandbox, adapters (tool/MCP/payment/buzz), `raas_license_verifier.py` (HMAC-SHA256 `MEKONG-RAAS-v1` / `SOPHIA-RAAS-v1`), and `src/core/opencore/` (25-step catalog + readiness engine, strictly `<= 185 LOC` per module)
 - `src/raas/` — Cloud RaaS Control Plane: `checkout_router.py` (Dual-Rail `vietqr` + `nowpayments`), `revenue_router.py` (`POST /webhook/polar` returns `HTTP 410 Gone`), `credits.py` (SQLite WAL `CreditStore` with replay-safe idempotency), `tenant.py`
-- `src/commands/` — command modules behind the 39 CLI groups
+- `src/commands/` — command modules behind the 189 CLI groups
 - `src/cli/` — Typer app assembly (`app_setup.build_app`), build wizard
 - `src/harness/` — PEV engine (plan-execute-verify), agents, observability
 - `src/api/` — REST routes (raas, billing, gateway)

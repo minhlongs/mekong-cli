@@ -266,7 +266,7 @@ class AdvertisingEngine:
 
         now = datetime.datetime.now()
         year = now.year
-        seq_hash = hashlib.md5(f"{product_name}:{applicant_name}:{now.timestamp()}".encode("utf-8")).hexdigest()[:5].upper()
+        seq_hash = hashlib.md5(f"{product_name}:{applicant_name}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:5].upper()
         xnndqc_code = f"XNNDQC-{year}-{seq_hash}"
 
         valid_until = (now + datetime.timedelta(days=validity_years * 365)).strftime("%Y-%m-%d")
@@ -441,7 +441,7 @@ class AdvertisingEngine:
             else:
                 status = "VIOLATION_TAKEDOWN_OVERDUE"
 
-        takedown_id = f"TD-{platform[:3].upper()}-{hashlib.md5(f'{ad_id}:{notice_str}'.encode('utf-8')).hexdigest()[:6].upper()}"
+        takedown_id = f"TD-{platform[:3].upper()}-{hashlib.md5(f'{ad_id}:{notice_str}'.encode('utf-8'), usedforsecurity=False).hexdigest()[:6].upper()}"
 
         result = {
             "takedown_id": takedown_id,
@@ -515,7 +515,7 @@ class AdvertisingEngine:
         allowed_ad_min = program_duration_min * (max_allowed_pct / 100.0)
         excess_min = max(0.0, ad_duration_min - allowed_ad_min)
 
-        slot_id = f"BC-{hashlib.md5(f'{channel_type}:{program_duration_min}:{ad_duration_min}:{break_count}'.encode('utf-8')).hexdigest()[:8].upper()}"
+        slot_id = f"BC-{hashlib.md5(f'{channel_type}:{program_duration_min}:{ad_duration_min}:{break_count}'.encode('utf-8'), usedforsecurity=False).hexdigest()[:8].upper()}"
 
         result = {
             "slot_id": slot_id,

@@ -5,11 +5,12 @@
 from __future__ import annotations
 
 import os
+import tempfile
 from pathlib import Path
 
 from seed.agents.base import BaseAgent
 
-OUTPUTS_DIR = "/tmp/seed_outputs"
+OUTPUTS_DIR = os.getenv("OUTPUTS_DIR", str(Path(tempfile.gettempdir()) / "seed_outputs"))
 
 
 class DeveloperAgent(BaseAgent):
@@ -55,7 +56,7 @@ class DeveloperAgent(BaseAgent):
         return [f"[step {i+1}/{len(plan)}] {first}" for i in range(len(plan))]
 
     def _save_file(self, file_path: str, content: str) -> None:
-        os.makedirs(OUTPUTS_DIR, exist_ok=True)
+        os.makedirs(OUTPUTS_DIR, mode=0o700, exist_ok=True)
         safe = Path(file_path).name
         target = Path(OUTPUTS_DIR) / safe
         target.write_text(content)

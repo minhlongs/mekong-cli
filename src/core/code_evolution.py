@@ -9,7 +9,10 @@ test in sandbox, and apply with git branch isolation.
 The closest step to AGI — the system improves its own codebase.
 """
 
+from __future__ import annotations
+
 import logging
+import shlex
 import subprocess
 import time
 from dataclasses import dataclass, field
@@ -267,12 +270,12 @@ class CodeEvolutionEngine:
         attempt.status = EvolutionStatus.TESTING
 
         # Create git branch for isolation
-        original_branch = self._git_cmd("rev-parse --abbrev-ref HEAD")
+        original_branch = self._git_cmd(["rev-parse", "--abbrev-ref", "HEAD"])
         branch = attempt.branch_name
 
         try:
             # Create branch
-            self._git_cmd(f"checkout -b {branch}")
+            self._git_cmd(["checkout", "-b", branch], check=True)
 
             # Apply changes
             for change in attempt.changes:
@@ -295,12 +298,13 @@ class CodeEvolutionEngine:
             passed = test_result.returncode == 0
 
             if passed:
-                attempt.status = EvolutionStatus.PASSED
-                # Commit the changes
-                self._git_cmd("add -A")
+                # Commit the changes cleanly via argv (no shell interpolation)
+                self._git_cmd(["add", "-A"], check=True)
                 self._git_cmd(
-                    f'commit -m "evolution({attempt.id}): {attempt.description[:50]}"'
+                    ["commit", "-m", f"evolution({attempt.id}): {attempt.description[:50]}"],
+                    check=True,
                 )
+                attempt.status = EvolutionStatus.PASSED
             else:
                 attempt.status = EvolutionStatus.FAILED
                 # Restore original files
@@ -321,9 +325,10 @@ class CodeEvolutionEngine:
             passed = False
         finally:
             # Return to original branch
-            self._git_cmd(f"checkout {original_branch}")
-            if not passed:
-                self._git_cmd(f"branch -D {branch}")
+            if original_branch:
+                self._git_cmd(["checkout", original_branch])
+            if not passed and branch:
+                self._git_cmd(["branch", "-D", branch])
 
         self._save_journal()
         return passed
@@ -342,7 +347,7 @@ class CodeEvolutionEngine:
             return False
 
         try:
-            self._git_cmd(f"merge {attempt.branch_name}")
+            self._git_cmd(["merge", "--", attempt.branch_name], check=True)
             attempt.status = EvolutionStatus.APPLIED
             self._save_journal()
 
@@ -433,13 +438,20 @@ class CodeEvolutionEngine:
             file_path.startswith(d) for d in self.SAFE_DIRS
         )
 
-    def _git_cmd(self, cmd: str) -> str:
-        """Run a git command."""
+    def _git_cmd(self, cmd: str | List[str], *, check: bool = False) -> str:
+        """Run a git command as an argv vector without invoking a shell."""
+        git_args = shlex.split(cmd) if isinstance(cmd, str) else [str(x) for x in cmd]
         result = subprocess.run(
-            f"git {cmd}", shell=True,
+            ["git", *git_args],
+            shell=False,
             capture_output=True, text=True, timeout=30,
             cwd=str(self.project_root),
         )
+        if check and result.returncode != 0:
+            raise RuntimeError(
+                f"git {git_args[0] if git_args else ''} failed ({result.returncode}): "
+                f"{result.stderr.strip() or result.stdout.strip()}"
+            )
         return result.stdout.strip()
 
     def _llm_generate_improvement(

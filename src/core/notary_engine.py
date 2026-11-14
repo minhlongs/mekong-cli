@@ -176,7 +176,7 @@ class NotaryEngine:
         else:
             fee = notary_fee_vnd
 
-        seq = hashlib.md5(f"{contract_title}:{party_a}:{party_b}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{contract_title}:{party_a}:{party_b}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         book_num = f"CC-{now.year}-{seq}"
 
         result = {
@@ -295,7 +295,7 @@ class NotaryEngine:
 
         is_compliant = len(deficiencies) == 0
         status = "COMPLIANT_RETAINER" if is_compliant else "NON_COMPLIANT_RETAINER"
-        seq = hashlib.md5(f"{law_firm_name}:{attorney_name}:{client_name}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{law_firm_name}:{attorney_name}:{client_name}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         agreement_code = f"HDPL-{now.year}-{seq}"
 
         result = {
@@ -371,7 +371,7 @@ class NotaryEngine:
             statutory_fee = fee_per_unit * number_of_copies
             legal_conclusion = f"Đã chứng thực hợp lệ {number_of_copies} bản theo đúng trình tự Nghị định 23/2015/NĐ-CP"
 
-        seq = hashlib.md5(f"{document_title}:{authenticating_body}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{document_title}:{authenticating_body}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         auth_code = f"CT-{now.year}-{seq}"
 
         result = {

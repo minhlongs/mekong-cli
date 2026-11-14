@@ -411,15 +411,22 @@ def publish_to_custom(source: str, verbose: bool):
     """Publish documentation using custom method"""
 
     custom_publish_script = os.environ.get("CUSTOM_DOCS_PUBLISH_SCRIPT", "./publish-docs.sh")
+    workspace_root = Path.cwd().resolve()
+    script_path = Path(custom_publish_script).resolve()
+    source_path = Path(source).resolve()
 
-    if not Path(custom_publish_script).exists():
-        console.print(f"[red]❌ Custom publish script not found: {custom_publish_script}[/red]")
-        console.print("[dim]Set CUSTOM_DOCS_PUBLISH_SCRIPT env var or create ./publish-docs.sh[/dim]")
+    if not script_path.is_file() or not script_path.is_relative_to(workspace_root):
+        console.print(f"[red]❌ Custom publish script not found or outside workspace: {custom_publish_script}[/red]")
+        console.print("[dim]Set CUSTOM_DOCS_PUBLISH_SCRIPT to a workspace-local script or create ./publish-docs.sh[/dim]")
+        return
+    if not source_path.is_relative_to(workspace_root):
+        console.print(f"[red]❌ Documentation source must reside within workspace: {source}[/red]")
         return
 
     try:
-        cmd = ["bash", custom_publish_script, source]
-        result = subprocess.run(cmd, check=True, capture_output=not verbose, text=True)
+        cmd = ["bash", "--", str(script_path), str(source_path)]
+        # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-tainted-env-args.dangerous-subprocess-use-tainted-env-args
+        result = subprocess.run(cmd, shell=False, check=True, capture_output=not verbose, text=True)
 
         console.print("[green]✅ Documentation published using custom method![/green]")
         if result.stdout:

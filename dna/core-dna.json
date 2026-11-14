@@ -313,6 +313,15 @@
         ],
         "verdict": "reviewed",
         "note": "Issue #153 Strategy E Forensic Audit (V-01..V-08), Fail-Closed Pilot A, VN SME Workflow Tiers & 15-Layer MEKONG-BENCH; top-level command surface unchanged (opc group grandfathered in dna/command-surface.json, 189 CLI groups preserved)."
+      },
+      {
+        "pr": 156,
+        "branch": "chore/hardening-g2-scanners-and-cli-groups",
+        "feature_surface_changes": [
+          "src/commands/docs.py — confine CUSTOM_DOCS_PUBLISH_SCRIPT in publish_to_custom() to workspace-local files with explicit '--' bash delimiter and shell=False; no CLI command or flag changes"
+        ],
+        "verdict": "reviewed",
+        "note": "Issue #154 G2 blocking security scanners (Bandit, Semgrep, Trivy, pip-audit) & 189 CLI group count reconciliation; command surface unchanged (dna/command-surface.json not modified, 189 CLI groups preserved)."
       }
     ]
   }

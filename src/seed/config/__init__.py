@@ -4,6 +4,8 @@
 """Seed config package — LLM settings + tier configs."""
 
 import os
+import tempfile
+from pathlib import Path
 
 # LLM / model settings (previously in flat config.py)
 OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
@@ -11,9 +13,10 @@ LLM_MODEL: str = os.getenv("LLM_MODEL", "llama3")
 EMBED_MODEL: str = os.getenv("EMBED_MODEL", "llama3")
 LLM_TIMEOUT: int = int(os.getenv("LLM_TIMEOUT", "30"))
 
-CHROMA_PATH: str = os.getenv("CHROMA_PATH", "/tmp/seed_chroma")
-SQLITE_PATH: str = os.getenv("SQLITE_PATH", "/tmp/seed_memory.db")
-OUTPUTS_DIR: str = os.getenv("OUTPUTS_DIR", "/tmp/seed_outputs")
+_TMP_ROOT = Path(tempfile.gettempdir())
+CHROMA_PATH: str = os.getenv("CHROMA_PATH", str(_TMP_ROOT / "seed_chroma"))
+SQLITE_PATH: str = os.getenv("SQLITE_PATH", str(_TMP_ROOT / "seed_memory.db"))
+OUTPUTS_DIR: str = os.getenv("OUTPUTS_DIR", str(_TMP_ROOT / "seed_outputs"))
 
 # Tier configs — imports from sub-module
 from .tiers import (  # noqa: E402

@@ -260,7 +260,7 @@ class CinemaEngine:
 
         now = datetime.datetime.now()
         year = now.year
-        seq = hashlib.md5(f"{film_title}:{producer_name}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{film_title}:{producer_name}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         permit_code = f"GPHPP-{year}-{seq}"
 
         result = {
@@ -330,7 +330,7 @@ class CinemaEngine:
         min_required_vn = math.ceil(total_screenings * 0.10)
         shortfall = max(0, min_required_vn - vn_screenings)
 
-        audit_id = f"QTA-{hashlib.md5(f'{cinema_name}:{total_screenings}:{vn_screenings}'.encode('utf-8')).hexdigest()[:8].upper()}"
+        audit_id = f"QTA-{hashlib.md5(f'{cinema_name}:{total_screenings}:{vn_screenings}'.encode('utf-8'), usedforsecurity=False).hexdigest()[:8].upper()}"
 
         result = {
             "audit_id": audit_id,
@@ -400,7 +400,7 @@ class CinemaEngine:
         elif not has_warning_banner:
             sanction = "Xử phạt 40M - 50M VND đối với hành vi không hiển thị cảnh báo theo Nghị định 38/2021"
 
-        record_id = f"OTT-{platform[:3].upper()}-{hashlib.md5(f'{film_id}:{rate}'.encode('utf-8')).hexdigest()[:6].upper()}"
+        record_id = f"OTT-{platform[:3].upper()}-{hashlib.md5(f'{film_id}:{rate}'.encode('utf-8'), usedforsecurity=False).hexdigest()[:6].upper()}"
 
         result = {
             "record_id": record_id,
@@ -468,7 +468,7 @@ class CinemaEngine:
             hours_elapsed = (now - notice_dt).total_seconds() / 3600.0
             status = "PENDING_WITHIN_24H" if hours_elapsed <= 24.0 else "VIOLATION_TAKEDOWN_OVERDUE"
 
-        takedown_id = f"TD-FILM-{hashlib.md5(f'{platform}:{film_id}:{notice_str}'.encode('utf-8')).hexdigest()[:6].upper()}"
+        takedown_id = f"TD-FILM-{hashlib.md5(f'{platform}:{film_id}:{notice_str}'.encode('utf-8'), usedforsecurity=False).hexdigest()[:6].upper()}"
 
         result = {
             "takedown_id": takedown_id,

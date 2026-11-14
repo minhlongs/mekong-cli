@@ -37,6 +37,8 @@ def test_bilingual_readmes_contain_all_25_steps_and_5_phases() -> None:
     readme_vi = _read("README.vi.md")
     assert "README.vi.md" in readme_en
     assert "README.md" in readme_vi
+    assert "189 Typer CLI command groups" in readme_en
+    assert "189 nhóm lệnh Typer CLI" in readme_vi
 
     assert len(TWENTY_FIVE_OPENCORE_STEPS) == 25
     for phase in OpenCorePhase:
@@ -108,6 +110,8 @@ def test_github_governance_and_security_policy_aligned() -> None:
 def test_ci_gates_workflow_executes_root_opencore_suites() -> None:
     gates_yml = _read(".github/workflows/gates.yml")
     assert "Open-Core 25-Step & RaaS Boundary Gate" in gates_yml
+    assert "--exit-zero" not in gates_yml
+    assert "bandit -r src/ -lll -q" in gates_yml
     required_suites = (
         "tests/test_opencore_saas_25_step_suite.py",
         "tests/test_core_boundary.py",

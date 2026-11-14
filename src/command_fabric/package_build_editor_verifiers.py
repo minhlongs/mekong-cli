@@ -10,6 +10,15 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
+def parse_safe_xml_root(path: Path) -> ET.Element:
+    """Parse local XML metadata after rejecting DTD/entity declarations (XXE guard)."""
+    raw = path.read_text(encoding="utf-8")
+    upper = raw.upper()
+    if "<!DOCTYPE" in upper or "<!ENTITY" in upper:
+        raise ValueError(f"XML DTD/entity declarations are forbidden in {path.name}")
+    return ET.fromstring(raw)  # nosec B314  # nosemgrep: python.lang.security.use-defused-xml-parse.use-defused-xml-parse
+
+
 def _load_json(path: Path) -> dict[str, object]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -19,7 +28,7 @@ def _check(host: str, root: Path, checks: list[str]) -> dict[str, object]:
 
 
 def verify_visual_studio_package(root: Path) -> dict[str, object]:
-    manifest = ET.parse(root / "source.extension.vsixmanifest").getroot()
+    manifest = parse_safe_xml_root(root / "source.extension.vsixmanifest")
     csproj = (root / "Mekong.CommandFabric.VisualStudio.csproj").read_text(encoding="utf-8")
     package = (root / "MekongCommandFabricPackage.cs").read_text(encoding="utf-8")
     adapter = _load_json(root / "data" / "visual-studio.json")
@@ -35,7 +44,7 @@ def verify_visual_studio_package(root: Path) -> dict[str, object]:
 
 
 def verify_eclipse_package(root: Path) -> dict[str, object]:
-    plugin = ET.parse(root / "plugin.xml").getroot()
+    plugin = parse_safe_xml_root(root / "plugin.xml")
     pom = (root / "pom.xml").read_text(encoding="utf-8")
     handler = (root / "src" / "com" / "mekong" / "commandfabric" / "MekongCommandHandler.java").read_text(
         encoding="utf-8"

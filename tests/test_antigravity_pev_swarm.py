@@ -488,6 +488,46 @@ class TestPEVSwarmBridgeCore:
         assert ver_res["rolled_back"] is True
         assert ver_res["attempts"] == 1
 
+    def test_verify_task_supports_env_prefix_and_blocks_unsafe_commands(
+        self, tmp_path: Path
+    ) -> None:
+        db_file = tmp_path / "test_cmd_guard.db"
+        (tmp_path / "test_ok.py").write_text("def test_pass():\n    assert True\n", encoding="utf-8")
+        bridge = PEVSwarmBridge(db_path=db_file, project_root=tmp_path)
+        plan = bridge.plan("Validate command sanitizer in verify_task")
+        task = plan.tasks[0]
+
+        with bridge.store._connect() as conn:
+            crit = VerificationCriteria(
+                test_command="PYTHONPATH=. python3 -m pytest test_ok.py -q",
+                exit_code=0,
+            )
+            conn.execute(
+                "UPDATE tasks SET verification_criteria = ? WHERE task_id = ?",
+                (json.dumps(crit.to_dict()), task.task_id),
+            )
+            conn.commit()
+        bridge.execute_task(plan.mission_id, task.task_id, dry_run=False)
+        ok_res = bridge.verify_task(plan.mission_id, task.task_id, dry_run=False)
+        assert ok_res["passed"] is True
+
+        # Unsafe python -c or disallowed binary must fail closed
+        plan2 = bridge.plan("Block unsafe interpreter eval")
+        task2 = plan2.tasks[0]
+        with bridge.store._connect() as conn:
+            bad_crit = VerificationCriteria(
+                test_command="python3 -c 'print(1)'",
+                exit_code=0,
+            )
+            conn.execute(
+                "UPDATE tasks SET verification_criteria = ? WHERE task_id = ?",
+                (json.dumps(bad_crit.to_dict()), task2.task_id),
+            )
+            conn.commit()
+        bridge.execute_task(plan2.mission_id, task2.task_id, dry_run=False)
+        bad_res = bridge.verify_task(plan2.mission_id, task2.task_id, dry_run=False)
+        assert bad_res["passed"] is False
+
 
 # =============================================================================
 # Milestone 2 Tests: CLI Commands & Rich Formatting
