@@ -163,8 +163,6 @@ export default function OpcCockpitPage() {
     void computeSha256Hex(canonical).then((hex) => {
       if (active) {
         setActionDigest(hex)
-        setServerActionDigest('')
-        setServerCardSig('')
       }
     })
     return () => {
@@ -356,6 +354,15 @@ export default function OpcCockpitPage() {
     })
     setGatewaySync(syncRes)
     setIsSyncing(false)
+    if (syncRes.serverRejected) {
+      setDispatchResult({
+        status: 'tamper_detected',
+        message: isVi
+          ? `FastAPI Gateway từ chối lệnh chuyển tiếp (${syncRes.detail}): Vui lòng bấm "Đồng bộ Gateway" bằng khóa chủ shop hợp lệ trước khi chuyển tiếp.`
+          : `FastAPI Gateway rejected handoff (${syncRes.detail}): Please sync Gateway with a valid owner API key before handing off.`,
+      })
+      return
+    }
     setApprovalState('revoked')
     setDispatchResult({
       status: 'revoked',
@@ -506,6 +513,8 @@ export default function OpcCockpitPage() {
           citations={citations}
           onChange={(next) => {
             setIntake(next)
+            setServerActionDigest('')
+            setServerCardSig('')
           }}
         />
         <ProposalDraftPreview

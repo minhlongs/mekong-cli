@@ -123,10 +123,6 @@ def _is_vn_jurisdiction_ipn(data: dict[str, Any], order_id: str, workspace_id: s
     if not candidates:
         return True
 
-    explicit_non_vn = any(
-        str(data.get(k) or "").strip() and not str(data.get(k) or "").strip().upper().startswith("VN")
-        for k in ("jurisdiction", "country")
-    )
     resolved_non_vn = False
     env_db = os.environ.get("MEKONG_RAAS_DB")
     try:
@@ -146,7 +142,7 @@ def _is_vn_jurisdiction_ipn(data: dict[str, Any], order_id: str, workspace_id: s
         logger.error("[NP] TenantStore lookup error during jurisdiction check (failing closed): %s", exc)
         return True
 
-    if order_low.startswith("mk-") and not (explicit_non_vn or resolved_non_vn):
+    if order_low.startswith("mk-") and not resolved_non_vn:
         return True
 
     return False
@@ -197,7 +193,11 @@ def handle_ipn(payload_json: str, signature: str = "") -> dict[str, Any]:
     payment_id = _clean_log_val(data.get("payment_id", "unknown"))
     order_id = str(data.get("order_id") or "")
     lead_uuid = _UUID_RE.match(order_id)
-    workspace_id = lead_uuid.group(0) if lead_uuid else (order_id.split("-")[0] if "-" in order_id else "default")
+    explicit_ws = str(data.get("workspace_id") or data.get("org_id") or data.get("tenant_id") or "").strip()
+    if order_id.lower().startswith("mk-") and explicit_ws:
+        workspace_id = explicit_ws
+    else:
+        workspace_id = lead_uuid.group(0) if lead_uuid else (order_id.split("-")[0] if "-" in order_id else "default")
 
     logger.info("[NP] IPN received: payment=%s status=%s", payment_id, payment_status)
 

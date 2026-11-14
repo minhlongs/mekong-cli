@@ -15,32 +15,13 @@ from typer.testing import CliRunner
 from src.cli.app_setup import build_app
 from src.opc.accounting_draft import build_accounting_draft_export
 from src.opc.approval import ApprovalSecurityError
-from src.opc.misa_export import (
-    MISA_SAPO_COLUMNS,
-    DraftExportComplianceError,
-    export_draft_bundle,
-    export_misa_csv,
-    export_misa_xml,
-)
+from src.opc.misa_export import MISA_SAPO_COLUMNS, DraftExportComplianceError, export_draft_bundle, export_misa_csv, export_misa_xml
 from src.opc.models import BusinessProfile, UsageStage
 from src.opc.pilot_a import ApprovalCard, PilotAWorkflow, ZaloWebhookEvent
 from src.opc.privacy_guard import TenantIsolationError
-from src.opc.recipe_loader import (
-    DEFAULT_ALLOWLIST_PATH,
-    DEFAULT_PILOT_A_RECIPE_PATH,
-    ManifestAllowlistError,
-    RecipeValidationError,
-    load_declarative_recipe,
-    verify_mcp_manifest_sha256,
-)
+from src.opc.recipe_loader import DEFAULT_ALLOWLIST_PATH, DEFAULT_PILOT_A_RECIPE_PATH, ManifestAllowlistError, RecipeValidationError, load_declarative_recipe, verify_mcp_manifest_sha256
 from src.opc.selective_router import SelectiveRouter, extract_deterministic_citations
-from src.opc.state_graph import (
-    GovernedStateGraph,
-    GraphStage,
-    SqliteGraphCheckpointer,
-    has_langgraph_extra,
-    resolve_runtime_engine,
-)
+from src.opc.state_graph import GovernedStateGraph, GraphStage, SqliteGraphCheckpointer, has_langgraph_extra, resolve_runtime_engine
 from src.opc.tenant_provisioner import provision_isolated_tenant, verify_tenant_api_key
 from src.opc.usage import UsageLedger
 
@@ -77,6 +58,13 @@ def test_governed_state_graph_interrupt_restart_tamper_idempotency_and_engine_to
     done2 = restarted.resume("run_g1", "appr_1", "a" * 64)
     assert done1.current_stage == GraphStage.COMPLETED and counts == {"s1_3": 3, "commit": 1}
     assert done1.state["side_effect_deduplicated"] is False and done2.state["side_effect_deduplicated"] is True
+    # Concurrent in_flight journal entry never prematurely marks checkpoint COMPLETED
+    cp_if = GovernedStateGraph(SqliteGraphCheckpointer(db), nodes).run_until_interrupt("run_if", {"lead": "z2"})
+    with SqliteGraphCheckpointer(db)._connect() as conn:
+        idem = f"act_{__import__('hashlib').sha256(('run_if:' + 'a' * 64).encode()).hexdigest()}"
+        conn.execute("INSERT INTO opc_side_effect_journal VALUES (?, 'run_if', 'ap', ?, '{\"status\":\"in_flight\"}', 1)", (idem, "a" * 64))
+    res_if = restarted.resume("run_if", "ap", "a" * 64)
+    assert res_if.current_stage == cp_if.current_stage == GraphStage.INTERRUPT_AUTHORIZE and res_if.state["commit_result"]["status"] == "in_flight"
 
     assert isinstance(has_langgraph_extra(), bool)
     monkeypatch.setenv("RUNTIME_ENGINE", "legacy")
@@ -115,9 +103,9 @@ def test_selective_router_citations_timeout_failover_budget_and_unknown_cost(tmp
     with pytest.raises(PermissionError, match="Budget reservation failed"):
         router.route(ambig, run_id="r_over", hard_budget_limit="10.00")
 
-    # OpenAI ChatCompletions without confidence fails closed to low_confidence_halt (0 budget burned when no cloud_fallback_fn)
+    # OpenAI ChatCompletions without confidence fails closed to low_confidence_halt (0 budget burned even with hard_budget_limit)
     oai_local = lambda _u, _h, _b, _t: (200, b'{"choices":[{"message":{"content":"{\\"extracted\\":{\\"quantity\\":2}}"}}],"usage":{"total_tokens":50,"cost":"1.00"}}')  # noqa: E731
-    halt_r = SelectiveRouter(ledger, catalog, local_endpoint="http://127.0.0.1:11434/v1/chat", local_transport=oai_local).route(ambig, run_id="r_oai_nocloud")
+    halt_r = SelectiveRouter(ledger, catalog, local_endpoint="http://127.0.0.1:11434/v1/chat", local_transport=oai_local).route(ambig, run_id="r_oai_nocloud", hard_budget_limit="500.00")
     assert halt_r.mode == "low_confidence_halt" and not any(r.stage.value == "reserved" for r in ledger.get_run_records("r_oai_nocloud"))
 
     litellm_cfg = yaml.safe_load((REPO_ROOT / "config" / "litellm_proxy.yaml").read_text(encoding="utf-8"))
@@ -126,7 +114,9 @@ def test_selective_router_citations_timeout_failover_budget_and_unknown_cost(tmp
     assert litellm_cfg["general_settings"]["fail_closed_budget_enforcement"] is True
 
 
-def test_recipe_allowlist_misa_export_tenant_provisioner_pilot_handoff_and_cli(tmp_path: Path) -> None:
+def test_recipe_allowlist_misa_export_tenant_provisioner_pilot_handoff_and_cli(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Validate Goose recipe, MCP SHA-256 allowlist, MISA CSV/XML/JSON, tenant CLI, Pilot A handoff, and 189 groups."""
     recipe = load_declarative_recipe(DEFAULT_PILOT_A_RECIPE_PATH)
     assert recipe.min_confidence == 0.85 and recipe.low_confidence_action == "HANDOFF_ZALO_OA_MANAGER"
@@ -154,6 +144,9 @@ def test_recipe_allowlist_misa_export_tenant_provisioner_pilot_handoff_and_cli(t
         export_misa_csv(dataclasses.replace(draft, invoice_status="ISSUED"))
 
     prof = BusinessProfile("CTY PILOT", "Lan", "vi", "vi_VN", "Asia/Ho_Chi_Minh", "VND", {"tu_van_ai": Decimal("500000")}, "VietQR", "VN")
+    monkeypatch.setenv("MLX_BASE_URL", "http://127.0.0.1:19999/v1/chat")
+    assert PilotAWorkflow(tmp_path / "pa_env.db", prof).router.local_endpoint == "http://127.0.0.1:19999/v1/chat"
+    monkeypatch.delenv("MLX_BASE_URL", raising=False)
     wf = PilotAWorkflow(tmp_path / "pa.db", prof)
     now_ts = 1_760_000_000
     low_ev = ZaloWebhookEvent("ev_low", "oa1", "84901112233", "Khách A", "Báo giá tư vấn AI 4 giờ", now_ts, now_ts - 60, ("tu_van_ai",), 4, "AI", extraction_confidence=0.60)

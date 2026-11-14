@@ -544,6 +544,20 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
+function buildGatewayHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  const apiKey = (process.env.NEXT_PUBLIC_MEKONG_TENANT_API_KEY || '').trim()
+  if (apiKey) {
+    headers['X-API-Key'] = apiKey
+  }
+  return headers
+}
+
+function getTenantId(): string {
+  const configured = (process.env.NEXT_PUBLIC_MEKONG_TENANT_ID || '').trim()
+  return configured || 'default'
+}
+
 export async function syncPilotAZaloWebhook(payload: {
   eventId: string
   senderName: string
@@ -563,7 +577,7 @@ export async function syncPilotAZaloWebhook(payload: {
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildGatewayHeaders(),
       body: JSON.stringify({
         event_id: payload.eventId,
         oa_id: 'oa_mekong_vn_01',
@@ -576,6 +590,7 @@ export async function syncPilotAZaloWebhook(payload: {
         currency: payload.currency,
         language: payload.language,
         extraction_confidence: payload.extractionConfidence,
+        tenant_id: getTenantId(),
       }),
       signal: controller?.signal,
     })
@@ -632,9 +647,10 @@ export async function syncPilotADecision(payload: {
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildGatewayHeaders(),
       body: JSON.stringify({
         run_id: payload.runId,
+        tenant_id: getTenantId(),
         decision: payload.decision,
         action_digest: payload.actionDigest,
         card_sig: payload.cardSig || '',

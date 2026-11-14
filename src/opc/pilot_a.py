@@ -95,7 +95,7 @@ class PilotAWorkflow:
         if tenant_db_dir is None:
             resolve_tenant_db_path(db_p.parent, tenant_id, active_tenant_id=tenant_id)
         self.state, self.usage = StateStore(db_p), UsageLedger(db_p)
-        self.router = SelectiveRouter(self.usage, self.profile.services, local_endpoint="")
+        self.router = SelectiveRouter(self.usage, self.profile.services)
         self.checkpointer = SqliteGraphCheckpointer(db_p) if self.runtime_engine == "langgraph" else None
         self.zalo_connector: Any = zalo_connector or ZaloSandboxConnector()
         self.require_webhook_mac = isinstance(self.zalo_connector, ZaloOAConnector) if require_webhook_mac is None else require_webhook_mac
@@ -119,15 +119,19 @@ class PilotAWorkflow:
         q_msg = self.quarantine.inspect(event.message_text, source=f"zalo:{event.event_id}")
         self.quarantine.enforce_before_tool(q_msg)
         redacted = redact_vietnamese_pii(event.message_text)
-        citations = tuple(dataclasses.asdict(c) for c in self.router.route(redacted.redacted_text, run_id=f"rt_{event.event_id}").citations)
-        intake = ProposalInput(event.event_id, event.sender_name, f"zalo:{event.sender_id}", event.project_title, event.requested_services, event.estimated_hours, event.currency, event.language, redacted.redacted_text)
+        rt_res = self.router.route(redacted.redacted_text, run_id=f"rt_{event.event_id}")
+        citations = tuple(dataclasses.asdict(c) for c in rt_res.citations)
+        eff_svcs = event.requested_services or tuple(rt_res.extracted.get("requested_services") or ())
+        eff_hours = event.estimated_hours if event.estimated_hours > 0 else int(rt_res.extracted.get("estimated_hours") or 1)
+        eff_conf = min(event.extraction_confidence, rt_res.confidence) if rt_res.mode in ("local_llm", "cloud_fallback") else event.extraction_confidence
+        intake = ProposalInput(event.event_id, event.sender_name, f"zalo:{event.sender_id}", event.project_title, eff_svcs, eff_hours, event.currency, event.language, redacted.redacted_text)
         self.quarantine.enforce_before_tool(self.quarantine.guard_proposal_input(intake))
         period_ym = datetime.fromtimestamp(event.timestamp, tz=timezone.utc).strftime("%Y-%m")
         if not (q_res := self.usage.reserve_workflow_quota(self.tenant_id, event.event_id, period_ym, event.timestamp, self.workflow_quota_limit, self.sme_tier)).allowed:
             raise WorkflowQuotaExceededError(f"Tenant '{self.tenant_id}' exceeded {q_res.limit_count} workflows for {period_ym}.")
         try:
             run_id, draft, base_payload = self.engine.generate_draft(self.profile, intake)
-            amount_vnd = int(verify_confidence_and_math(draft.line_items, draft.total_amount, confidence=event.extraction_confidence))
+            amount_vnd = int(verify_confidence_and_math(draft.line_items, draft.total_amount, confidence=eff_conf))
         except Exception:
             self.usage.quota_guard.release_workflow_slot(self.tenant_id, event.event_id, period_ym)
             raise
@@ -143,7 +147,8 @@ class PilotAWorkflow:
         try:
             return self.handle_webhook(event, **kwargs)
         except HaltForHumanError as exc:
-            cits = tuple(dataclasses.asdict(c) for c in self.router.route(event.message_text, run_id=f"ho_{event.event_id}").citations)
+            safe_txt = redact_vietnamese_pii(event.message_text).redacted_text
+            cits = tuple(dataclasses.asdict(c) for c in self.router.route(safe_txt, run_id=f"ho_{event.event_id}").citations)
             return build_handoff_outcome(self.checkpointer, event.event_id, event.sender_id, exc.code, str(exc), cits, self.runtime_engine)
 
     def approve_and_send(self, card: ApprovalCard, token: ApprovalToken | None = None, idempotency_key: str | None = None, *, now: int | None = None) -> dict[str, Any]:

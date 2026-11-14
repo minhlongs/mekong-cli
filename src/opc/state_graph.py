@@ -107,8 +107,7 @@ class SqliteGraphCheckpointer:
             conn.execute("BEGIN IMMEDIATE")
             if (row := conn.execute("SELECT result_json FROM opc_side_effect_journal WHERE idempotency_key = ?", (idem_key,)).fetchone()) is not None:
                 conn.execute("COMMIT")
-                cached = json.loads(row["result_json"])
-                return (cached if cached.get("status") != "in_flight" else {"status": "deduplicated"}), True
+                return json.loads(row["result_json"]), True
             conn.execute("INSERT INTO opc_side_effect_journal (idempotency_key, thread_id, approval_token_id, payload_sha256, result_json, created_at) VALUES (?, ?, ?, ?, ?, ?)", (idem_key, thread_id, approval_token_id, payload_sha256, '{"status":"in_flight"}', int(time.time())))
             conn.execute("COMMIT")
         try:
@@ -151,6 +150,8 @@ class GovernedStateGraph:
         if (eff_commit := (commit_fn or self.nodes.get(GraphStage.COMMIT_RECONCILE))) is None:
             raise ValueError("Missing commit_fn for COMMIT_RECONCILE resume.")
         commit_out, deduplicated = self.checkpointer.execute_side_effect_once(run_id, approval_token_id, payload_sha256, eff_commit, dict(cp.state))
+        if str(commit_out.get("status", "")) == "in_flight":
+            return GraphCheckpoint(run_id, cp.current_stage, {**cp.state, "commit_result": commit_out, "side_effect_deduplicated": True}, cp.interrupted, payload_sha256, cp.updated_at)
         merged = {**cp.state, "approval_token_id": approval_token_id, "commit_result": commit_out, "side_effect_deduplicated": deduplicated}
         self.checkpointer.put(run_id, GraphStage.COMMIT_RECONCILE, merged, interrupted=False, payload_sha256=payload_sha256)
         if str(commit_out.get("status", "completed")) in ("completed", "deduplicated"):

@@ -165,8 +165,6 @@ class SelectiveRouter:
             except (TimeoutError, urllib.error.URLError, OSError, ValueError, TypeError):
                 pass
         if self.cloud_fallback_fn is None:
-            if (eff_lim := hard_budget_limit if hard_budget_limit is not None else self.hard_budget_limit) is not None and self.fail_closed_budget_enforcement and not self.usage_ledger.reserve_budget(f"res_{uuid.uuid4().hex[:12]}", run_id, self.estimated_call_budget, self.currency, "owner", int(time.time()), eff_lim):
-                raise PermissionError("Budget reservation failed (fail-closed)")
             return SelectiveRouteResult("low_confidence_halt", "deterministic_python", "rule_extractor_v1", det_ext, det_cits, det_conf, (time.monotonic() - t0) * 1000.0, False)
         if self.fail_closed_budget_enforcement and not self.usage_ledger.reserve_budget(f"res_{uuid.uuid4().hex[:12]}", run_id, self.estimated_call_budget, self.currency, "owner", int(time.time()), hard_budget_limit if hard_budget_limit is not None else self.hard_budget_limit):
             raise PermissionError("Budget reservation failed (fail-closed)")

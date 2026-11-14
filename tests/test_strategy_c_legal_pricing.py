@@ -124,6 +124,7 @@ def test_decree_52_2024_fourth_door_blocks_vn_nowpayments_ipn(
         {"payment_id": "p_vn_tnm", "payment_status": "finished", "order_id": "doanhnghiep_vn-pro-monthly", "price_currency": "usd"},
         {"payment_id": "p_vn_hyp", "payment_status": "finished", "order_id": f"{vn_hyph.name}-pro-monthly", "price_currency": "usd"},
         {"payment_id": "p_mk_unattr", "payment_status": "finished", "order_id": "mk-a1b2c3d4e5f6", "price_currency": "usd"},
+        {"payment_id": "p_mk_spoof_cty", "payment_status": "finished", "order_id": "mk-a1b2c3d4e5f6", "country": "US", "jurisdiction": "SG", "price_currency": "usd"},
         {"payment_id": "p_vnd_cur", "payment_status": "finished", "order_id": "ws_vnd-pro-monthly", "price_currency": "vnd"},
         {"payment_id": "p_pilot_a", "payment_status": "finished", "order_id": "ws_pilot-pilot_a-monthly", "price_currency": "usd"},
     ]
@@ -142,13 +143,13 @@ def test_decree_52_2024_fourth_door_blocks_vn_nowpayments_ipn(
         for ws in ("ws_explicit", "VN", "vn_shop", vn_tenant.id, "doanhnghiep_vn", "shop", "shop-hanoi", "mk", "ws_vnd", "ws_pilot"):
             assert repo.get_balance(ws) == 0
 
-        # Registered SG tenant + unregistered overseas workspace continue to receive credits normally
+        # Registered SG tenant + mk-* order attributed to registered SG tenant grant credits to overseas_sg (never "mk")
         sg_resp = client.post(
             "/webhooks/nowpayments",
-            content=json.dumps({"payment_id": "p_sg_ok", "payment_status": "finished", "order_id": "overseas_sg-pro-monthly", "price_currency": "usd"}),
+            content=json.dumps({"payment_id": "p_sg_ok", "payment_status": "finished", "order_id": "mk-a1b2c3d4e5f6", "tenant_id": "overseas_sg", "price_currency": "usd"}),
         )
         assert sg_resp.status_code == 200 and sg_resp.json() == {"status": "ok", "action": "credits_granted"}
-        assert repo.get_balance("overseas_sg") > 0
+        assert repo.get_balance("overseas_sg") > 0 and repo.get_balance("mk") == 0
 
 
 def test_quota_and_legal_pricing_loc_ceilings() -> None:

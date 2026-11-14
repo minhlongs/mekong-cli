@@ -150,8 +150,7 @@ def _verify_owner_access(
     x_api_key: str | None,
     card_sig: str = "",
 ) -> bool:
-    """Verify tenant API key or HMAC card signature; enforce strictly when provisioned or in production."""
-    cfg = _load_tenant_cfg(base_dir, tenant_id)
+    """Require valid tenant API key or HMAC card signature across all environments."""
     api_key = _extract_presented_api_key(authorization, x_api_key)
     if api_key and verify_tenant_api_key(base_dir, tenant_id, api_key):
         return True
@@ -159,15 +158,13 @@ def _verify_owner_access(
         expected_sig = _compute_card_sig(tenant_id, run_id, action_digest)
         if hmac.compare_digest(expected_sig, card_sig.strip()):
             return True
-    if cfg is not None or _is_production():
-        raise HTTPException(
-            status_code=401,
-            detail={
-                "error": "unauthorized_pilot_a_owner",
-                "message": "Valid tenant API key (X-API-Key / Bearer) or signed card token (sig) is required.",
-            },
-        )
-    return False
+    raise HTTPException(
+        status_code=401,
+        detail={
+            "error": "unauthorized_pilot_a_owner",
+            "message": "Valid tenant API key (X-API-Key / Bearer) or signed card token (sig) is required.",
+        },
+    )
 
 
 def _build_profile(
@@ -224,6 +221,7 @@ def _build_workflow(
     runtime_engine: str | None = None,
     custom_rates: dict[str, int] | None = None,
     require_existing_in_prod: bool = False,
+    require_webhook_mac: bool | None = None,
 ) -> tuple[PilotAWorkflow, dict[str, Any] | None]:
     base_dir = _pilot_base_dir()
     db_path = resolve_tenant_db_path(base_dir, tenant_id, active_tenant_id=tenant_id)
@@ -242,6 +240,7 @@ def _build_workflow(
         tenant_db_dir=base_dir,
         sme_tier=eff_tier,
         workflow_quota_limit=quota_lim,
+        require_webhook_mac=require_webhook_mac,
         runtime_engine=runtime_engine,
         handoff_on_low_confidence=True,
     )
@@ -293,17 +292,32 @@ async def receive_pilot_a_zalo_webhook(
         is_owner_authed = bool(presented_key and verify_tenant_api_key(base_dir, req.tenant_id, presented_key))
         tenant_cfg = _load_tenant_cfg(base_dir, req.tenant_id)
 
-        # Privileged overrides (grant_consent, custom service_rates_vnd, tier override on provisioned tenant)
-        # require authenticated tenant API key when provisioned or in production.
-        if (tenant_cfg is not None or _is_production()) and not is_owner_authed:
-            if req.grant_consent or req.service_rates_vnd is not None:
+        # Fail closed: require owner API key OR verified Zalo OA MAC whenever provisioned, in prod, or secret is set.
+        has_zalo_secret = bool(os.getenv("ZALO_OA_SECRET_KEY", "").strip())
+        must_enforce_external_mac = (
+            not is_owner_authed
+            and (
+                x_zevent_mac is not None
+                or req.connector.strip().lower() == "zalo_oa"
+                or tenant_cfg is not None
+                or _is_production()
+                or has_zalo_secret
+            )
+        )
+        if not is_owner_authed:
+            if (tenant_cfg is not None or _is_production()) and (req.grant_consent or req.service_rates_vnd is not None):
                 raise HTTPException(
                     status_code=403,
                     detail={"error": "privileged_webhook_fields_forbidden", "message": "Tenant API key required for consent/rate overrides."},
                 )
-        allow_custom_rates = req.service_rates_vnd if (is_owner_authed or (tenant_cfg is None and not _is_production())) else None
+            if must_enforce_external_mac and not has_zalo_secret:
+                raise HTTPException(
+                    status_code=401,
+                    detail={"error": "missing_zalo_webhook_secret", "message": "ZALO_OA_SECRET_KEY or owner X-API-Key required."},
+                )
+        allow_custom_rates = req.service_rates_vnd if is_owner_authed else None
         allow_grant_consent = req.grant_consent and (is_owner_authed or (tenant_cfg is None and not _is_production()))
-        eff_sme_tier = req.sme_tier if (is_owner_authed or (tenant_cfg is None and not _is_production())) else "pilot_a"
+        eff_sme_tier = req.sme_tier if is_owner_authed else "pilot_a"
 
         wf, _ = _build_workflow(
             tenant_id=req.tenant_id,
@@ -314,14 +328,10 @@ async def receive_pilot_a_zalo_webhook(
             runtime_engine=req.runtime_engine,
             custom_rates=allow_custom_rates,
             require_existing_in_prod=True,
+            require_webhook_mac=must_enforce_external_mac,
         )
         if allow_grant_consent:
             wf.privacy_guard.record_subject_consent(req.sender_id)
-        must_check_mac = (
-            x_zevent_mac is not None
-            or req.connector.strip().lower() == "zalo_oa"
-            or (_is_production() and bool(os.getenv("ZALO_OA_SECRET_KEY", "").strip()) and not is_owner_authed)
-        )
         event = ZaloWebhookEvent(
             event_id=req.event_id,
             oa_id=req.oa_id,
@@ -339,7 +349,7 @@ async def receive_pilot_a_zalo_webhook(
         )
         outcome = wf.handle_webhook_or_handoff(
             event,
-            webhook_mac=(x_zevent_mac or "") if must_check_mac else None,
+            webhook_mac=(x_zevent_mac or "") if must_enforce_external_mac else None,
             app_id=req.app_id,
             raw_webhook_data=raw_body,
         )
@@ -364,19 +374,9 @@ async def receive_pilot_a_zalo_webhook(
     if not isinstance(outcome, ApprovalCard):
         raise HTTPException(status_code=500, detail={"error": "unexpected_outcome_type"})
     digest = outcome.approval_token.action_digest
-    card_sig = _compute_card_sig(req.tenant_id, outcome.run_id, digest)
-    card_url = f"/v1/opc/pilot-a/card/{outcome.run_id}?tenant_id={req.tenant_id}&sig={card_sig}"
+    base_card_url = f"/v1/opc/pilot-a/card/{outcome.run_id}?tenant_id={req.tenant_id}"
     memo = f"OPC {outcome.run_id}"
-    notif = build_owner_notification_cards(
-        run_id=outcome.run_id,
-        client_name=outcome.client_name,
-        project_title=outcome.project_title,
-        total_amount_vnd=outcome.total_amount_vnd,
-        action_digest=digest,
-        card_url=card_url,
-        vietqr_memo=memo,
-    )
-    return {
+    resp_body: dict[str, Any] = {
         "status": "INTERRUPT_AUTHORIZE",
         "workflow_status": WorkflowStatus.PENDING_APPROVAL.value,
         "run_id": outcome.run_id,
@@ -391,15 +391,28 @@ async def receive_pilot_a_zalo_webhook(
         "vietqr_quicklink": outcome.vietqr_quicklink,
         "vietqr_memo": memo,
         "action_digest": digest,
-        "card_sig": card_sig,
         "approval_token_id": outcome.approval_token.token_id,
-        "card_url": card_url,
+        "card_url": base_card_url,
         "accounting_draft_status": DRAFT_STATUS_PENDING_TVAN,
         "line_items": list(outcome.line_items),
         "citations": list(outcome.citations),
         "redacted_notes": outcome.redacted_notes,
-        "notification_cards": notif,
     }
+    if is_owner_authed:
+        card_sig = _compute_card_sig(req.tenant_id, outcome.run_id, digest)
+        signed_card_url = f"{base_card_url}&sig={card_sig}"
+        resp_body["card_sig"] = card_sig
+        resp_body["card_url"] = signed_card_url
+        resp_body["notification_cards"] = build_owner_notification_cards(
+            run_id=outcome.run_id,
+            client_name=outcome.client_name,
+            project_title=outcome.project_title,
+            total_amount_vnd=outcome.total_amount_vnd,
+            action_digest=digest,
+            card_url=signed_card_url,
+            vietqr_memo=memo,
+        )
+    return resp_body
 
 
 @router.get("/runs/{run_id}")
@@ -422,8 +435,9 @@ async def get_pilot_a_run(
 
     action_dict = run_data.get("action_payload") or {}
     digest = compute_action_digest(_reconstruct_action_payload(action_dict)) if action_dict else ""
+    base_dir = _pilot_base_dir()
     _verify_owner_access(
-        base_dir=_pilot_base_dir(),
+        base_dir=base_dir,
         tenant_id=tenant_id,
         run_id=run_id,
         action_digest=digest,
@@ -431,6 +445,7 @@ async def get_pilot_a_run(
         x_api_key=x_api_key,
         card_sig=sig,
     )
+    eff_sig = sig.strip() or (_compute_card_sig(tenant_id, run_id, digest) if digest else "")
     cp = wf.checkpointer.get(run_id) if wf.checkpointer is not None else None
     costs = wf.usage.aggregate_run_costs(run_id)
     draft_info = run_data.get("proposal_draft") or {}
@@ -441,6 +456,8 @@ async def get_pilot_a_run(
         "checkpoint_stage": cp.current_stage.value if cp else None,
         "checkpoint_interrupted": cp.interrupted if cp else False,
         "action_digest": digest,
+        "card_sig": eff_sig,
+        "card_url": f"/v1/opc/pilot-a/card/{run_id}?tenant_id={tenant_id}&sig={eff_sig}" if eff_sig else "",
         "proposal_draft": draft_info,
         "amount_vnd": action_dict.get("parameters", {}).get("amount_vnd", 0),
         "vietqr_emvco": action_dict.get("parameters", {}).get("vietqr_emvco", ""),
@@ -614,6 +631,15 @@ async def decide_pilot_a_run(
 
     if cur_status == WorkflowStatus.REJECTED:
         raise HTTPException(status_code=409, detail={"error": "run_already_rejected", "run_id": req.run_id})
+    if cur_status in (WorkflowStatus.FAILED, WorkflowStatus.RECONCILIATION_REQUIRED):
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "run_requires_reconciliation_or_failed",
+                "run_id": req.run_id,
+                "current_status": cur_status.value,
+            },
+        )
     if cur_status == WorkflowStatus.COMPLETED:
         return {
             "run_id": req.run_id,
@@ -659,6 +685,9 @@ async def decide_pilot_a_run(
         raise HTTPException(status_code=409, detail={"error": "approval_security_error", "message": str(exc)}) from exc
     except ValueError as exc:
         raise HTTPException(status_code=400, detail={"error": "connector_dispatch_error", "message": str(exc)}) from exc
+
+    if out_status == "in_flight":
+        raise HTTPException(status_code=409, detail={"error": "action_in_flight", "run_id": req.run_id})
 
     final_wf_status = (
         WorkflowStatus.COMPLETED
