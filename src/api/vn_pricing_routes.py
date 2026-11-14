@@ -2,10 +2,11 @@
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
 """
-VN Pricing API Routes — Hiển thị giá VND cho thị trường Việt Nam.
+VN Pricing API Routes — Hiển thị giá VND nội địa cho thị trường Việt Nam.
 
-GET /v1/pricing/vn       → 3 tiers VND + services VN
-GET /v1/pricing/vn/services → chỉ danh sách dịch vụ VN
+GET /v1/pricing/vn             → Bảng giá VND + VN SME workflow tiers + services VN (VietQR Napas 247)
+GET /v1/pricing/vn/services    → Chỉ danh sách dịch vụ VN
+GET /v1/pricing/vn/tier/{key}  → Chi tiết 1 tier VN
 """
 from __future__ import annotations
 
@@ -14,6 +15,8 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
+
+from src.raas.checkout_router import VN_SME_COMMITMENT_PRICING, VN_SME_WORKFLOW_TIERS
 
 router = APIRouter(prefix="/v1/pricing", tags=["VN Pricing"])
 
@@ -25,24 +28,64 @@ def _load_pricing() -> dict[str, Any]:
         raise HTTPException(status_code=500, detail="pricing.json not found")
     try:
         with _PRICING_FILE.open(encoding="utf-8") as f:
-            return json.load(f)
+            loaded = json.load(f)
+            return dict(loaded) if isinstance(loaded, dict) else {}
     except (OSError, json.JSONDecodeError) as exc:
         raise HTTPException(status_code=500, detail=f"pricing.json invalid: {exc}") from exc
 
 
+def _sanitize_vn_product(product: dict[str, Any]) -> dict[str, Any]:
+    """Strip legacy foreign gateway/USD fields from domestic VN product cards."""
+    cleaned = {
+        k: v
+        for k, v in product.items()
+        if "polar" not in k.lower() and k != "price_usd"
+    }
+    cleaned["rails"] = ["vietqr"]
+    return cleaned
+
+
+def _build_vn_sme_workflow_tiers() -> list[dict[str, Any]]:
+    """Build canonical Section 10.3 VN SME outcome-priced workflow tiers."""
+    items: list[dict[str, Any]] = []
+    for tier_key, info in VN_SME_WORKFLOW_TIERS.items():
+        commitment = VN_SME_COMMITMENT_PRICING.get(tier_key, {})
+        items.append(
+            {
+                "tier": tier_key,
+                "price_vnd": info["vnd"],
+                "commitment_6m_vnd": commitment.get("commitment_6m_vnd"),
+                "setup_fee_vnd": commitment.get("setup_fee_vnd", 0),
+                "verified_workflows_per_month": info["workflows"],
+                "workflow_quota": info["workflows"],
+                "billing_unit": "verified_workflows_per_month",
+                "rails": ["vietqr"],
+                "checkout_url": f"/v1/checkout?tier={tier_key}",
+            }
+        )
+    return items
+
+
 @router.get("/vn")
 async def get_vn_pricing() -> dict[str, Any]:
-    """3 tiers VND + services VN. Giá USD billed qua Polar.sh, hiển thị VND."""
+    """Bảng giá VND nội địa cho doanh nghiệp Việt Nam thanh toán qua VietQR Napas 247."""
     data = _load_pricing()
     vn_products = data.get("vn_products", {})
     vn_services = data.get("vn_services", [])
     if not vn_products:
         raise HTTPException(status_code=404, detail="VN products chưa cấu hình")
+    sanitized_tiers = {
+        key: _sanitize_vn_product(val)
+        for key, val in vn_products.items()
+        if isinstance(val, dict)
+    }
     return {
         "currency_display": "VND",
-        "currency_billing": "USD",
-        "note": "Thanh toán qua Polar.sh bằng USD. Giá VND hiển thị theo tỷ giá tháng.",
-        "tiers": vn_products,
+        "currency_billing": "VND",
+        "allowed_rails": ["vietqr"],
+        "note": "Thanh toán nội địa bằng VND qua chuyển khoản nhanh VietQR Napas 247.",
+        "tiers": sanitized_tiers,
+        "vn_sme_workflow_tiers": _build_vn_sme_workflow_tiers(),
         "services": vn_services,
     }
 
@@ -62,19 +105,20 @@ async def get_vn_tier(tier_key: str) -> dict[str, Any]:
     """Chi tiết 1 tier VN."""
     data = _load_pricing()
     tier = data.get("vn_products", {}).get(tier_key)
-    if not tier:
-        raise HTTPException(status_code=404, detail=f"Tier '{tier_key}' không tồn tại")
-    return tier
+    if isinstance(tier, dict):
+        return _sanitize_vn_product(tier)
+    for sme_tier in _build_vn_sme_workflow_tiers():
+        if sme_tier["tier"] == tier_key:
+            return sme_tier
+    raise HTTPException(status_code=404, detail=f"Tier '{tier_key}' không tồn tại")
 
-
-__all__ = ["router"]
 
 @router.get("/free")
 async def get_free_plan() -> dict[str, Any]:
-    """Free tier limits (no VND display — always USD baseline)."""
+    """Free tier baseline limits."""
     return {
         "plan": "free",
-        "currency": "USD",
+        "currency": "VND",
         "limits": {
             "commands_per_day": 100,
             "concurrent_agents": 1,
@@ -85,7 +129,7 @@ async def get_free_plan() -> dict[str, Any]:
 
 @router.get("/paid")
 async def get_paid_plan() -> dict[str, Any]:
-    """Paid tiers — priced in USD, billed via Polar."""
+    """Paid commercial tiers via VietQR Napas 247 (domestic VND) or NOWPayments (overseas)."""
     try:
         data = _load_pricing()
     except HTTPException:
@@ -93,7 +137,10 @@ async def get_paid_plan() -> dict[str, Any]:
     usd_tiers = data.get("usd_products", {})
     return {
         "plan": "paid",
-        "currency": "USD",
-        "gateway": "polar",
+        "currency": "VND",
+        "allowed_rails": ["vietqr"],
         "tiers": usd_tiers,
     }
+
+
+__all__ = ["router"]

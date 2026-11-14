@@ -108,8 +108,8 @@ def test_parallel_vn_sme_workflow_tiers_status_mapping_and_atomic_quota(tmp_path
     assert VN_SME_WORKFLOW_TIERS == {
         "starter": {"vnd": 790_000, "usd": 31, "workflows": 300},
         "pilot_a": {"vnd": 990_000, "usd": 39, "workflows": 500},
-        "growth": {"vnd": 1_990_000, "usd": 78, "workflows": 1_500},
-        "agency": {"vnd": 4_900_000, "usd": 195, "workflows": 5_000},
+        "growth": {"vnd": 1_990_000, "usd": 78, "workflows": 1_000},
+        "agency": {"vnd": 4_900_000, "usd": 195, "workflows": 3_500},
     }
 
     api = FastAPI()
@@ -120,6 +120,7 @@ def test_parallel_vn_sme_workflow_tiers_status_mapping_and_atomic_quota(tmp_path
     pricing = client.get("/v1/pricing").json()
     sme_by_tier = {item["tier"]: item for item in pricing["vn_sme_workflow_tiers"]}
     assert len(pricing["tiers"]) == 4 and sme_by_tier["pilot_a"]["price_vnd"] == 990_000 and sme_by_tier["pilot_a"]["rails"] == ["vietqr"]
+    assert sme_by_tier["growth"]["verified_workflows_per_month"] == 1_000 and sme_by_tier["agency"]["verified_workflows_per_month"] == 3_500
 
     co_ok = client.post("/v1/checkout", json={"tier": "pilot_a", "rail": "vietqr", "email": "chu_shop@mekong.vn"}).json()
     assert co_ok["tier"] == "pilot_a" and co_ok["amount_vnd"] == 990_000 and co_ok["workflow_quota"] == 500
