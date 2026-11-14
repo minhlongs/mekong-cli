@@ -28,7 +28,7 @@ MISA_SAPO_COLUMNS: Final[tuple[str, ...]] = (
     "MaGiaoDichVietQR",
 )
 
-_CSV_FORMULA_PREFIXES: Final[tuple[str, ...]] = ("=", "+", "-", "@")
+_CSV_FORMULA_PREFIXES: Final[tuple[str, ...]] = ("=", "+", "-", "@", "|")
 
 
 class DraftExportComplianceError(PermissionError):
@@ -51,8 +51,9 @@ def _assert_draft_compliance(draft: AccountingDraftExport) -> None:
 
 
 def _safe_csv_text(val: str) -> str:
-    stripped = val.lstrip()
-    return f"'{val}" if stripped.startswith(_CSV_FORMULA_PREFIXES) else val
+    flat = val.replace("\r", " ").replace("\n", " ")
+    stripped = flat.lstrip()
+    return f"'{stripped}" if stripped.startswith(_CSV_FORMULA_PREFIXES) else flat
 
 
 def _build_misa_rows(draft: AccountingDraftExport) -> list[dict[str, Any]]:

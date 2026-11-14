@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import time
@@ -17,6 +18,8 @@ from decimal import Decimal
 from typing import Any, Callable, Final
 
 from src.opc.models import UsageRecord, UsageStage
+from src.opc.privacy_guard import redact_vietnamese_pii
+from src.opc.quarantine import QuarantineFloor
 from src.opc.usage import UsageLedger
 
 _STOP_TOKENS: Final[frozenset[str]] = frozenset({"tich", "hop", "dich", "thiet", "giai", "phap", "goi", "lam"})
@@ -132,7 +135,7 @@ class SelectiveRouter:
             return self._local_transport(url, {"Content-Type": "application/json"}, body, timeout_s)
         if not url.lower().startswith(("http://", "https://")):
             raise urllib.error.URLError(f"Unsupported endpoint scheme: {url}")
-        with urllib.request.urlopen(urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST"), timeout=timeout_s) as resp:  # noqa: S310
+        with urllib.request.urlopen(urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST"), timeout=timeout_s) as resp:  # nosec B310  # noqa: S310
             return int(resp.status), resp.read()
 
     def _record_llm_usage(self, run_id: str, provider: str, model: str, resp: Mapping[str, Any]) -> bool:
@@ -146,20 +149,24 @@ class SelectiveRouter:
 
     def route(self, message_text: str, *, run_id: str = "run_router", service_catalog: Mapping[str, Decimal] | None = None, hard_budget_limit: str | None = None) -> SelectiveRouteResult:
         t0 = time.monotonic()
+        QuarantineFloor().enforce_before_tool(QuarantineFloor().inspect(message_text, source=f"router:{run_id}"))
+        safe_msg = redact_vietnamese_pii(message_text).redacted_text
         catalog = service_catalog if service_catalog is not None else self.service_catalog
-        det_ext, det_cits, det_conf = extract_deterministic_citations(message_text, catalog)
+        det_ext, det_cits, det_conf = extract_deterministic_citations(safe_msg, catalog)
         if det_conf >= self.min_confidence:
             return SelectiveRouteResult("deterministic", "deterministic_python", "rule_extractor_v1", det_ext, det_cits, det_conf, (time.monotonic() - t0) * 1000.0, False)
         if self.local_endpoint:
             deadline_s = max(0.05, (self.timeout_ms * 0.92) / 1000.0)
-            req_bytes = json.dumps({"model": self.local_model, "messages": [{"role": "user", "content": message_text}]}).encode("utf-8")
+            req_bytes = json.dumps({"model": self.local_model, "messages": [{"role": "user", "content": safe_msg}]}).encode("utf-8")
             pool = ThreadPoolExecutor(max_workers=1)
             try:
                 status, raw = pool.submit(self._post_json, self.local_endpoint, req_bytes, deadline_s).result(timeout=deadline_s)
                 if 200 <= status < 300:
                     parsed = json.loads(raw.decode("utf-8"))
                     unk = self._record_llm_usage(run_id, "local_openai_compat", self.local_model, parsed)
-                    return SelectiveRouteResult("local_llm", "local_openai_compat", self.local_model, dict(parsed.get("extracted") or det_ext), _anchor_citations(message_text, parsed.get("citations"), det_cits), float(parsed.get("confidence", 0.88)), (time.monotonic() - t0) * 1000.0, unk)
+                    l_conf = float(parsed.get("confidence", 0.88))
+                    if math.isfinite(l_conf) and l_conf >= self.min_confidence:
+                        return SelectiveRouteResult("local_llm", "local_openai_compat", self.local_model, dict(parsed.get("extracted") or det_ext), _anchor_citations(safe_msg, parsed.get("citations"), det_cits), l_conf, (time.monotonic() - t0) * 1000.0, unk)
             except (FuturesTimeoutError, TimeoutError, urllib.error.URLError, OSError, ValueError):
                 pass
             finally:
@@ -169,6 +176,9 @@ class SelectiveRouter:
             raise PermissionError("Budget reservation failed (fail-closed)")
         if self.cloud_fallback_fn is None:
             return SelectiveRouteResult("low_confidence_halt", "deterministic_python", "rule_extractor_v1", det_ext, det_cits, det_conf, (time.monotonic() - t0) * 1000.0, False)
-        cloud_resp = self.cloud_fallback_fn(message_text, catalog)
+        cloud_resp = self.cloud_fallback_fn(safe_msg, catalog)
         unk = self._record_llm_usage(run_id, "cloud_fallback", str(cloud_resp.get("model", self.cloud_model)), cloud_resp)
-        return SelectiveRouteResult("cloud_fallback", "cloud_fallback", str(cloud_resp.get("model", self.cloud_model)), dict(cloud_resp.get("extracted") or det_ext), _anchor_citations(message_text, cloud_resp.get("citations"), det_cits), float(cloud_resp.get("confidence", 0.90)), (time.monotonic() - t0) * 1000.0, unk)
+        c_conf = float(cloud_resp.get("confidence", 0.90))
+        if not math.isfinite(c_conf) or c_conf < self.min_confidence:
+            return SelectiveRouteResult("low_confidence_halt", "cloud_fallback", str(cloud_resp.get("model", self.cloud_model)), dict(cloud_resp.get("extracted") or det_ext), _anchor_citations(safe_msg, cloud_resp.get("citations"), det_cits), c_conf if math.isfinite(c_conf) else 0.0, (time.monotonic() - t0) * 1000.0, unk)
+        return SelectiveRouteResult("cloud_fallback", "cloud_fallback", str(cloud_resp.get("model", self.cloud_model)), dict(cloud_resp.get("extracted") or det_ext), _anchor_citations(safe_msg, cloud_resp.get("citations"), det_cits), c_conf, (time.monotonic() - t0) * 1000.0, unk)

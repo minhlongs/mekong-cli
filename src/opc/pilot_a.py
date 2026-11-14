@@ -135,8 +135,8 @@ class PilotAWorkflow:
             raise ZaloInteractionWindowError(f"Zalo OA interaction window expired for '{event.sender_id}' (age={age}s).")
         q_msg = self.quarantine.inspect(event.message_text, source=f"zalo:{event.event_id}")
         self.quarantine.enforce_before_tool(q_msg)
-        citations = tuple(dataclasses.asdict(c) for c in extract_deterministic_citations(event.message_text, self.profile.services)[1])
         redacted = redact_vietnamese_pii(event.message_text)
+        citations = tuple(dataclasses.asdict(c) for c in extract_deterministic_citations(redacted.redacted_text, self.profile.services)[1])
         intake = ProposalInput(event.event_id, event.sender_name, f"zalo:{event.sender_id}", event.project_title, event.requested_services, event.estimated_hours, event.currency, event.language, redacted.redacted_text)
         self.quarantine.enforce_before_tool(self.quarantine.guard_proposal_input(intake))
         period_ym = datetime.fromtimestamp(event.timestamp, tz=timezone.utc).strftime("%Y-%m")
@@ -163,7 +163,8 @@ class PilotAWorkflow:
         try:
             return self.handle_webhook(event, **kwargs)
         except HaltForHumanError as exc:
-            cits = tuple(dataclasses.asdict(c) for c in extract_deterministic_citations(event.message_text, self.profile.services)[1])
+            safe_txt = redact_vietnamese_pii(event.message_text).redacted_text
+            cits = tuple(dataclasses.asdict(c) for c in extract_deterministic_citations(safe_txt, self.profile.services)[1])
             return build_handoff_outcome(self.checkpointer, event.event_id, event.sender_id, exc.code, str(exc), cits, self.runtime_engine)
 
     def approve_and_send(self, card: ApprovalCard, token: ApprovalToken | None = None, idempotency_key: str | None = None, *, now: int | None = None) -> dict[str, Any]:

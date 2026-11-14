@@ -42,10 +42,14 @@ STATUS_REFUNDED = "refunded"
 # Ledger path for audit trail
 LEDGER_DIR = Path.home() / ".mekong" / "raas" / "payments"
 
-_UUID_PREFIX_RE = re.compile(
-    r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+_UUID_RE = re.compile(
+    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 )
-_VN_ONLY_TIER_TOKENS = ("pilot_a", "pilot-a", "starter_vn", "growth_vn", "pro_vn")
+_VN_ONLY_TIER_TOKENS = ("pilot_a", "pilot-a", "agency", "agency_vn", "starter_vn", "growth_vn", "pro_vn")
+
+
+def _clean_log_val(val: object) -> str:
+    return str(val or "").replace("\r", " ").replace("\n", " ")[:160]
 
 
 def verify_ipn_signature(payload_json: str, received_sig: str) -> bool:
@@ -108,15 +112,13 @@ def _is_vn_jurisdiction_ipn(data: dict[str, Any], order_id: str, workspace_id: s
         candidates.append(workspace_id)
     if order_id:
         candidates.append(order_id)
-        uuid_match = _UUID_PREFIX_RE.match(order_id)
-        if uuid_match:
-            candidates.append(uuid_match.group(0))
+        candidates.extend(_UUID_RE.findall(order_id))
     customer_email = str(data.get("customer_email") or "").strip()
     if customer_email:
         candidates.append(customer_email)
 
     if not candidates:
-        return False
+        return True
 
     env_db = os.environ.get("MEKONG_RAAS_DB")
     try:
@@ -127,10 +129,13 @@ def _is_vn_jurisdiction_ipn(data: dict[str, Any], order_id: str, workspace_id: s
                     "SELECT jurisdiction FROM tenants WHERE id = ? OR name = ?",
                     (candidate, candidate),
                 ).fetchone()
-                if row is not None and str(row["jurisdiction"] or "").strip().upper().startswith("VN"):
-                    return True
+                if row is not None:
+                    jur = str(row["jurisdiction"] or "").strip().upper()
+                    if not jur or jur.startswith("VN"):
+                        return True
     except Exception as exc:
-        logger.warning("[NP] TenantStore lookup error during jurisdiction check: %s", exc)
+        logger.error("[NP] TenantStore lookup error during jurisdiction check (failing closed): %s", exc)
+        return True
 
     return False
 
@@ -169,22 +174,23 @@ def handle_ipn(payload_json: str, signature: str = "") -> dict[str, Any]:
     Returns:
         dict with status, action taken, and any error
     """
-    # Verify signature
-    if signature and not verify_ipn_signature(payload_json, signature):
-        logger.warning("[NP] IPN signature mismatch — rejecting")
+    # Verify signature (mandatory whenever IPN_SECRET is configured)
+    if (IPN_SECRET or signature) and not verify_ipn_signature(payload_json, signature):
+        logger.warning("[NP] IPN signature mismatch or missing — rejecting")
         return {"ok": False, "error": "signature_mismatch"}
 
     data = json.loads(payload_json)
-    payment_status = data.get("payment_status", "")
-    payment_id = data.get("payment_id", "unknown")
+    payment_status = _clean_log_val(data.get("payment_status", ""))
+    payment_id = _clean_log_val(data.get("payment_id", "unknown"))
     order_id = str(data.get("order_id") or "")
-    workspace_id = order_id.split("-")[0] if "-" in order_id else "default"
+    lead_uuid = _UUID_RE.match(order_id)
+    workspace_id = lead_uuid.group(0) if lead_uuid else (order_id.split("-")[0] if "-" in order_id else "default")
 
-    logger.info(f"[NP] IPN received: payment={payment_id} status={payment_status}")
+    logger.info("[NP] IPN received: payment=%s status=%s", payment_id, payment_status)
 
     # Decree 52/2024/ND-CP fourth-door guard: domestic VN entities settle exclusively via VietQR
     if _is_vn_jurisdiction_ipn(data, order_id=order_id, workspace_id=workspace_id):
-        logger.warning("[NP] Blocked VN jurisdiction crypto IPN: order_id=%s", order_id)
+        logger.warning("[NP] Blocked VN jurisdiction crypto IPN: order_id=%s", _clean_log_val(order_id))
         return {
             "ok": False,
             "error": "rail_not_permitted_for_jurisdiction",

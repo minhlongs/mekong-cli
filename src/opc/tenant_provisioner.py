@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import os
 import secrets
 import time
 from dataclasses import dataclass
@@ -64,6 +65,8 @@ def provision_isolated_tenant(
     config_file = (tenant_root / f"{slug}.tenant.json").resolve()
     if vietqr_db.parent != tenant_root or privacy_db.parent != tenant_root or config_file.parent != tenant_root:
         raise TenantIsolationError(f"Path traversal blocked for tenant '{tenant_id}'.")
+    if config_file.exists():
+        raise TenantIsolationError(f"Tenant '{slug}' is already provisioned; refusing silent overwrite.")
 
     StateStore(db_path)
     UsageLedger(db_path)
@@ -89,7 +92,12 @@ def provision_isolated_tenant(
         "tenant_api_key_sha256": key_sha256,
         "created_at": int(time.time()),
     }
-    config_file.write_text(json.dumps(tenant_cfg, ensure_ascii=False, sort_keys=True, indent=2), encoding="utf-8")
+    fd = os.open(str(config_file), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write(json.dumps(tenant_cfg, ensure_ascii=False, sort_keys=True, indent=2))
+    for p in (db_path, vietqr_db, privacy_db, config_file):
+        if p.exists():
+            os.chmod(p, 0o600)
     elapsed_ms = (time.monotonic() - t0) * 1000.0
 
     return ProvisionedTenantResult(

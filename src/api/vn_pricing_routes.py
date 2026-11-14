@@ -129,17 +129,23 @@ async def get_free_plan() -> dict[str, Any]:
 
 @router.get("/paid")
 async def get_paid_plan() -> dict[str, Any]:
-    """Paid commercial tiers via VietQR Napas 247 (domestic VND) or NOWPayments (overseas)."""
+    """Paid domestic tiers via VietQR Napas 247 (VND)."""
     try:
         data = _load_pricing()
     except HTTPException:
         data = {}
-    usd_tiers = data.get("usd_products", {})
+    vn_products = data.get("vn_products", {})
+    sanitized = {
+        k: _sanitize_vn_product(v)
+        for k, v in vn_products.items()
+        if isinstance(v, dict)
+    }
     return {
         "plan": "paid",
         "currency": "VND",
         "allowed_rails": ["vietqr"],
-        "tiers": usd_tiers,
+        "tiers": sanitized,
+        "vn_sme_workflow_tiers": _build_vn_sme_workflow_tiers(),
     }
 
 
