@@ -25,7 +25,7 @@ It directly powers the AI enterprise platform [mekongmind.com](https://www.mekon
 2. **Tax & Accounting (`thue_dnvn` / `ke_toan`)** — Full Vietnamese regulatory compliance: TNCN (Personal Income Tax), TNDN (Corporate Income Tax), GTGT (VAT), and Decree 123 / Circular 78 (`TT78`) electronic invoice issuance.
 3. **AI Video Factory (`sophia`)** — Automated AI marketing video generation pipelines running on edge infrastructure.
 
-Across all funnels, **39 Typer CLI command groups** are wired through `build_app()` (`python3 -c "from src.cli.app_setup import build_app; print(len(build_app().registered_groups))"`), guided by our deterministic Plan-Execute-Verify (PEV) harness.
+Across all funnels, **189 Typer CLI command groups** are wired through `build_app()` (`python3 -c "from src.cli.app_setup import build_app; print(len(build_app().registered_groups))"`), guided by our deterministic Plan-Execute-Verify (PEV) harness.
 
 ---
 
@@ -36,7 +36,7 @@ Mekong CLI strictly adopts the **25-Step Open-Core Architecture**, separating th
 ```
                     ┌────────────────────────────────────────────────────────┐
                     │               Mekong CLI (MIT Open-Core)               │
-                    │   Local Runtime • CapabilityBus • BYOK • 39 Commands   │
+                    │   Local Runtime • CapabilityBus • BYOK • 189 Groups    │
                     └───────────────────────────┬────────────────────────────┘
                                                 │
                           PLG Upsell Bridge / BYOK / Status Polling

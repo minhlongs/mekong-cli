@@ -437,7 +437,7 @@ class WebSocketFrameParser:
     def compute_handshake_accept(sec_websocket_key: str) -> str:
         """Compute Sec-WebSocket-Accept token per RFC 6455 Section 1.3."""
         raw = (sec_websocket_key.strip() + WEBSOCKET_GUID).encode("ascii")
-        return base64.b64encode(hashlib.sha1(raw).digest()).decode("ascii")
+        return base64.b64encode(hashlib.sha1(raw, usedforsecurity=False).digest()).decode("ascii")
 
     @staticmethod
     def build_handshake_response(sec_websocket_key: str) -> bytes:

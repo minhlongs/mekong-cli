@@ -85,7 +85,9 @@ def get_verifier() -> VietQRVerifier:
     """
     provider = os.environ.get("MEKONG_VIETQR_PROVIDER", "sepay").lower()
     if provider == "sepay":
-        secret = os.environ.get("MEKONG_VIETQR_WEBHOOK_SECRET", "")
+        secret = os.environ.get("MEKONG_VIETQR_WEBHOOK_SECRET") or os.environ.get(
+            "VIETQR_WEBHOOK_SECRET", ""
+        )
         if not secret:
             raise RuntimeError(
                 "MEKONG_VIETQR_WEBHOOK_SECRET not set — VietQR webhook disabled"

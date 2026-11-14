@@ -118,10 +118,10 @@ class PilotPrivacyGuard:
                 conn.execute("PRAGMA foreign_keys = ON")
                 run_ids = [r[0] for r in conn.execute("SELECT run_id FROM opc_runs WHERE proposal_input_json LIKE ? ESCAPE '\\' OR action_payload_json LIKE ? ESCAPE '\\'", (like_pat, like_pat)).fetchall()]
                 if run_ids:
-                    ph = ",".join("?" * len(run_ids))
-                    c0 = conn.execute(f"DELETE FROM opc_approvals WHERE run_id IN ({ph})", run_ids)
-                    c1 = conn.execute(f"DELETE FROM opc_actions WHERE run_id IN ({ph})", run_ids)
-                    c2 = conn.execute(f"DELETE FROM opc_runs WHERE run_id IN ({ph})", run_ids)
+                    rows_param = [(rid,) for rid in run_ids]
+                    c0 = conn.executemany("DELETE FROM opc_approvals WHERE run_id = ?", rows_param)
+                    c1 = conn.executemany("DELETE FROM opc_actions WHERE run_id = ?", rows_param)
+                    c2 = conn.executemany("DELETE FROM opc_runs WHERE run_id = ?", rows_param)
                     opc_erased += max(0, c0.rowcount) + max(0, c1.rowcount) + max(0, c2.rowcount)
                 c3 = conn.execute("DELETE FROM opc_actions WHERE payload_json LIKE ? ESCAPE '\\'", (like_pat,))
                 opc_erased += max(0, c3.rowcount)

@@ -373,8 +373,7 @@ class MemoryStore:
         for e in removed_entries:
             try:
                 entry_id = hashlib.md5(
-                    f"{e.goal}:{e.timestamp}".encode(),
-                ).hexdigest()
+                    f"{e.goal}:{e.timestamp}".encode(), usedforsecurity=False).hexdigest()
                 self._vector_store.delete_point(self.VECTOR_COLLECTION, entry_id)
             except Exception:
                 pass
@@ -457,8 +456,7 @@ class MemoryStore:
                 text, self.VECTOR_DIM,
             )
             entry_id = hashlib.md5(
-                f"{entry.goal}:{entry.timestamp}".encode(),
-            ).hexdigest()
+                f"{entry.goal}:{entry.timestamp}".encode(), usedforsecurity=False).hexdigest()
 
             mem_type = MemoryType.EPISODIC
             if entry.recipe_used:

@@ -179,7 +179,7 @@ class HitechEngine:
 
         is_qualified = len(deficiencies) == 0
         status = "QUALIFIED_HITECH_ENTERPRISE" if is_qualified else "DEFICIENT_CONDITIONS"
-        seq = hashlib.md5(f"{company_name}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{company_name}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         cert_code = f"CNC-{now.year}-{seq}"
 
         tax_incentive_desc = (
@@ -276,7 +276,7 @@ class HitechEngine:
             status = "VOLUNTARY_REGISTERED"
             legal_status = "Đăng ký tự nguyện đối với chuyển giao công nghệ nội địa không dùng vốn nhà nước"
 
-        seq = hashlib.md5(f"{contract_title}:{transferor}:{transferee}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{contract_title}:{transferor}:{transferee}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         reg_code = f"DKCG-{now.year}-{seq}"
 
         result = {
@@ -354,7 +354,7 @@ class HitechEngine:
 
         is_approved = len(deficiencies) == 0
         status = "APPROVED_FOR_HITECH_PARK" if is_approved else "INSUFFICIENT_INVESTMENT_DENSITY"
-        seq = hashlib.md5(f"{project_name}:{park_name}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{project_name}:{park_name}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         proj_code = f"KCNC-{now.year}-{seq}"
 
         result = {
@@ -440,7 +440,7 @@ class HitechEngine:
 
         tax_saved = max(0.0, standard_tax - incentive_tax)
         now = datetime.datetime.now()
-        seq = hashlib.md5(f"{company_name}:{operating_year}:{profit_before_tax_vnd}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{company_name}:{operating_year}:{profit_before_tax_vnd}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         eval_code = f"CIT-CNC-{now.year}-{seq}"
 
         result = {

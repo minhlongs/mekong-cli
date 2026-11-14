@@ -25,6 +25,9 @@ import binascii
 import hashlib
 import json
 import logging
+import os
+import re
+import shlex
 import sqlite3
 import subprocess
 import time
@@ -34,6 +37,13 @@ from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
+
+from src.core.command_sanitizer import CommandSanitizer
+
+_ENV_ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=.*$")
+_ALLOWED_TEST_RUNNERS = frozenset(
+    {"python", "python3", "pytest", "ruff", "mypy", "npm", "pnpm", "npx", "node", "mekong"}
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1454,13 +1464,34 @@ class PEVSwarmBridge:
             if not exists:
                 all_passed = False
 
-        # 2. Automated test command execution
+        # 2. Automated test command execution (sanitized argv-split, zero shell)
         if criteria.test_command and not dry_run:
             try:
+                raw_cmd = criteria.test_command
+                if "\n" in raw_cmd or "\r" in raw_cmd:
+                    raise ValueError("Multiline test_command forbidden")
+                verdict = CommandSanitizer(strict_mode=True).sanitize(raw_cmd)
+                if not verdict.is_safe:
+                    raise ValueError(f"Unsafe test_command blocked: {verdict.blocked_patterns}")
+                tokens = shlex.split(raw_cmd)
+                env_overrides: dict[str, str] = {}
+                idx = 0
+                while idx < len(tokens) and _ENV_ASSIGNMENT_RE.match(tokens[idx]):
+                    key, val = tokens[idx].split("=", 1)
+                    env_overrides[key] = val
+                    idx += 1
+                cmd_argv = tokens[idx:]
+                if not cmd_argv:
+                    raise ValueError("Empty test_command")
+                binary_name = Path(cmd_argv[0]).name
+                if binary_name not in _ALLOWED_TEST_RUNNERS:
+                    raise ValueError(f"Disallowed test runner binary: {binary_name!r}")
+                run_env = {**os.environ, **env_overrides} if env_overrides else None
                 cmd_res = subprocess.run(
-                    criteria.test_command,
-                    shell=True,
+                    cmd_argv,
+                    shell=False,
                     cwd=self.project_root,
+                    env=run_env,
                     capture_output=True,
                     text=True,
                     timeout=120,

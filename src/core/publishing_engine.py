@@ -129,7 +129,7 @@ class PublishingEngine:
 
         approved = len(deficiencies) == 0
         now = datetime.datetime.now()
-        seq = hashlib.md5(f"{name}:{managing_agency}".encode("utf-8")).hexdigest()[:5].upper()
+        seq = hashlib.md5(f"{name}:{managing_agency}".encode("utf-8"), usedforsecurity=False).hexdigest()[:5].upper()
         pub_code = f"GP-NXB-{now.year}-{seq}"
 
         result = {
@@ -203,7 +203,7 @@ class PublishingEngine:
         year = now.year
         isbn = self._generate_isbn13(f"{publisher_code}:{title}:{author_name}:{now.timestamp()}")
 
-        seq_dec = hashlib.md5(f"{title}:{year}".encode("utf-8")).hexdigest()[:4].upper()
+        seq_dec = hashlib.md5(f"{title}:{year}".encode("utf-8"), usedforsecurity=False).hexdigest()[:4].upper()
         decision_number = f"QĐXB-{seq_dec}/{year}/NXB"
 
         result = {
@@ -276,7 +276,7 @@ class PublishingEngine:
         if national_library_copies < 2:
             deficiencies.append(f"Số bản nộp Thư viện Quốc gia ({national_library_copies} bản) thấp hơn quy định 02 bản")
 
-        deposit_code = f"LC-{sub_dt.year}-{hashlib.md5(f'{isbn}:{sub_str}'.encode('utf-8')).hexdigest()[:6].upper()}"
+        deposit_code = f"LC-{sub_dt.year}-{hashlib.md5(f'{isbn}:{sub_str}'.encode('utf-8'), usedforsecurity=False).hexdigest()[:6].upper()}"
         status = "DEPOSITED" if len(deficiencies) == 0 else "DEFICIENT"
 
         result = {
@@ -376,7 +376,7 @@ class PublishingEngine:
             deficiencies.append("Người đứng đầu cơ sở in chưa có bằng đại học chuyên ngành in hoặc chứng chỉ bồi dưỡng quản lý in")
 
         compliant = len(deficiencies) == 0
-        fac_code = f"PRN-{hashlib.md5(f'{facility_name}:{address}'.encode('utf-8')).hexdigest()[:6].upper()}"
+        fac_code = f"PRN-{hashlib.md5(f'{facility_name}:{address}'.encode('utf-8'), usedforsecurity=False).hexdigest()[:6].upper()}"
 
         result = {
             "facility_code": fac_code,

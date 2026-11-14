@@ -140,24 +140,38 @@ jobs:
           cache: pip
 
       - name: Install security tools
-        run: pip install bandit semgrep
+        run: pip install bandit semgrep pip-audit
 
-      - name: Bandit static analysis
-        run: bandit -r src/ -ll --exit-zero
+      - name: Bandit static analysis (blocking High across src/, Medium+ on OPC/OpenCore)
+        run: |
+          bandit -r src/ -lll -q
+          bandit -r src/opc/ src/core/opencore/ src/core/raas_license_verifier.py src/seed/ integrations/ -ll -q
 
-      - name: Semgrep scan
-        run: semgrep --config=auto src/ cli/ --error --exclude=node_modules --exclude=.venv --exclude=dist
-        continue-on-error: true
+      - name: Semgrep scan (blocking ERROR severity across src/)
+        run: semgrep --config=p/python --config=p/secrets src/ --severity=ERROR --error --exclude=node_modules --exclude=.venv --exclude=dist
 
-      - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@master
+      - name: Resolve and freeze canonical Python dependencies
+        run: |
+          python -m venv "$RUNNER_TEMP/trivy-venv"
+          "$RUNNER_TEMP/trivy-venv/bin/pip" install -q -r requirements.txt
+          mkdir -p "$RUNNER_TEMP/trivy-deps"
+          "$RUNNER_TEMP/trivy-venv/bin/pip" freeze --exclude-editable > "$RUNNER_TEMP/trivy-deps/requirements.txt"
+          pkg_count=$(grep -c "==" "$RUNNER_TEMP/trivy-deps/requirements.txt")
+          echo "Resolved $pkg_count pinned Python packages for vulnerability gate"
+          test "$pkg_count" -ge 30
+
+      - name: pip-audit on resolved runtime dependencies (blocking)
+        run: pip-audit -r "$RUNNER_TEMP/trivy-deps/requirements.txt"
+
+      - name: Trivy scan on resolved requirements.txt (blocking HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
-          scan-ref: .
-          exit-code: 0
+          scan-ref: ${{ runner.temp }}/trivy-deps
+          exit-code: "1"
+          ignore-unfixed: true
           severity: HIGH,CRITICAL
           format: table
-        continue-on-error: true
 
   # ------------------------------------------------------------------ #
   # G3 — QUALITY: Python coverage >= 28%                                #

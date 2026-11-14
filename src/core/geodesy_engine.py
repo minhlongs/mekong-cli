@@ -201,7 +201,7 @@ class GeodesyEngine:
         )
 
         status = "COORDINATE_VALID_VN2000" if is_in_vn else "OUTSIDE_VIETNAM_TERRITORY"
-        seq = hashlib.md5(f"{point_id}:{latitude}:{longitude}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{point_id}:{latitude}:{longitude}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         conv_code = f"VN2K-{now.year}-{seq}"
 
         result = {
@@ -280,7 +280,7 @@ class GeodesyEngine:
             fine_vnd = 0.0
 
         is_compliant = (status == "SOVEREIGNTY_COMPLIANT_MAP")
-        seq = hashlib.md5(f"{map_title}:{publisher_or_platform}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{map_title}:{publisher_or_platform}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         audit_code = f"SOV-{now.year}-{seq}"
 
         result = {
@@ -358,7 +358,7 @@ class GeodesyEngine:
 
         is_approved = (len(deficiencies) == 0)
         status = "LICENSE_APPROVED" if is_approved else "LICENSE_REJECTED"
-        seq = hashlib.md5(f"{enterprise_name}:{technical_director}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{enterprise_name}:{technical_director}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         lic_code = f"GP-DDBĐ-{now.year}-{seq}"
 
         result = {
@@ -446,7 +446,7 @@ class GeodesyEngine:
 
         is_compliant = (len(deficiencies) == 0)
         status = "SURVEY_APPROVED_COMPLIANT" if is_compliant else "SURVEY_ERROR_EXCEEDED"
-        seq = hashlib.md5(f"{parcel_id}:{province}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{parcel_id}:{province}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         survey_code = f"CAD-{now.year}-{seq}"
 
         result = {

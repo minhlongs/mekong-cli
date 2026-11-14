@@ -167,7 +167,7 @@ class FireEngine:
 
         is_approved = (len(deficiencies) == 0)
         status = "FIRE_DESIGN_APPROVED" if is_approved else "FIRE_DESIGN_REJECTED"
-        seq = hashlib.md5(f"{facility_name}:{facility_type}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{facility_name}:{facility_type}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         approval_code = f"TD-PCCC-{now.year}-{seq}"
 
         result = {
@@ -265,7 +265,7 @@ class FireEngine:
             status = "FIRE_ACCEPTANCE_FAILED"
             fine_vnd = 0.0
 
-        seq = hashlib.md5(f"{facility_name}:{water_pressure_mpa}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{facility_name}:{water_pressure_mpa}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         inspection_code = f"NT-PCCC-{now.year}-{seq}"
 
         result = {
@@ -330,7 +330,7 @@ class FireEngine:
 
         status = "EQUIPMENT_CERTIFIED_STAMPED" if is_certified else "EQUIPMENT_REJECTED"
         validity_years = 2 if is_certified else 0
-        seq = hashlib.md5(f"{equipment_type}:{serial_number}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{equipment_type}:{serial_number}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         verif_code = f"KD-TEM-PCCC-{now.year}-{seq}"
 
         result = {
@@ -398,7 +398,7 @@ class FireEngine:
 
         is_licensed = (len(deficiencies) == 0)
         status = "FIRE_SERVICE_LICENSED" if is_licensed else "FIRE_SERVICE_DENIED"
-        seq = hashlib.md5(f"{firm_name}:{technical_director}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{firm_name}:{technical_director}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         lic_code = f"GP-DV-PCCC-{now.year}-{seq}"
 
         result = {

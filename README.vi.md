@@ -25,7 +25,7 @@ Hệ thống này vận hành trực tiếp nền tảng doanh nghiệp AI [meko
 2. **Thuế & Kế toán (`thue_dnvn` / `ke_toan`)** — Tuân thủ toàn diện pháp luật Việt Nam: Thuế TNCN, Thu nhập doanh nghiệp (TNDN), Thuế GTGT, và phát hành hóa đơn điện tử theo Nghị định 123 / Thông tư 78 (`TT78`).
 3. **Nhà Máy Video AI (`sophia`)** — Tự động hóa sản xuất video marketing AI trên hạ tầng edge (Cloudflare Workers).
 
-Trên toàn bộ phễu kinh doanh, **39 nhóm lệnh Typer CLI** được ghép qua `build_app()` (`python3 -c "from src.cli.app_setup import build_app; print(len(build_app().registered_groups))"`), điều hướng bởi harness xác minh Plan-Execute-Verify (PEV) mang tính tất định.
+Trên toàn bộ phễu kinh doanh, **189 nhóm lệnh Typer CLI** được ghép qua `build_app()` (`python3 -c "from src.cli.app_setup import build_app; print(len(build_app().registered_groups))"`), điều hướng bởi harness xác minh Plan-Execute-Verify (PEV) mang tính tất định.
 
 ---
 
@@ -36,7 +36,7 @@ Mekong CLI áp dụng nghiêm ngặt **Kiến trúc Open-Core 25 bước**, tác
 ```
                     ┌────────────────────────────────────────────────────────┐
                     │               Mekong CLI (MIT Open-Core)               │
-                    │   Local Runtime • CapabilityBus • BYOK • 39 Commands   │
+                    │   Local Runtime • CapabilityBus • BYOK • 189 Groups    │
                     └───────────────────────────┬────────────────────────────┘
                                                 │
                           PLG Upsell Bridge / BYOK / Status Polling

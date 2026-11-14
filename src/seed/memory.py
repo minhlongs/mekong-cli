@@ -7,13 +7,15 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import tempfile
 import time
 import uuid
 from pathlib import Path
 from typing import Any
 
-CHROMA_PATH: str = os.getenv("CHROMA_PATH", "/tmp/seed_chroma")
-SQLITE_PATH: str = os.getenv("SQLITE_PATH", "/tmp/seed_memory.db")
+_TMP_ROOT = Path(tempfile.gettempdir())
+CHROMA_PATH: str = os.getenv("CHROMA_PATH", str(_TMP_ROOT / "seed_chroma"))
+SQLITE_PATH: str = os.getenv("SQLITE_PATH", str(_TMP_ROOT / "seed_memory.db"))
 
 
 class SeedMemory:

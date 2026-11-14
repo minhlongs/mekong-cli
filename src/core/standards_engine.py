@@ -287,7 +287,7 @@ class StandardsEngine:
             )
 
         status = "REGISTERED_COMPLIANT" if len(deficiencies) == 0 else "DEFICIENT_REJECTED"
-        seq = hashlib.md5(f"{product_name}:{manufacturer}:{standard_code}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{product_name}:{manufacturer}:{standard_code}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         prefix = "DKHQ" if c_type == "HOP_QUY" else "DKHC"
         dec_code = f"{prefix}-{now.year}-{seq}"
 
@@ -365,7 +365,7 @@ class StandardsEngine:
         is_compliant = len(deficiencies) == 0
         status = "COMPLIANT_CR_MARK" if is_compliant else "VIOLATION_CR_MARK"
         now = datetime.datetime.now()
-        seq = hashlib.md5(f"{product_name}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{product_name}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         ver_code = f"CR-VER-{now.year}-{seq}"
 
         result = {
@@ -456,7 +456,7 @@ class StandardsEngine:
         else:
             status = "VERIFIED_VALID"
 
-        seq = hashlib.md5(f"{instrument_name}:{serial_number}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{instrument_name}:{serial_number}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         inst_code = f"MET-{now.year}-{seq}"
 
         result = {
@@ -521,7 +521,7 @@ class StandardsEngine:
         status = "PASSED_INSPECTION" if passed else "FAILED_INSPECTION"
         decision = "THÔNG QUAN / CHO PHÉP LƯU THÔNG" if passed else "TẠM DỪNG LƯU THÔNG / TÁI XUẤT / THU HỒI TIÊU HỦY"
 
-        seq = hashlib.md5(f"{batch_no}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{batch_no}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         insp_code = f"KTCL-{now.year}-{seq}"
 
         result = {

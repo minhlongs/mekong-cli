@@ -424,3 +424,50 @@ class TestWorkerPoolHealthCheck:
         self._add_worker(pool, "stopping", WorkerState.STOPPING)
         health = pool.health_check()
         assert "stopping" in health["unhealthy"]
+
+
+class TestHeartbeatSchedulerExecuteTask:
+    """Tier 1 fail-closed argv/pipeline execution without shell injection."""
+
+    def test_executes_single_and_chained_and_piped_commands_safely(self, tmp_path):
+        import asyncio
+
+        scheduler = HeartbeatScheduler(project_root=str(tmp_path))
+        (tmp_path / "sample.txt").write_text("alpha\nbeta\n", encoding="utf-8")
+
+        single = ScheduledTask(description="single", command="git --version", tier=1)
+        chained = ScheduledTask(
+            description="chained",
+            command="echo first && echo 'second && literal'",
+            tier=1,
+        )
+        piped = ScheduledTask(
+            description="piped",
+            command="cat sample.txt | wc -l",
+            tier=1,
+        )
+        assert asyncio.run(scheduler.execute_task(single)) is True
+        assert asyncio.run(scheduler.execute_task(chained)) is True
+        assert asyncio.run(scheduler.execute_task(piped)) is True
+
+    def test_blocks_unclosed_quote_multiline_and_dangerous_commands(self, tmp_path):
+        import asyncio
+
+        scheduler = HeartbeatScheduler(project_root=str(tmp_path))
+        marker = tmp_path / "pwned.txt"
+
+        payloads = [
+            f"touch {marker}\n'",
+            "echo ok; whoami",
+            "echo ok || whoami",
+            "echo $(id)",
+            "echo `id`",
+            "echo secret > leaked.txt",
+            "python3 -c 'import os'",
+            "rm -rf /",
+        ]
+        for cmd in payloads:
+            task = ScheduledTask(description="unsafe", command=cmd, tier=1)
+            assert asyncio.run(scheduler.execute_task(task)) is False, f"Failed to block: {cmd!r}"
+        assert not marker.exists()
+

@@ -124,6 +124,51 @@ class TestCodeEvolutionEngine(unittest.TestCase):
             )
             self.assertFalse(engine.apply_evolution(attempt))
 
+    def test_git_isolation_handles_quotes_and_flag_smuggling_in_description(self):
+        import subprocess
+        from unittest.mock import patch
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            engine = self._make_engine(tmpdir)
+            subprocess.run(["git", "init", "-b", "main"], cwd=tmpdir, check=True, capture_output=True)
+            subprocess.run(["git", "config", "user.email", "bot@example.com"], cwd=tmpdir, check=True)
+            subprocess.run(["git", "config", "user.name", "Mekong Bot"], cwd=tmpdir, check=True)
+            subprocess.run(["git", "add", "-A"], cwd=tmpdir, check=True)
+            subprocess.run(["git", "commit", "-m", "init"], cwd=tmpdir, check=True, capture_output=True)
+
+            desc = 'Handle "foo bar" --author="Attacker <evil@example.com>" and "truncated quote'
+            attempt = EvolutionAttempt(
+                id="evo-quote",
+                description=desc,
+                branch_name="evo/evo-quote",
+                changes=[
+                    CodeChange(
+                        file_path="src/core/sample.py",
+                        original_content="def hello():\n    return 'world'\n",
+                        modified_content="def hello():\n    return 'evolved'\n",
+                    )
+                ],
+            )
+
+            orig_run = subprocess.run
+            with patch("src.core.code_evolution.subprocess.run") as mock_run:
+                mock_run.side_effect = lambda cmd, **kw: (
+                    subprocess.CompletedProcess(cmd, 0, stdout="1 passed\n", stderr="")
+                    if isinstance(cmd, list) and "pytest" in cmd
+                    else orig_run(cmd, **kw)
+                )
+                ok = engine.test_evolution(attempt)
+
+            self.assertTrue(ok)
+            self.assertEqual(attempt.status, EvolutionStatus.PASSED)
+            applied = engine.apply_evolution(attempt)
+            self.assertTrue(applied)
+            author = orig_run(
+                ["git", "log", "-1", "--format=%an"],
+                cwd=tmpdir, capture_output=True, text=True, check=True,
+            ).stdout.strip()
+            self.assertEqual(author, "Mekong Bot")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -164,7 +164,7 @@ class PriceEngine:
 
         is_valid = len(deficiencies) == 0
         status = "DECLARATION_ACCEPTED" if is_valid else "DECLARATION_FLAGGED"
-        seq = hashlib.md5(f"{enterprise_name}:{product_name}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{enterprise_name}:{product_name}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         dec_code = f"KKG-{now.year}-{seq}"
 
         result = {
@@ -238,7 +238,7 @@ class PriceEngine:
         else:
             status = "COMPLIANT_POSTING"
 
-        seq = hashlib.md5(f"{store_name}:{product_name}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{store_name}:{product_name}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         audit_code = f"NYG-{now.year}-{seq}"
 
         result = {
@@ -310,7 +310,7 @@ class PriceEngine:
 
         is_valid = len(deficiencies) == 0
         status = "CERTIFIED_VALID" if is_valid else "CERTIFICATE_REVOKED"
-        seq = hashlib.md5(f"{appraisal_firm}:{client_name}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{appraisal_firm}:{client_name}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         cert_code = f"CTTDG-{now.year}-{seq}"
 
         result = {
@@ -389,7 +389,7 @@ class PriceEngine:
             penalty_fine = 0.0
             legal_conclusion = "Mức biến động giá nằm trong biên độ chấp nhận được của thị trường"
 
-        seq = hashlib.md5(f"{business_name}:{product_name}:{now.timestamp()}".encode("utf-8")).hexdigest()[:6].upper()
+        seq = hashlib.md5(f"{business_name}:{product_name}:{now.timestamp()}".encode("utf-8"), usedforsecurity=False).hexdigest()[:6].upper()
         audit_code = f"GOUGE-{now.year}-{seq}"
 
         result = {
