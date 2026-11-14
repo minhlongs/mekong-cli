@@ -104,16 +104,21 @@ class SqliteGraphCheckpointer:
     def execute_side_effect_once(self, thread_id: str, approval_token_id: str, payload_sha256: str, commit_fn: Callable[[dict[str, Any]], dict[str, Any]], state: dict[str, Any]) -> tuple[dict[str, Any], bool]:
         idem_key = f"act_{hashlib.sha256(f'{thread_id}:{payload_sha256}'.encode('utf-8')).hexdigest()}"
         with self._connect() as conn:
-            if (row := conn.execute("SELECT result_json FROM opc_side_effect_journal WHERE idempotency_key = ?", (idem_key,)).fetchone()) is not None:
-                return json.loads(row["result_json"]), True
-        out = commit_fn(state)
-        with self._connect() as conn:
             conn.execute("BEGIN IMMEDIATE")
-            if (row2 := conn.execute("SELECT result_json FROM opc_side_effect_journal WHERE idempotency_key = ?", (idem_key,)).fetchone()) is not None:
+            if (row := conn.execute("SELECT result_json FROM opc_side_effect_journal WHERE idempotency_key = ?", (idem_key,)).fetchone()) is not None:
                 conn.execute("COMMIT")
-                return json.loads(row2["result_json"]), True
-            conn.execute("INSERT INTO opc_side_effect_journal (idempotency_key, thread_id, approval_token_id, payload_sha256, result_json, created_at) VALUES (?, ?, ?, ?, ?, ?)", (idem_key, thread_id, approval_token_id, payload_sha256, json.dumps(out, sort_keys=True, ensure_ascii=False), int(time.time())))
+                cached = json.loads(row["result_json"])
+                return (cached if cached.get("status") != "in_flight" else {"status": "deduplicated"}), True
+            conn.execute("INSERT INTO opc_side_effect_journal (idempotency_key, thread_id, approval_token_id, payload_sha256, result_json, created_at) VALUES (?, ?, ?, ?, ?, ?)", (idem_key, thread_id, approval_token_id, payload_sha256, '{"status":"in_flight"}', int(time.time())))
             conn.execute("COMMIT")
+        try:
+            out = commit_fn(state)
+        except Exception:
+            with self._connect() as conn:
+                conn.execute("DELETE FROM opc_side_effect_journal WHERE idempotency_key = ? AND result_json = '{\"status\":\"in_flight\"}'", (idem_key,))
+            raise
+        with self._connect() as conn:
+            conn.execute("UPDATE opc_side_effect_journal SET result_json = ? WHERE idempotency_key = ?", (json.dumps(out, sort_keys=True, ensure_ascii=False), idem_key))
         return out, False
 
 
@@ -148,7 +153,9 @@ class GovernedStateGraph:
         commit_out, deduplicated = self.checkpointer.execute_side_effect_once(run_id, approval_token_id, payload_sha256, eff_commit, dict(cp.state))
         merged = {**cp.state, "approval_token_id": approval_token_id, "commit_result": commit_out, "side_effect_deduplicated": deduplicated}
         self.checkpointer.put(run_id, GraphStage.COMMIT_RECONCILE, merged, interrupted=False, payload_sha256=payload_sha256)
-        return self.checkpointer.put(run_id, GraphStage.COMPLETED, merged, interrupted=False, payload_sha256=payload_sha256)
+        if str(commit_out.get("status", "completed")) in ("completed", "deduplicated"):
+            return self.checkpointer.put(run_id, GraphStage.COMPLETED, merged, interrupted=False, payload_sha256=payload_sha256)
+        return self.checkpointer.put(run_id, GraphStage.COMMIT_RECONCILE, merged, interrupted=False, payload_sha256=payload_sha256)
 
 
 def record_pilot_checkpoint(checkpointer: SqliteGraphCheckpointer | None, run_id: str, payload: ActionPayload, extra: dict[str, Any]) -> str:

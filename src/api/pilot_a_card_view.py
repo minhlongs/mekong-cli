@@ -110,22 +110,26 @@ def render_mobile_approval_card_html(
     vietqr_memo: str,
     window_remaining_hours: float,
     tenant_id: str = "default",
+    card_sig: str = "",
 ) -> str:
     """Render self-contained <15KB Vietnamese mobile HTML card for 10-30s owner 1-tap approval."""
-    esc_run = html_escape(run_id)
-    esc_status = html_escape(status)
-    esc_client = html_escape(client_name)
-    esc_title = html_escape(project_title)
-    esc_notes = html_escape(customer_notes or "(Đã ẩn danh thông tin nhạy cảm theo Nghị định 13/2023)")
-    esc_memo = html_escape(vietqr_memo)
-    esc_digest = html_escape(action_digest)
-    esc_tenant = html_escape(tenant_id)
+    esc_run = html_escape(run_id[:64])
+    esc_status = html_escape(status[:40])
+    esc_client = html_escape(client_name[:120])
+    esc_title = html_escape(project_title[:160])
+    clipped_notes = (customer_notes or "(Đã ẩn danh thông tin nhạy cảm theo Nghị định 13/2023)")[:400]
+    esc_notes = html_escape(clipped_notes)
+    esc_memo = html_escape(vietqr_memo[:80])
+    esc_digest = html_escape(action_digest[:80])
+    esc_tenant = html_escape(tenant_id[:64])
+    esc_sig_q = f"&amp;sig={html_escape(card_sig)}" if card_sig else ""
     fmt_total = f"{int(total_amount_vnd):,}".replace(",", ".")
 
     item_rows: list[str] = []
-    for it in line_items:
-        svc = html_escape(str(it.get("service", it.get("item_name", "dịch vụ"))))
-        qty = html_escape(str(it.get("hours", it.get("quantity", 1))))
+    shown_items = line_items[:12]
+    for it in shown_items:
+        svc = html_escape(str(it.get("service", it.get("item_name", "dịch vụ")))[:48])
+        qty = html_escape(str(it.get("hours", it.get("quantity", 1)))[:12])
         rate_i = int(float(str(it.get("rate", it.get("unit_price_vnd", 0)))))
         sub_i = int(float(str(it.get("subtotal", it.get("line_subtotal_vnd", 0)))))
         rate_s = f"{rate_i:,}".replace(",", ".")
@@ -133,19 +137,21 @@ def render_mobile_approval_card_html(
         item_rows.append(
             f"<li><strong>{svc}</strong>: {qty} × {rate_s}đ = <b>{sub_s}đ</b></li>"
         )
+    if len(line_items) > 12:
+        item_rows.append(f"<li><em>(+{len(line_items) - 12} hạng mục khác trong tổng tiền)</em></li>")
     items_html = "".join(item_rows) or "<li>Chưa có dòng hàng hóa</li>"
 
     cit_rows: list[str] = []
     for cit in citations[:4]:
-        fn = html_escape(str(cit.get("field_name", "source_span")))
-        qt = html_escape(str(cit.get("source_quote", ""))[:80])
+        fn = html_escape(str(cit.get("field_name", "source_span"))[:32])
+        qt = html_escape(str(cit.get("source_quote", ""))[:70])
         sc = int(cit.get("start_char", 0))
         ec = int(cit.get("end_char", 0))
         cit_rows.append(f"<li><code>{fn}</code>: &ldquo;{qt}&rdquo; <span>[{sc}..{ec}]</span></li>")
     cits_html = "".join(cit_rows) or "<li>Trích xuất tất định từ bảng giá chuẩn</li>"
 
-    js_cfg = json.dumps({"runId": run_id, "digest": action_digest, "tenantId": tenant_id}).replace("</", "<\\/")
-    disabled_attr = "" if status == "pending_approval" else "disabled"
+    js_cfg = json.dumps({"runId": run_id, "digest": action_digest, "tenantId": tenant_id, "sig": card_sig}).replace("</", "<\\/")
+    disabled_attr = "" if status in ("pending_approval", "revise_requested") and window_remaining_hours > 0 else "disabled"
 
     return (
         "<!doctype html><html lang='vi'><head><meta charset='utf-8'>"
@@ -180,13 +186,13 @@ def render_mobile_approval_card_html(
         "✅ DUYỆT &amp; GỬI BÁO GIÁ + VIETQR</button>"
         f"<button id='bHo' class='btn-ho' {disabled_attr} onclick=\"sendDecide('handoff')\">"
         "👤 CHUYỂN NHÂN VIÊN CHAT TAY (ZALO OA MANAGER)</button>"
-        f"<p><a href='/v1/opc/pilot-a/draft-export/{esc_run}?fmt=csv&amp;tenant_id={esc_tenant}'>Tải nháp MISA CSV</a> • "
-        f"<a href='/v1/opc/pilot-a/draft-export/{esc_run}?fmt=xml&amp;tenant_id={esc_tenant}'>Tải nháp MISA XML</a></p>"
+        f"<p><a href='/v1/opc/pilot-a/draft-export/{esc_run}?fmt=csv&amp;tenant_id={esc_tenant}{esc_sig_q}'>Tải nháp MISA CSV</a> • "
+        f"<a href='/v1/opc/pilot-a/draft-export/{esc_run}?fmt=xml&amp;tenant_id={esc_tenant}{esc_sig_q}'>Tải nháp MISA XML</a></p>"
         "<div id='msg' role='status'></div>"
         f"<script>const CFG={js_cfg};"
         "async function sendDecide(d){const m=document.getElementById('msg');m.textContent='Đang xử lý...';"
         "const r=await fetch('/v1/opc/pilot-a/decide',{method:'POST',headers:{'Content-Type':'application/json'},"
-        "body:JSON.stringify({run_id:CFG.runId,tenant_id:CFG.tenantId,decision:d,action_digest:CFG.digest})});"
+        "body:JSON.stringify({run_id:CFG.runId,tenant_id:CFG.tenantId,decision:d,action_digest:CFG.digest,card_sig:CFG.sig})});"
         "const j=await r.json();if(r.ok){m.textContent='Đã xử lý: '+(j.status||d);document.getElementById('bOk').disabled=true;"
         "document.getElementById('bHo').disabled=true;}else{m.textContent='Từ chối an toàn: '+JSON.stringify(j.detail||j);}}"
         "</script></main></body></html>"

@@ -3,11 +3,14 @@ from __future__ import annotations
 
 import dataclasses
 from decimal import Decimal
+import hashlib
 import hmac
+import json
 import os
 from pathlib import Path
+import sqlite3
 import time
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Header, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse
@@ -32,11 +35,17 @@ from src.opc.pilot_a import (
     ZaloSandboxConnector,
     ZaloWebhookEvent,
 )
-from src.opc.privacy_guard import ConsentRequiredError, TenantIsolationError, redact_vietnamese_pii
+from src.opc.privacy_guard import (
+    ConsentRequiredError,
+    TenantIsolationError,
+    redact_vietnamese_pii,
+    resolve_tenant_db_path,
+)
 from src.opc.quarantine import QuarantineViolationError
 from src.opc.quota import WorkflowQuotaExceededError
 from src.opc.selective_router import extract_deterministic_citations
-from src.opc.state_graph import GraphStage, GovernedStateGraph
+from src.opc.state_graph import GovernedStateGraph, GraphStage
+from src.opc.tenant_provisioner import verify_tenant_api_key
 
 router = APIRouter(prefix="/v1/opc/pilot-a", tags=["OPC Pilot A"])
 
@@ -46,9 +55,12 @@ DEFAULT_PILOT_A_SERVICES: dict[str, Decimal] = {
     "misa_sapo_tvan_draft": Decimal("350000"),
     "tu_van_ai": Decimal("600000"),
     "tich_hop_vietqr": Decimal("400000"),
-    "architecture_review": Decimal("1200000"),
-    "security_audit": Decimal("1500000"),
+    "architecture_review": Decimal("3750000"),
+    "cloud_migration_plan": Decimal("4500000"),
+    "security_audit": Decimal("5000000"),
 }
+
+ServiceSlug = Annotated[str, Field(min_length=1, max_length=64)]
 
 
 class PilotAZaloWebhookRequest(BaseModel):
@@ -59,12 +71,16 @@ class PilotAZaloWebhookRequest(BaseModel):
     message_text: str = Field(..., min_length=1, max_length=4000)
     timestamp: int | None = None
     last_user_interaction_ts: int | None = None
-    requested_services: list[str] = Field(default_factory=lambda: ["tu_van_ai", "tich_hop_vietqr"])
+    requested_services: list[ServiceSlug] = Field(
+        default_factory=lambda: ["tu_van_ai", "tich_hop_vietqr"],
+        min_length=1,
+        max_length=20,
+    )
     estimated_hours: int = Field(10, ge=1, le=2000)
     project_title: str = Field("Báo giá dịch vụ Zalo OA & VietQR", min_length=1, max_length=240)
     currency: str = Field("VND", min_length=3, max_length=8)
     language: str = Field("vi", min_length=2, max_length=8)
-    extraction_confidence: float = Field(0.95)
+    extraction_confidence: float = Field(0.95, ge=0.0, le=1.0, allow_inf_nan=False)
     tenant_id: str = Field("default", min_length=2, max_length=63)
     sme_tier: str = Field("pilot_a")
     connector: str = Field("zalo_oa_sandbox")
@@ -83,6 +99,11 @@ class PilotADecideRequest(BaseModel):
     action_digest: str = Field(..., min_length=16, max_length=128)
     revision_notes: str = Field("", max_length=1000)
     idempotency_key: str | None = None
+    card_sig: str = Field("", max_length=128)
+
+
+def _is_production() -> bool:
+    return os.getenv("MEKONG_ENV", "development").strip().lower() == "production"
 
 
 def _pilot_base_dir() -> Path:
@@ -92,16 +113,96 @@ def _pilot_base_dir() -> Path:
     return base.resolve()
 
 
-def _build_profile(custom_rates: dict[str, int] | None = None) -> BusinessProfile:
+def _load_tenant_cfg(base_dir: Path, tenant_id: str) -> dict[str, Any] | None:
+    db_path = resolve_tenant_db_path(base_dir, tenant_id, active_tenant_id=tenant_id)
+    cfg_path = db_path.parent / f"{db_path.stem}.tenant.json"
+    if not cfg_path.is_file():
+        return None
+    loaded = json.loads(cfg_path.read_text(encoding="utf-8"))
+    return dict(loaded) if isinstance(loaded, dict) else None
+
+
+def _extract_presented_api_key(authorization: str | None, x_api_key: str | None) -> str:
+    if x_api_key and x_api_key.strip():
+        return x_api_key.strip()
+    if authorization and authorization.strip().lower().startswith("bearer "):
+        return authorization.strip()[7:].strip()
+    return ""
+
+
+def _compute_card_sig(tenant_id: str, run_id: str, action_digest: str) -> str:
+    secret = os.getenv("MEKONG_APPROVAL_SECRET", "").strip()
+    if not secret and os.getenv("PYTEST_CURRENT_TEST"):
+        secret = "pytest-ephemeral-approval-secret-key"
+    if len(secret.encode("utf-8")) < 16:
+        raise ApprovalSecurityError("MEKONG_APPROVAL_SECRET (>=16 bytes) required for card signature.")
+    msg = f"{tenant_id.strip()}:{run_id.strip()}:{action_digest.strip()}".encode("utf-8")
+    return hmac.new(secret.encode("utf-8"), msg, hashlib.sha256).hexdigest()
+
+
+def _verify_owner_access(
+    *,
+    base_dir: Path,
+    tenant_id: str,
+    run_id: str,
+    action_digest: str,
+    authorization: str | None,
+    x_api_key: str | None,
+    card_sig: str = "",
+) -> bool:
+    """Verify tenant API key or HMAC card signature; enforce strictly when provisioned or in production."""
+    cfg = _load_tenant_cfg(base_dir, tenant_id)
+    api_key = _extract_presented_api_key(authorization, x_api_key)
+    if api_key and verify_tenant_api_key(base_dir, tenant_id, api_key):
+        return True
+    if card_sig and action_digest:
+        expected_sig = _compute_card_sig(tenant_id, run_id, action_digest)
+        if hmac.compare_digest(expected_sig, card_sig.strip()):
+            return True
+    if cfg is not None or _is_production():
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "error": "unauthorized_pilot_a_owner",
+                "message": "Valid tenant API key (X-API-Key / Bearer) or signed card token (sig) is required.",
+            },
+        )
+    return False
+
+
+def _build_profile(
+    tenant_cfg: dict[str, Any] | None = None,
+    custom_rates: dict[str, int] | None = None,
+) -> BusinessProfile:
     services = dict(DEFAULT_PILOT_A_SERVICES)
     if custom_rates:
         for k, v in custom_rates.items():
             if int(v) < 0:
                 raise ValueError(f"Negative rate not allowed for '{k}'.")
             services[str(k)] = Decimal(int(v))
+    biz_name = (
+        str(tenant_cfg["business_name"])
+        if tenant_cfg and tenant_cfg.get("business_name")
+        else os.getenv("MEKONG_PILOT_BUSINESS_NAME", "CÔNG TY TNHH MEKONG SME OPS")
+    )
+    owner_name = (
+        str(tenant_cfg["owner_name"])
+        if tenant_cfg and tenant_cfg.get("owner_name")
+        else os.getenv("MEKONG_PILOT_OWNER_NAME", "Chủ Doanh Nghiệp")
+    )
+    bank_id = (
+        str(tenant_cfg["bank_id"])
+        if tenant_cfg and tenant_cfg.get("bank_id")
+        else os.getenv("MEKONG_BANK_ID", "MB")
+    )
+    account_no = (
+        str(tenant_cfg["account_no"])
+        if tenant_cfg and tenant_cfg.get("account_no")
+        else os.getenv("MEKONG_BANK_ACCOUNT_NO", "0988889999")
+    )
     return BusinessProfile(
-        business_name=os.getenv("MEKONG_PILOT_BUSINESS_NAME", "CÔNG TY TNHH MEKONG SME OPS"),
-        owner_name=os.getenv("MEKONG_PILOT_OWNER_NAME", "Chủ Doanh Nghiệp"),
+        business_name=biz_name,
+        owner_name=owner_name,
         language="vi",
         locale="vi_VN",
         timezone="Asia/Ho_Chi_Minh",
@@ -109,10 +210,7 @@ def _build_profile(custom_rates: dict[str, int] | None = None) -> BusinessProfil
         services=services,
         payment_terms="Thanh toán 100% qua chuyển khoản nhanh VietQR Napas 247",
         jurisdiction="VN",
-        preferences={
-            "bank_id": os.getenv("MEKONG_BANK_ID", "MB"),
-            "account_no": os.getenv("MEKONG_BANK_ACCOUNT_NO", "0988889999"),
-        },
+        preferences={"bank_id": bank_id, "account_no": account_no},
     )
 
 
@@ -125,19 +223,29 @@ def _build_workflow(
     enforce_consent: bool = False,
     runtime_engine: str | None = None,
     custom_rates: dict[str, int] | None = None,
-) -> PilotAWorkflow:
-    conn = ZaloOAConnector(oa_tier=oa_tier) if connector_name.strip().lower() == "zalo_oa" else ZaloSandboxConnector()
-    return PilotAWorkflow(
+    require_existing_in_prod: bool = False,
+) -> tuple[PilotAWorkflow, dict[str, Any] | None]:
+    base_dir = _pilot_base_dir()
+    db_path = resolve_tenant_db_path(base_dir, tenant_id, active_tenant_id=tenant_id)
+    tenant_cfg = _load_tenant_cfg(base_dir, tenant_id)
+    if require_existing_in_prod and _is_production() and tenant_cfg is None and not db_path.exists():
+        raise TenantIsolationError(f"Tenant '{tenant_id}' is not provisioned.")
+    eff_tier = str(tenant_cfg["sme_tier"]) if tenant_cfg and tenant_cfg.get("sme_tier") else sme_tier
+    quota_lim = int(tenant_cfg["monthly_workflow_quota"]) if tenant_cfg and tenant_cfg.get("monthly_workflow_quota") else None
+    conn: Any = ZaloOAConnector(oa_tier=oa_tier) if connector_name.strip().lower() == "zalo_oa" else ZaloSandboxConnector()
+    wf = PilotAWorkflow(
         db_path=None,
-        profile=_build_profile(custom_rates),
+        profile=_build_profile(tenant_cfg, custom_rates),
         zalo_connector=conn,
         enforce_consent=enforce_consent or (connector_name.strip().lower() == "zalo_oa"),
         tenant_id=tenant_id,
-        tenant_db_dir=_pilot_base_dir(),
-        sme_tier=sme_tier,
+        tenant_db_dir=base_dir,
+        sme_tier=eff_tier,
+        workflow_quota_limit=quota_lim,
         runtime_engine=runtime_engine,
         handoff_on_low_confidence=True,
     )
+    return wf, tenant_cfg
 
 
 def _reconstruct_action_payload(action_dict: dict[str, Any]) -> ActionPayload:
@@ -155,29 +263,65 @@ def _reconstruct_action_payload(action_dict: dict[str, Any]) -> ActionPayload:
     )
 
 
+def _lookup_vietqr_bank_tx_id(vietqr_db_path: Path, run_id: str) -> str | None:
+    if not vietqr_db_path.exists():
+        return None
+    with sqlite3.connect(str(vietqr_db_path), timeout=10.0) as conn:
+        row = conn.execute(
+            "SELECT bank_tx_id FROM transactions WHERE matched_order_id = ? ORDER BY received_at DESC, rowid DESC LIMIT 1",
+            (run_id,),
+        ).fetchone()
+    return str(row[0]) if row and row[0] else None
+
+
 @router.post("/webhook/zalo")
 async def receive_pilot_a_zalo_webhook(
     req: PilotAZaloWebhookRequest,
     request: Request,
     x_zevent_mac: str | None = Header(default=None, alias="X-ZEvent-Mac"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
 ) -> dict[str, Any]:
     """Ingest Zalo OA inbound message, run GovernedStateGraph stages 1-4, and emit 1-tap ApprovalCard or Handoff."""
     raw_body = await request.body()
     now_ts = int(req.timestamp) if req.timestamp is not None else int(time.time())
     last_ts = int(req.last_user_interaction_ts) if req.last_user_interaction_ts is not None else (now_ts - 300)
-    services = tuple(req.requested_services) if req.requested_services else ("tu_van_ai",)
+    services = tuple(req.requested_services)
     try:
-        wf = _build_workflow(
+        base_dir = _pilot_base_dir()
+        presented_key = _extract_presented_api_key(authorization, x_api_key)
+        is_owner_authed = bool(presented_key and verify_tenant_api_key(base_dir, req.tenant_id, presented_key))
+        tenant_cfg = _load_tenant_cfg(base_dir, req.tenant_id)
+
+        # Privileged overrides (grant_consent, custom service_rates_vnd, tier override on provisioned tenant)
+        # require authenticated tenant API key when provisioned or in production.
+        if (tenant_cfg is not None or _is_production()) and not is_owner_authed:
+            if req.grant_consent or req.service_rates_vnd is not None:
+                raise HTTPException(
+                    status_code=403,
+                    detail={"error": "privileged_webhook_fields_forbidden", "message": "Tenant API key required for consent/rate overrides."},
+                )
+        allow_custom_rates = req.service_rates_vnd if (is_owner_authed or (tenant_cfg is None and not _is_production())) else None
+        allow_grant_consent = req.grant_consent and (is_owner_authed or (tenant_cfg is None and not _is_production()))
+        eff_sme_tier = req.sme_tier if (is_owner_authed or (tenant_cfg is None and not _is_production())) else "pilot_a"
+
+        wf, _ = _build_workflow(
             tenant_id=req.tenant_id,
-            sme_tier=req.sme_tier,
+            sme_tier=eff_sme_tier,
             connector_name=req.connector,
             oa_tier=req.oa_tier,
             enforce_consent=req.require_consent,
             runtime_engine=req.runtime_engine,
-            custom_rates=req.service_rates_vnd,
+            custom_rates=allow_custom_rates,
+            require_existing_in_prod=True,
         )
-        if req.grant_consent:
+        if allow_grant_consent:
             wf.privacy_guard.record_subject_consent(req.sender_id)
+        must_check_mac = (
+            x_zevent_mac is not None
+            or req.connector.strip().lower() == "zalo_oa"
+            or (_is_production() and bool(os.getenv("ZALO_OA_SECRET_KEY", "").strip()) and not is_owner_authed)
+        )
         event = ZaloWebhookEvent(
             event_id=req.event_id,
             oa_id=req.oa_id,
@@ -195,10 +339,12 @@ async def receive_pilot_a_zalo_webhook(
         )
         outcome = wf.handle_webhook_or_handoff(
             event,
-            webhook_mac=x_zevent_mac,
+            webhook_mac=(x_zevent_mac or "") if must_check_mac else None,
             app_id=req.app_id,
             raw_webhook_data=raw_body,
         )
+    except HTTPException:
+        raise
     except ZaloWebhookMacError as exc:
         raise HTTPException(status_code=401, detail={"error": "invalid_zalo_webhook_mac", "message": str(exc)}) from exc
     except (ConsentRequiredError, ZaloTierPolicyError, ZaloInteractionWindowError, TenantIsolationError) as exc:
@@ -218,7 +364,8 @@ async def receive_pilot_a_zalo_webhook(
     if not isinstance(outcome, ApprovalCard):
         raise HTTPException(status_code=500, detail={"error": "unexpected_outcome_type"})
     digest = outcome.approval_token.action_digest
-    card_url = f"/v1/opc/pilot-a/card/{outcome.run_id}?tenant_id={req.tenant_id}"
+    card_sig = _compute_card_sig(req.tenant_id, outcome.run_id, digest)
+    card_url = f"/v1/opc/pilot-a/card/{outcome.run_id}?tenant_id={req.tenant_id}&sig={card_sig}"
     memo = f"OPC {outcome.run_id}"
     notif = build_owner_notification_cards(
         run_id=outcome.run_id,
@@ -244,6 +391,7 @@ async def receive_pilot_a_zalo_webhook(
         "vietqr_quicklink": outcome.vietqr_quicklink,
         "vietqr_memo": memo,
         "action_digest": digest,
+        "card_sig": card_sig,
         "approval_token_id": outcome.approval_token.token_id,
         "card_url": card_url,
         "accounting_draft_status": DRAFT_STATUS_PENDING_TVAN,
@@ -258,10 +406,13 @@ async def receive_pilot_a_zalo_webhook(
 async def get_pilot_a_run(
     run_id: str,
     tenant_id: str = Query("default", min_length=2, max_length=63),
+    sig: str = Query("", max_length=128),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
 ) -> dict[str, Any]:
     """Inspect persisted Pilot A run state, SQLite WAL graph checkpoint, and honest usage summary."""
     try:
-        wf = _build_workflow(tenant_id=tenant_id)
+        wf, _ = _build_workflow(tenant_id=tenant_id, require_existing_in_prod=True)
     except (TenantIsolationError, ApprovalSecurityError) as exc:
         raise HTTPException(status_code=403, detail={"error": type(exc).__name__, "message": str(exc)}) from exc
 
@@ -271,6 +422,15 @@ async def get_pilot_a_run(
 
     action_dict = run_data.get("action_payload") or {}
     digest = compute_action_digest(_reconstruct_action_payload(action_dict)) if action_dict else ""
+    _verify_owner_access(
+        base_dir=_pilot_base_dir(),
+        tenant_id=tenant_id,
+        run_id=run_id,
+        action_digest=digest,
+        authorization=authorization,
+        x_api_key=x_api_key,
+        card_sig=sig,
+    )
     cp = wf.checkpointer.get(run_id) if wf.checkpointer is not None else None
     costs = wf.usage.aggregate_run_costs(run_id)
     draft_info = run_data.get("proposal_draft") or {}
@@ -293,10 +453,13 @@ async def get_pilot_a_run(
 async def get_pilot_a_mobile_card(
     run_id: str,
     tenant_id: str = Query("default", min_length=2, max_length=63),
+    sig: str = Query("", max_length=128),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
 ) -> HTMLResponse:
     """Serve <15KB self-contained Vietnamese mobile HTML approval card for 10-30s shop owner review."""
     try:
-        wf = _build_workflow(tenant_id=tenant_id)
+        wf, _ = _build_workflow(tenant_id=tenant_id, require_existing_in_prod=True)
     except (TenantIsolationError, ApprovalSecurityError) as exc:
         raise HTTPException(status_code=403, detail={"error": type(exc).__name__, "message": str(exc)}) from exc
 
@@ -307,12 +470,24 @@ async def get_pilot_a_mobile_card(
     action_dict = run_data.get("action_payload") or {}
     payload = _reconstruct_action_payload(action_dict)
     digest = compute_action_digest(payload)
+    _verify_owner_access(
+        base_dir=_pilot_base_dir(),
+        tenant_id=tenant_id,
+        run_id=run_id,
+        action_digest=digest,
+        authorization=authorization,
+        x_api_key=x_api_key,
+        card_sig=sig,
+    )
+    eff_sig = sig.strip() or _compute_card_sig(tenant_id, run_id, digest)
     params = payload.parameters
     intake = run_data.get("proposal_input") or {}
     draft = run_data.get("proposal_draft") or {}
-    age_s = max(0, int(params.get("interaction_age_seconds", 0)))
+    now_s = int(time.time())
+    last_ts = params.get("last_user_interaction_ts")
+    age_s = max(0, now_s - int(last_ts)) if last_ts is not None else max(0, int(params.get("interaction_age_seconds", 0)))
     rem_hours = max(0.0, (ZALO_INTERACTION_WINDOW_SECONDS - age_s) / 3600.0)
-    raw_notes = redact_vietnamese_pii(str(intake.get("notes", payload.content))).redacted_text
+    raw_notes = redact_vietnamese_pii(str(intake.get("notes") or payload.content)).redacted_text
     cits = [dataclasses.asdict(c) for c in extract_deterministic_citations(raw_notes, wf.profile.services)[1]]
 
     html = render_mobile_approval_card_html(
@@ -328,22 +503,27 @@ async def get_pilot_a_mobile_card(
         vietqr_memo=f"OPC {run_id}",
         window_remaining_hours=rem_hours,
         tenant_id=tenant_id,
+        card_sig=eff_sig,
     )
     return HTMLResponse(content=html, status_code=200)
 
 
 @router.post("/decide")
-async def decide_pilot_a_run(req: PilotADecideRequest) -> dict[str, Any]:
+async def decide_pilot_a_run(
+    req: PilotADecideRequest,
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+) -> dict[str, Any]:
     """Verify payload_sha256 anti-TOCTOU binding and execute 1-tap approve, reject, revise, or handoff."""
     norm_dec = req.decision.strip().lower()
     if norm_dec not in ("approve", "reject", "revise", "handoff"):
         raise HTTPException(status_code=400, detail={"error": "invalid_decision", "decision": req.decision})
     try:
-        wf = _build_workflow(tenant_id=req.tenant_id)
+        wf_probe, _ = _build_workflow(tenant_id=req.tenant_id, require_existing_in_prod=True)
     except (TenantIsolationError, ApprovalSecurityError) as exc:
         raise HTTPException(status_code=403, detail={"error": type(exc).__name__, "message": str(exc)}) from exc
 
-    run_data = wf.state.get_run(req.run_id)
+    run_data = wf_probe.state.get_run(req.run_id)
     if not run_data:
         raise HTTPException(status_code=404, detail={"error": "run_not_found", "run_id": req.run_id})
     action_dict = run_data.get("action_payload")
@@ -352,6 +532,15 @@ async def decide_pilot_a_run(req: PilotADecideRequest) -> dict[str, Any]:
 
     payload = _reconstruct_action_payload(action_dict)
     expected_digest = compute_action_digest(payload)
+    _verify_owner_access(
+        base_dir=_pilot_base_dir(),
+        tenant_id=req.tenant_id,
+        run_id=req.run_id,
+        action_digest=expected_digest,
+        authorization=authorization,
+        x_api_key=x_api_key,
+        card_sig=req.card_sig,
+    )
     if not hmac.compare_digest(expected_digest, req.action_digest.strip()):
         raise HTTPException(
             status_code=409,
@@ -361,33 +550,52 @@ async def decide_pilot_a_run(req: PilotADecideRequest) -> dict[str, Any]:
             },
         )
 
-    if norm_dec == "handoff":
-        wf.state.save_run(
-            req.run_id,
-            run_data["pack_id"],
-            WorkflowStatus.REVISE_REQUESTED,
-            run_data["business_profile"],
-            run_data["proposal_input"],
-            int(time.time()),
-            run_data.get("proposal_draft"),
-            action_dict,
+    try:
+        wf, _ = _build_workflow(
+            tenant_id=req.tenant_id,
+            connector_name=payload.connector,
+            require_existing_in_prod=True,
         )
-        if wf.checkpointer is not None:
-            wf.checkpointer.put(
-                req.run_id,
-                GraphStage.HANDOFF_ZALO_OA_MANAGER,
-                {"run_id": req.run_id, "notes": redact_vietnamese_pii(req.revision_notes).redacted_text},
-                interrupted=False,
-                payload_sha256=expected_digest,
-            )
-        return {
-            "run_id": req.run_id,
-            "status": GraphStage.HANDOFF_ZALO_OA_MANAGER.value,
-            "handoff_status": GraphStage.HANDOFF_ZALO_OA_MANAGER.value,
-            "action_digest": expected_digest,
-        }
+    except (ZaloTierPolicyError, TenantIsolationError, ApprovalSecurityError) as exc:
+        raise HTTPException(status_code=403, detail={"error": type(exc).__name__, "message": str(exc)}) from exc
 
-    if norm_dec in ("reject", "revise"):
+    cur_status: WorkflowStatus = run_data["status"]
+    cp_cur = wf.checkpointer.get(req.run_id) if wf.checkpointer is not None else None
+    if cp_cur is not None and cp_cur.current_stage == GraphStage.HANDOFF_ZALO_OA_MANAGER and norm_dec == "approve":
+        raise HTTPException(status_code=409, detail={"error": "run_already_handed_off", "run_id": req.run_id})
+
+    if norm_dec in ("handoff", "reject", "revise"):
+        if cur_status not in (WorkflowStatus.PENDING_APPROVAL, WorkflowStatus.REVISE_REQUESTED):
+            raise HTTPException(
+                status_code=409,
+                detail={"error": "invalid_run_state_transition", "current_status": cur_status.value},
+            )
+        if norm_dec == "handoff":
+            wf.state.save_run(
+                req.run_id,
+                run_data["pack_id"],
+                WorkflowStatus.REJECTED,
+                run_data["business_profile"],
+                run_data["proposal_input"],
+                int(time.time()),
+                run_data.get("proposal_draft"),
+                action_dict,
+            )
+            if wf.checkpointer is not None:
+                wf.checkpointer.put(
+                    req.run_id,
+                    GraphStage.HANDOFF_ZALO_OA_MANAGER,
+                    {"run_id": req.run_id, "notes": redact_vietnamese_pii(req.revision_notes).redacted_text},
+                    interrupted=False,
+                    payload_sha256=expected_digest,
+                )
+            return {
+                "run_id": req.run_id,
+                "status": GraphStage.HANDOFF_ZALO_OA_MANAGER.value,
+                "handoff_status": GraphStage.HANDOFF_ZALO_OA_MANAGER.value,
+                "action_digest": expected_digest,
+            }
+
         dec_enum = ApprovalDecision.REJECT if norm_dec == "reject" else ApprovalDecision.REVISE
         tok = wf.engine.approval_engine.issue_token(req.run_id, payload, decision=dec_enum, revision_notes=req.revision_notes)
         wf.state.save_approval(tok)
@@ -404,9 +612,26 @@ async def decide_pilot_a_run(req: PilotADecideRequest) -> dict[str, Any]:
         )
         return {"run_id": req.run_id, "status": new_st.value, "action_digest": expected_digest}
 
-    # Block approval if run was already explicitly rejected
-    if run_data["status"] == WorkflowStatus.REJECTED:
+    if cur_status == WorkflowStatus.REJECTED:
         raise HTTPException(status_code=409, detail={"error": "run_already_rejected", "run_id": req.run_id})
+    if cur_status == WorkflowStatus.COMPLETED:
+        return {
+            "run_id": req.run_id,
+            "status": "deduplicated",
+            "workflow_status": WorkflowStatus.COMPLETED.value,
+            "side_effect_deduplicated": True,
+            "action_digest": expected_digest,
+        }
+
+    now_s = int(time.time())
+    last_ts = payload.parameters.get("last_user_interaction_ts")
+    if last_ts is not None:
+        live_age = now_s - int(last_ts)
+        if live_age < 0 or live_age > ZALO_INTERACTION_WINDOW_SECONDS:
+            raise HTTPException(
+                status_code=403,
+                detail={"error": "ZaloInteractionWindowError", "message": f"Zalo OA 48h window expired (age={live_age}s)."},
+            )
 
     idem_key = req.idempotency_key or f"pilot_a_{req.run_id}"
     tok_approve = wf.engine.approval_engine.issue_token(req.run_id, payload, decision=ApprovalDecision.APPROVE)
@@ -418,17 +643,22 @@ async def decide_pilot_a_run(req: PilotADecideRequest) -> dict[str, Any]:
                 req.run_id,
                 tok_approve.token_id,
                 expected_digest,
-                commit_fn=lambda _st: wf.engine.execute_approved_action(tok_approve, payload, idempotency_key=idem_key),
+                commit_fn=lambda _st: wf.engine.execute_approved_action(
+                    tok_approve, payload, idempotency_key=idem_key, now=now_s
+                ),
             )
             dedup = bool(cp_done.state.get("side_effect_deduplicated", False))
             commit_res = dict(cp_done.state.get("commit_result") or {})
-            out_status = "deduplicated" if dedup else str(commit_res.get("status", "completed"))
+            raw_commit_status = str(commit_res.get("status", "completed"))
+            out_status = "deduplicated" if (dedup and raw_commit_status in ("completed", "deduplicated")) else raw_commit_status
         else:
-            commit_res = wf.engine.execute_approved_action(tok_approve, payload, idempotency_key=idem_key)
+            commit_res = wf.engine.execute_approved_action(tok_approve, payload, idempotency_key=idem_key, now=now_s)
             out_status = str(commit_res.get("status", "completed"))
             dedup = out_status == "deduplicated"
     except ApprovalSecurityError as exc:
         raise HTTPException(status_code=409, detail={"error": "approval_security_error", "message": str(exc)}) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail={"error": "connector_dispatch_error", "message": str(exc)}) from exc
 
     final_wf_status = (
         WorkflowStatus.COMPLETED
@@ -445,7 +675,7 @@ async def decide_pilot_a_run(req: PilotADecideRequest) -> dict[str, Any]:
         final_wf_status,
         run_data["business_profile"],
         run_data["proposal_input"],
-        int(time.time()),
+        now_s,
         run_data.get("proposal_draft"),
         action_dict,
     )
@@ -473,7 +703,7 @@ async def reconcile_pilot_a_vietqr_webhook(
         raise HTTPException(status_code=503, detail={"error": "missing_vietqr_webhook_secret"})
     raw_body = await request.body()
     try:
-        wf = _build_workflow(tenant_id=tenant_id)
+        wf, _ = _build_workflow(tenant_id=tenant_id, require_existing_in_prod=True)
     except (TenantIsolationError, ApprovalSecurityError) as exc:
         raise HTTPException(status_code=403, detail={"error": type(exc).__name__, "message": str(exc)}) from exc
 
@@ -513,10 +743,13 @@ async def export_pilot_a_misa_sapo_draft(
     tenant_id: str = Query("default", min_length=2, max_length=63),
     vat_rate_pct: int = Query(8),
     target_provider: str = Query("misa_meinvoice"),
+    sig: str = Query("", max_length=128),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
 ) -> PlainTextResponse:
     """Export uncertified DRAFT_PENDING_TVAN pre-accounting file (CSV, XML, or JSON) for MISA / Sapo."""
     try:
-        wf = _build_workflow(tenant_id=tenant_id)
+        wf, _ = _build_workflow(tenant_id=tenant_id, require_existing_in_prod=True)
     except (TenantIsolationError, ApprovalSecurityError) as exc:
         raise HTTPException(status_code=403, detail={"error": type(exc).__name__, "message": str(exc)}) from exc
 
@@ -525,14 +758,20 @@ async def export_pilot_a_misa_sapo_draft(
         raise HTTPException(status_code=404, detail={"error": "run_not_found", "run_id": run_id})
 
     action_dict = run_data.get("action_payload") or {}
+    digest = compute_action_digest(_reconstruct_action_payload(action_dict)) if action_dict else ""
+    _verify_owner_access(
+        base_dir=_pilot_base_dir(),
+        tenant_id=tenant_id,
+        run_id=run_id,
+        action_digest=digest,
+        authorization=authorization,
+        x_api_key=x_api_key,
+        card_sig=sig,
+    )
     expected_vnd = int(action_dict.get("parameters", {}).get("amount_vnd", 0))
     draft_info = run_data.get("proposal_draft") or {}
     intake_info = run_data.get("proposal_input") or {}
-    matched_tx = next(
-        (t for t in wf.vietqr.list_transactions(limit=50) if t.get("matched_order_id") == run_id),
-        None,
-    )
-    bank_tx_id = str(matched_tx["bank_tx_id"]) if matched_tx and matched_tx.get("bank_tx_id") else None
+    bank_tx_id = _lookup_vietqr_bank_tx_id(wf.vietqr.db_path, run_id)
     try:
         acc_draft = build_accounting_draft_export(
             run_id,

@@ -22,7 +22,7 @@ from src.opc.recipe_loader import (
 from src.opc.tenant_provisioner import provision_isolated_tenant
 
 console = Console()
-_DEFAULT_TENANT_DIR = Path(".mekong") / "tenants"
+_DEFAULT_TENANT_DIR = Path(".mekong") / "pilot_a_tenants"
 
 
 def _opt(val: object, default: object) -> object:

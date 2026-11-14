@@ -113,6 +113,9 @@ def _is_vn_jurisdiction_ipn(data: dict[str, Any], order_id: str, workspace_id: s
     if order_id:
         candidates.append(order_id)
         candidates.extend(_UUID_RE.findall(order_id))
+        parts = order_id.split("-")
+        for idx in range(1, len(parts)):
+            candidates.append("-".join(parts[:idx]))
     customer_email = str(data.get("customer_email") or "").strip()
     if customer_email:
         candidates.append(customer_email)
@@ -120,6 +123,11 @@ def _is_vn_jurisdiction_ipn(data: dict[str, Any], order_id: str, workspace_id: s
     if not candidates:
         return True
 
+    explicit_non_vn = any(
+        str(data.get(k) or "").strip() and not str(data.get(k) or "").strip().upper().startswith("VN")
+        for k in ("jurisdiction", "country")
+    )
+    resolved_non_vn = False
     env_db = os.environ.get("MEKONG_RAAS_DB")
     try:
         store = TenantStore(Path(env_db)) if env_db else TenantStore()
@@ -133,8 +141,12 @@ def _is_vn_jurisdiction_ipn(data: dict[str, Any], order_id: str, workspace_id: s
                     jur = str(row["jurisdiction"] or "").strip().upper()
                     if not jur or jur.startswith("VN"):
                         return True
+                    resolved_non_vn = True
     except Exception as exc:
         logger.error("[NP] TenantStore lookup error during jurisdiction check (failing closed): %s", exc)
+        return True
+
+    if order_low.startswith("mk-") and not (explicit_non_vn or resolved_non_vn):
         return True
 
     return False
@@ -174,8 +186,9 @@ def handle_ipn(payload_json: str, signature: str = "") -> dict[str, Any]:
     Returns:
         dict with status, action taken, and any error
     """
-    # Verify signature (mandatory whenever IPN_SECRET is configured)
-    if (IPN_SECRET or signature) and not verify_ipn_signature(payload_json, signature):
+    # Verify signature (mandatory whenever IPN_SECRET is configured or in production)
+    is_prod = os.getenv("MEKONG_ENV", "development").strip().lower() == "production"
+    if (IPN_SECRET or signature or is_prod) and not verify_ipn_signature(payload_json, signature):
         logger.warning("[NP] IPN signature mismatch or missing — rejecting")
         return {"ok": False, "error": "signature_mismatch"}
 

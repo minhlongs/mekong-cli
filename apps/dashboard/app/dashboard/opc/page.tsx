@@ -57,6 +57,8 @@ export default function OpcCockpitPage() {
   const [selectedTier, setSelectedTier] = useState<SmeQuotaTierKey>('pilot_a')
   const [actionDigest, setActionDigest] = useState<string>('')
   const [boundDigest, setBoundDigest] = useState<string>('')
+  const [serverActionDigest, setServerActionDigest] = useState<string>('')
+  const [serverCardSig, setServerCardSig] = useState<string>('')
   const [approvalState, setApprovalState] = useState<ApprovalState>('idle')
   const [isSyncing, setIsSyncing] = useState<boolean>(false)
   const [gatewaySync, setGatewaySync] = useState<GatewaySyncResult>({
@@ -161,6 +163,8 @@ export default function OpcCockpitPage() {
     void computeSha256Hex(canonical).then((hex) => {
       if (active) {
         setActionDigest(hex)
+        setServerActionDigest('')
+        setServerCardSig('')
       }
     })
     return () => {
@@ -253,6 +257,12 @@ export default function OpcCockpitPage() {
     if (syncRes.serverRunId) {
       setRunId(syncRes.serverRunId)
     }
+    if (syncRes.serverActionDigest) {
+      setServerActionDigest(syncRes.serverActionDigest)
+    }
+    if (syncRes.serverCardSig) {
+      setServerCardSig(syncRes.serverCardSig)
+    }
     setIsSyncing(false)
   }
 
@@ -284,6 +294,7 @@ export default function OpcCockpitPage() {
     }
 
     const lockedDigest = actionDigest
+    const gatewayDigest = serverActionDigest || lockedDigest
     setBoundDigest(lockedDigest)
     setApprovalState('approved')
     setIsSyncing(true)
@@ -291,15 +302,28 @@ export default function OpcCockpitPage() {
     const syncRes = await syncPilotADecision({
       runId,
       decision: 'approve',
-      actionDigest: lockedDigest,
+      actionDigest: gatewayDigest,
+      cardSig: serverCardSig,
       revisionNotes,
     })
     setGatewaySync(syncRes)
     setIsSyncing(false)
+
+    if (syncRes.serverRejected) {
+      setApprovalState('idle')
+      setDispatchResult({
+        status: 'tamper_detected',
+        message: isVi
+          ? `FastAPI Gateway từ chối an toàn (${syncRes.detail}): Mã băm payload hoặc trạng thái phiên không khớp. Vui lòng bấm "Đồng bộ Gateway" lại trước khi duyệt.`
+          : `FastAPI Gateway fail-closed rejection (${syncRes.detail}): Payload digest or run state mismatch. Please re-sync Gateway before approving.`,
+      })
+      return
+    }
+
     setApprovalState('consumed')
 
     const syncTag =
-      syncRes.mode === 'live_gateway'
+      syncRes.synced && syncRes.mode === 'live_gateway'
         ? isVi
           ? 'Đã đồng bộ FastAPI Gateway trực tiếp'
           : 'Synced via live FastAPI Gateway'
@@ -310,11 +334,11 @@ export default function OpcCockpitPage() {
     setDispatchResult({
       status: 'success',
       message: isVi
-        ? `Đã gửi báo giá & mã VietQR (${financials.vietQrMemo}) tới ${actionPayload.recipient}. Khóa chống gửi trùng: idem_${lockedDigest.slice(
+        ? `Đã gửi báo giá & mã VietQR (${financials.vietQrMemo}) tới ${actionPayload.recipient}. Khóa chống gửi trùng: idem_${gatewayDigest.slice(
             0,
             12
           )} · ${syncTag}.`
-        : `Dispatched quote & VietQR (${financials.vietQrMemo}) to ${actionPayload.recipient} (key: idem_${lockedDigest.slice(
+        : `Dispatched quote & VietQR (${financials.vietQrMemo}) to ${actionPayload.recipient} (key: idem_${gatewayDigest.slice(
             0,
             12
           )}) · ${syncTag}.`,
@@ -326,7 +350,8 @@ export default function OpcCockpitPage() {
     const syncRes = await syncPilotADecision({
       runId,
       decision: 'handoff',
-      actionDigest,
+      actionDigest: serverActionDigest || actionDigest,
+      cardSig: serverCardSig,
       revisionNotes,
     })
     setGatewaySync(syncRes)

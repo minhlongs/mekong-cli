@@ -11,8 +11,6 @@ import urllib.error
 import urllib.request
 import uuid
 from collections.abc import Mapping
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import TimeoutError as FuturesTimeoutError
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Callable, Final
@@ -29,25 +27,13 @@ _QTY_PREFIX_RE: Final[re.Pattern[str]] = re.compile(r"(?i)(?:(?<=\s)|^)(?:x|sl:?
 
 @dataclass(frozen=True)
 class FieldCitation:
-    """Character-exact provenance span anchoring an extracted field to customer input."""
-    field_name: str
-    value: Any
-    source_quote: str
-    start_char: int
-    end_char: int
+    field_name: str; value: Any; source_quote: str; start_char: int; end_char: int  # noqa: E702
 
 
 @dataclass(frozen=True)
 class SelectiveRouteResult:
-    """Structured outcome from SelectiveRouter across deterministic, local, or cloud tiers."""
-    mode: str
-    provider: str
-    model: str
-    extracted: dict[str, Any]
-    citations: tuple[FieldCitation, ...]
-    confidence: float
-    latency_ms: float
-    unknown_cost: bool
+    mode: str; provider: str; model: str; extracted: dict[str, Any]  # noqa: E702
+    citations: tuple[FieldCitation, ...]; confidence: float; latency_ms: float; unknown_cost: bool  # noqa: E702
 
 
 def _fold_with_offsets(text: str) -> tuple[str, list[int]]:
@@ -65,14 +51,13 @@ def _fold_with_offsets(text: str) -> tuple[str, list[int]]:
 def extract_deterministic_citations(message_text: str, service_catalog: Mapping[str, Decimal]) -> tuple[dict[str, Any], tuple[FieldCitation, ...], float]:
     """Deterministically extract services, quantities/hours, and notes with exact char spans."""
     folded, offsets = _fold_with_offsets(message_text)
-    citations: list[FieldCitation] = []
-    matched_services: list[str] = []
+    citations, matched = [], []
     for svc_key in service_catalog:
         phrase = _fold_with_offsets(svc_key)[0].strip()
         for needle in [phrase] + [tok for tok in phrase.split() if len(tok) >= 4 and tok not in _STOP_TOKENS]:
             if needle and (m := re.search(rf"(?<![a-z0-9]){re.escape(needle)}(?![a-z0-9])", folded)) is not None:
                 s, e = offsets[m.start()], offsets[m.end()]
-                matched_services.append(svc_key)
+                matched.append(svc_key)
                 citations.append(FieldCitation("requested_services", svc_key, message_text[s:e], s, e))
                 break
 
@@ -89,12 +74,24 @@ def extract_deterministic_citations(message_text: str, service_catalog: Mapping[
         ns, ne = len(message_text) - len(message_text.lstrip()), len(message_text.rstrip())
         citations.append(FieldCitation("customer_notes", message_text[ns:ne], message_text[ns:ne], ns, ne))
 
-    extracted: dict[str, Any] = {"requested_services": tuple(matched_services), "customer_notes": stripped}
+    extracted: dict[str, Any] = {"requested_services": tuple(matched), "customer_notes": stripped}
     if qty_val is not None:
         extracted[qty_field] = qty_val
         extracted.setdefault("estimated_hours", qty_val)
-    conf = 0.95 if (matched_services and qty_val is not None) else (0.60 if (matched_services or qty_val is not None) else 0.25)
+    conf = 0.95 if (matched and qty_val is not None) else (0.60 if (matched or qty_val is not None) else 0.25)
     return extracted, tuple(citations), conf
+
+
+def _unwrap_llm_json(parsed: Any) -> dict[str, Any]:
+    if not isinstance(parsed, Mapping):
+        return {}
+    if isinstance(choices := parsed.get("choices"), list) and choices and isinstance(msg := choices[0].get("message"), Mapping):
+        try:
+            if isinstance(inner := json.loads(str(msg.get("content", ""))), Mapping):
+                return {**dict(parsed), **dict(inner)}
+        except ValueError:
+            pass
+    return dict(parsed)
 
 
 def _anchor_citations(message_text: str, raw_citations: Any, fallback: tuple[FieldCitation, ...]) -> tuple[FieldCitation, ...]:
@@ -158,27 +155,22 @@ class SelectiveRouter:
         if self.local_endpoint:
             deadline_s = max(0.05, (self.timeout_ms * 0.92) / 1000.0)
             req_bytes = json.dumps({"model": self.local_model, "messages": [{"role": "user", "content": safe_msg}]}).encode("utf-8")
-            pool = ThreadPoolExecutor(max_workers=1)
             try:
-                status, raw = pool.submit(self._post_json, self.local_endpoint, req_bytes, deadline_s).result(timeout=deadline_s)
+                status, raw = self._post_json(self.local_endpoint, req_bytes, deadline_s)
                 if 200 <= status < 300:
-                    parsed = json.loads(raw.decode("utf-8"))
+                    parsed = _unwrap_llm_json(json.loads(raw.decode("utf-8")))
                     unk = self._record_llm_usage(run_id, "local_openai_compat", self.local_model, parsed)
-                    l_conf = float(parsed.get("confidence", 0.88))
-                    if math.isfinite(l_conf) and l_conf >= self.min_confidence:
+                    if math.isfinite(l_conf := float(parsed.get("confidence", 0.0))) and l_conf >= self.min_confidence:
                         return SelectiveRouteResult("local_llm", "local_openai_compat", self.local_model, dict(parsed.get("extracted") or det_ext), _anchor_citations(safe_msg, parsed.get("citations"), det_cits), l_conf, (time.monotonic() - t0) * 1000.0, unk)
-            except (FuturesTimeoutError, TimeoutError, urllib.error.URLError, OSError, ValueError):
+            except (TimeoutError, urllib.error.URLError, OSError, ValueError, TypeError):
                 pass
-            finally:
-                pool.shutdown(wait=False, cancel_futures=True)
-        reserved = self.usage_ledger.reserve_budget(f"res_{uuid.uuid4().hex[:12]}", run_id, self.estimated_call_budget, self.currency, "owner", int(time.time()), hard_budget_limit if hard_budget_limit is not None else self.hard_budget_limit)
-        if self.fail_closed_budget_enforcement and not reserved:
-            raise PermissionError("Budget reservation failed (fail-closed)")
         if self.cloud_fallback_fn is None:
+            if (eff_lim := hard_budget_limit if hard_budget_limit is not None else self.hard_budget_limit) is not None and self.fail_closed_budget_enforcement and not self.usage_ledger.reserve_budget(f"res_{uuid.uuid4().hex[:12]}", run_id, self.estimated_call_budget, self.currency, "owner", int(time.time()), eff_lim):
+                raise PermissionError("Budget reservation failed (fail-closed)")
             return SelectiveRouteResult("low_confidence_halt", "deterministic_python", "rule_extractor_v1", det_ext, det_cits, det_conf, (time.monotonic() - t0) * 1000.0, False)
-        cloud_resp = self.cloud_fallback_fn(safe_msg, catalog)
+        if self.fail_closed_budget_enforcement and not self.usage_ledger.reserve_budget(f"res_{uuid.uuid4().hex[:12]}", run_id, self.estimated_call_budget, self.currency, "owner", int(time.time()), hard_budget_limit if hard_budget_limit is not None else self.hard_budget_limit):
+            raise PermissionError("Budget reservation failed (fail-closed)")
+        cloud_resp = _unwrap_llm_json(self.cloud_fallback_fn(safe_msg, catalog))
         unk = self._record_llm_usage(run_id, "cloud_fallback", str(cloud_resp.get("model", self.cloud_model)), cloud_resp)
-        c_conf = float(cloud_resp.get("confidence", 0.90))
-        if not math.isfinite(c_conf) or c_conf < self.min_confidence:
-            return SelectiveRouteResult("low_confidence_halt", "cloud_fallback", str(cloud_resp.get("model", self.cloud_model)), dict(cloud_resp.get("extracted") or det_ext), _anchor_citations(safe_msg, cloud_resp.get("citations"), det_cits), c_conf if math.isfinite(c_conf) else 0.0, (time.monotonic() - t0) * 1000.0, unk)
-        return SelectiveRouteResult("cloud_fallback", "cloud_fallback", str(cloud_resp.get("model", self.cloud_model)), dict(cloud_resp.get("extracted") or det_ext), _anchor_citations(safe_msg, cloud_resp.get("citations"), det_cits), c_conf, (time.monotonic() - t0) * 1000.0, unk)
+        c_conf = float(cloud_resp.get("confidence", 0.0))
+        return SelectiveRouteResult("cloud_fallback" if (math.isfinite(c_conf) and c_conf >= self.min_confidence) else "low_confidence_halt", "cloud_fallback", str(cloud_resp.get("model", self.cloud_model)), dict(cloud_resp.get("extracted") or det_ext), _anchor_citations(safe_msg, cloud_resp.get("citations"), det_cits), c_conf if math.isfinite(c_conf) else 0.0, (time.monotonic() - t0) * 1000.0, unk)

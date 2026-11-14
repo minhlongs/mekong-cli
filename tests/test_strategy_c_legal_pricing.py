@@ -104,13 +104,14 @@ def test_decree_52_2024_fourth_door_blocks_vn_nowpayments_ipn(
     monkeypatch.setenv("MEKONG_RAAS_DB", str(tenants_db))
     t_store = TenantStore(tenants_db)
     vn_tenant = t_store.create_tenant("doanhnghiep_vn")
+    vn_hyph = t_store.create_tenant("shop-hanoi")
     sg_tenant = t_store.create_tenant("overseas_sg")
     with closing(t_store._connect()) as conn:
         conn.execute("UPDATE tenants SET jurisdiction = 'SG' WHERE id = ?", (sg_tenant.id,))
         conn.commit()
 
     repo = CreditAccountRepository(tmp_path / "credits.db")
-    for ws in ("ws_explicit", "VN", "vn_shop", vn_tenant.id, "doanhnghiep_vn", "ws_vnd", "ws_pilot", "overseas_sg"):
+    for ws in ("ws_explicit", "VN", "vn_shop", vn_tenant.id, "doanhnghiep_vn", "shop", "shop-hanoi", "mk", "ws_vnd", "ws_pilot", "overseas_sg"):
         repo.create_account(ws)
 
     client = _build_client()
@@ -121,6 +122,8 @@ def test_decree_52_2024_fourth_door_blocks_vn_nowpayments_ipn(
         {"payment_id": "p_vn_pfx2", "payment_status": "finished", "order_id": "vn_shop-starter-monthly", "price_currency": "usd"},
         {"payment_id": "p_vn_tid", "payment_status": "finished", "order_id": f"{vn_tenant.id}-pro-monthly", "price_currency": "usd"},
         {"payment_id": "p_vn_tnm", "payment_status": "finished", "order_id": "doanhnghiep_vn-pro-monthly", "price_currency": "usd"},
+        {"payment_id": "p_vn_hyp", "payment_status": "finished", "order_id": f"{vn_hyph.name}-pro-monthly", "price_currency": "usd"},
+        {"payment_id": "p_mk_unattr", "payment_status": "finished", "order_id": "mk-a1b2c3d4e5f6", "price_currency": "usd"},
         {"payment_id": "p_vnd_cur", "payment_status": "finished", "order_id": "ws_vnd-pro-monthly", "price_currency": "vnd"},
         {"payment_id": "p_pilot_a", "payment_status": "finished", "order_id": "ws_pilot-pilot_a-monthly", "price_currency": "usd"},
     ]
@@ -136,7 +139,7 @@ def test_decree_52_2024_fourth_door_blocks_vn_nowpayments_ipn(
                 "allowed_rails": ["vietqr"],
             }
 
-        for ws in ("ws_explicit", "VN", "vn_shop", vn_tenant.id, "doanhnghiep_vn", "ws_vnd", "ws_pilot"):
+        for ws in ("ws_explicit", "VN", "vn_shop", vn_tenant.id, "doanhnghiep_vn", "shop", "shop-hanoi", "mk", "ws_vnd", "ws_pilot"):
             assert repo.get_balance(ws) == 0
 
         # Registered SG tenant + unregistered overseas workspace continue to receive credits normally

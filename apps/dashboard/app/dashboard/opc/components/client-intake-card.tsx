@@ -42,7 +42,7 @@ export interface ClientIntake {
 }
 
 const CURRENCIES: SupportedCurrency[] = ['VND', 'USD', 'EUR']
-const VAT_RATES: VatRatePct[] = [8, 10, 0]
+const VAT_RATES: VatRatePct[] = [8, 10, 5, 0]
 
 const TIMEZONES = [
   'Asia/Ho_Chi_Minh',

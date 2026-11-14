@@ -1,6 +1,6 @@
 export type SupportedCurrency = 'USD' | 'VND' | 'EUR'
 export type SupportedLanguage = 'en' | 'vi'
-export type VatRatePct = 0 | 8 | 10
+export type VatRatePct = 0 | 5 | 8 | 10
 export type TvanExportFormat = 'CSV' | 'XML' | 'JSON'
 export type AccountingTargetProvider = 'misa_meinvoice' | 'sapo_invoice'
 export type SmeQuotaTierKey = 'starter' | 'pilot_a' | 'growth' | 'agency'
@@ -61,21 +61,21 @@ export const SERVICE_CATALOG: Record<string, ServiceCatalogEntry> = {
   zalo_oa_lead_to_quote: {
     labelEn: 'Zalo OA Auto Lead-to-Quote Setup',
     labelVi: 'Thiết lập Báo giá Tự động Zalo OA',
-    rates: { VND: 450000, USD: 18, EUR: 17 },
+    rates: { VND: 600000, USD: 24, EUR: 22 },
     keywordsVi: ['Zalo OA báo giá tự động', 'báo giá tự động', 'Zalo OA'],
     keywordsEn: ['Zalo OA auto quote', 'lead-to-quote', 'Zalo OA'],
   },
   vietqr_reconciliation_setup: {
     labelEn: 'VietQR Napas 247 Order Reconciliation',
     labelVi: 'Tích hợp Đối soát VietQR Napas 247',
-    rates: { VND: 350000, USD: 14, EUR: 13 },
+    rates: { VND: 400000, USD: 16, EUR: 15 },
     keywordsVi: ['đối soát VietQR', 'VietQR Napas 247', 'VietQR'],
     keywordsEn: ['VietQR reconciliation', 'Napas 247', 'VietQR'],
   },
   misa_sapo_tvan_draft: {
     labelEn: 'MISA / Sapo Pre-Accounting Draft Bridge',
     labelVi: 'Kết nối Nháp Hóa đơn MISA / Sapo (TVAN)',
-    rates: { VND: 300000, USD: 12, EUR: 11 },
+    rates: { VND: 350000, USD: 14, EUR: 13 },
     keywordsVi: ['xuất hóa đơn VAT', 'MISA', 'Sapo', 'hóa đơn'],
     keywordsEn: ['MISA', 'Sapo', 'VAT invoice draft'],
   },
@@ -263,7 +263,7 @@ export function computeQuoteFinancials(
       : Math.round(grandTotal * 27000)
 
   const sanitizedRun = runId.replace(/[^A-Za-z0-9_-]/g, '')
-  const vietQrMemo = `MEKONG ${sanitizedRun}`
+  const vietQrMemo = `OPC ${sanitizedRun}`
   const amountTag = String(vietQrAmountVnd)
   const vietQrEmvcoPreview = `00020101021238540010A0000007270124000697042201100988889999530370454${String(
     amountTag.length
@@ -522,6 +522,10 @@ export interface GatewaySyncResult {
   endpoint: string
   mode: 'live_gateway' | 'offline_webcrypto'
   serverRunId?: string
+  serverActionDigest?: string
+  serverCardSig?: string
+  serverRejected?: boolean
+  httpStatus?: number
   detail: string
 }
 
@@ -581,17 +585,26 @@ export async function syncPilotAZaloWebhook(payload: {
         synced: false,
         endpoint,
         mode: 'offline_webcrypto',
+        serverRejected: response.status >= 400 && response.status < 500,
+        httpStatus: response.status,
         detail: `HTTP ${response.status}`,
       }
     }
     const body: unknown = await response.json()
     const serverRunId =
       isRecord(body) && typeof body.run_id === 'string' ? body.run_id : undefined
+    const serverActionDigest =
+      isRecord(body) && typeof body.action_digest === 'string' ? body.action_digest : undefined
+    const serverCardSig =
+      isRecord(body) && typeof body.card_sig === 'string' ? body.card_sig : undefined
     return {
       synced: true,
       endpoint,
       mode: 'live_gateway',
       serverRunId,
+      serverActionDigest,
+      serverCardSig,
+      httpStatus: response.status,
       detail: 'OK',
     }
   } catch {
@@ -609,6 +622,7 @@ export async function syncPilotADecision(payload: {
   runId: string
   decision: 'approve' | 'reject' | 'handoff'
   actionDigest: string
+  cardSig?: string
   revisionNotes: string
 }): Promise<GatewaySyncResult> {
   const endpoint = buildGatewayUrl('/v1/opc/pilot-a/decide')
@@ -623,6 +637,7 @@ export async function syncPilotADecision(payload: {
         run_id: payload.runId,
         decision: payload.decision,
         action_digest: payload.actionDigest,
+        card_sig: payload.cardSig || '',
         revision_notes: payload.revisionNotes,
       }),
       signal: controller?.signal,
@@ -632,7 +647,9 @@ export async function syncPilotADecision(payload: {
       return {
         synced: false,
         endpoint,
-        mode: 'offline_webcrypto',
+        mode: 'live_gateway',
+        serverRejected: response.status >= 400 && response.status < 500,
+        httpStatus: response.status,
         detail: `HTTP ${response.status}`,
       }
     }
@@ -641,6 +658,7 @@ export async function syncPilotADecision(payload: {
       endpoint,
       mode: 'live_gateway',
       serverRunId: payload.runId,
+      httpStatus: response.status,
       detail: 'OK',
     }
   } catch {

@@ -115,6 +115,11 @@ def test_selective_router_citations_timeout_failover_budget_and_unknown_cost(tmp
     with pytest.raises(PermissionError, match="Budget reservation failed"):
         router.route(ambig, run_id="r_over", hard_budget_limit="10.00")
 
+    # OpenAI ChatCompletions without confidence fails closed to low_confidence_halt (0 budget burned when no cloud_fallback_fn)
+    oai_local = lambda _u, _h, _b, _t: (200, b'{"choices":[{"message":{"content":"{\\"extracted\\":{\\"quantity\\":2}}"}}],"usage":{"total_tokens":50,"cost":"1.00"}}')  # noqa: E731
+    halt_r = SelectiveRouter(ledger, catalog, local_endpoint="http://127.0.0.1:11434/v1/chat", local_transport=oai_local).route(ambig, run_id="r_oai_nocloud")
+    assert halt_r.mode == "low_confidence_halt" and not any(r.stage.value == "reserved" for r in ledger.get_run_records("r_oai_nocloud"))
+
     litellm_cfg = yaml.safe_load((REPO_ROOT / "config" / "litellm_proxy.yaml").read_text(encoding="utf-8"))
     models = {m["model_name"] for m in litellm_cfg["model_list"]}
     assert {"local-qwen-14b-mlx", "gemini-2.5-flash", "claude-sonnet-5-5"} <= models

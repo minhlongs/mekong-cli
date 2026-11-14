@@ -136,10 +136,12 @@ class PilotPrivacyGuard:
                     opc_erased += max(0, conn.execute("DELETE FROM opc_graph_checkpoints WHERE state_json LIKE ? ESCAPE '\\'", (like_pat,)).rowcount)
                 conn.commit()
             vqr_db = self.opc_db_path.parent / f"{self.opc_db_path.stem}_vietqr.db"
-            if run_ids and vqr_db.exists():
+            if vqr_db.exists():
                 with sqlite3.connect(str(vqr_db), timeout=10.0) as vconn:
                     for rid in run_ids:
                         vconn.execute("DELETE FROM qr_codes WHERE memo LIKE ? ESCAPE '\\'", (f"%{rid}%",))
+                        vconn.execute("DELETE FROM transactions WHERE matched_order_id = ? OR memo LIKE ? ESCAPE '\\'", (rid, f"%{rid}%"))
+                    vconn.execute("DELETE FROM transactions WHERE memo LIKE ? ESCAPE '\\'", (like_pat,))
                     vconn.commit()
         total_erased = int((dsar.get("erasure") or {}).get("total_erased", 0)) + opc_erased
         if total_erased > 0 and dsar.get("status") != "COMPLETED":

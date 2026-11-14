@@ -109,6 +109,9 @@ jobs:
             tests/test_promise_wave3_ops.py \
             tests/test_promise_wave4_ops.py \
             tests/test_promise_wave5_ops.py \
+            tests/test_strategy_c_legal_pricing.py \
+            tests/test_strategy_c_runtime.py \
+            tests/test_strategy_c_http_gateway.py \
             -v --tb=short \
             --cov=src \
             --cov-report=xml \
@@ -207,6 +210,9 @@ jobs:
             tests/test_promise_wave3_ops.py \
             tests/test_promise_wave4_ops.py \
             tests/test_promise_wave5_ops.py \
+            tests/test_strategy_c_legal_pricing.py \
+            tests/test_strategy_c_runtime.py \
+            tests/test_strategy_c_http_gateway.py \
             --cov=src \
             --cov-report=xml \
             --cov-fail-under=25 \

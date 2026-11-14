@@ -28,6 +28,9 @@ _CSRF_ACTIVE = os.getenv("CSRF_ENABLED", "0") == "1"
 _CSRF_PRIVILEGED_PATHS = {"/v1/auth/login", "/v1/auth/password-change"}
 _CSRF_SKIP_PREFIXES = (
     "/v1/webhook/",
+    "/v1/opc/pilot-a/webhook/",
+    "/v1/opc/pilot-a/decide",
+    "/webhooks/",
     "/v1/polar/",
     "/v1/payments/",
 )
