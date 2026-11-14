@@ -15,7 +15,7 @@ from src.opc.pilot_a import PilotAWorkflow, ZaloSandboxConnector, ZaloWebhookEve
 from src.opc.quarantine import QuarantineViolationError
 from src.opc.quota import WorkflowQuotaGuard
 
-_BENCH_SECRET = "mekong-bench-ephemeral-approval-secret-2026"
+_BENCH_HMAC_KEY = "mekong-bench-ephemeral-hmac-key-2026"
 
 
 @dataclass(frozen=True)
@@ -64,7 +64,7 @@ class MekongBenchRunner:
 
     def layer_1_deterministic_task(self, work_dir: Path) -> BenchLayerResult:
         """Layer 1: Exact Decimal quote math & EMVCo CRC16-CCITT determinism across repeated runs."""
-        wf = PilotAWorkflow(db_path=work_dir / "l1.db", profile=_bench_profile(), approval_secret=_BENCH_SECRET)
+        wf = PilotAWorkflow(db_path=work_dir / "l1.db", profile=_bench_profile(), approval_secret=_BENCH_HMAC_KEY)
         c1, c2 = wf.handle_webhook(_bench_event("l1_a")), wf.handle_webhook(_bench_event("l1_b"))
         emv = c1.vietqr_emvco
         passed = (
@@ -76,7 +76,7 @@ class MekongBenchRunner:
 
     def layer_2_dependency_graph(self, work_dir: Path) -> BenchLayerResult:
         """Layer 2: Multi-step DAG halting when upstream QuarantineFloor blocks untrusted input."""
-        wf = PilotAWorkflow(db_path=work_dir / "l2.db", profile=_bench_profile(), approval_secret=_BENCH_SECRET)
+        wf = PilotAWorkflow(db_path=work_dir / "l2.db", profile=_bench_profile(), approval_secret=_BENCH_HMAC_KEY)
         blocked = False
         try:
             wf.handle_webhook(
@@ -91,7 +91,7 @@ class MekongBenchRunner:
     def layer_3_external_api_failure(self, work_dir: Path) -> BenchLayerResult:
         """Layer 3: External API failure/502/timeout transitions to reconciliation_required without blind retry."""
         conn = ZaloSandboxConnector(simulate_uncertain=True)
-        wf = PilotAWorkflow(db_path=work_dir / "l3.db", profile=_bench_profile(), zalo_connector=conn, approval_secret=_BENCH_SECRET)
+        wf = PilotAWorkflow(db_path=work_dir / "l3.db", profile=_bench_profile(), zalo_connector=conn, approval_secret=_BENCH_HMAC_KEY)
         res = wf.approve_and_send(wf.handle_webhook(_bench_event("l3_timeout")), idempotency_key="idem_l3")
         passed = res["status"] == "reconciliation_required" and len(conn.dispatched) == 0
         return BenchLayerResult("L3", "External API Failure Reconciliation Guard", passed, 2,
@@ -111,7 +111,7 @@ class MekongBenchRunner:
 
     def layer_5_duplicate_event(self, work_dir: Path) -> BenchLayerResult:
         """Layer 5: 5x duplicate webhook delivery + 2-worker token race execute external side effect once."""
-        wf = PilotAWorkflow(db_path=work_dir / "l5.db", profile=_bench_profile(), approval_secret=_BENCH_SECRET)
+        wf = PilotAWorkflow(db_path=work_dir / "l5.db", profile=_bench_profile(), approval_secret=_BENCH_HMAC_KEY)
         card = wf.handle_webhook(_bench_event("l5_race"))
         tok = card.approval_token
         with ThreadPoolExecutor(max_workers=2) as pool:

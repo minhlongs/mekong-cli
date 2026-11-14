@@ -17,8 +17,8 @@ from src.opc.quota import WorkflowQuotaGuard
 from src.opc.state import StateStore
 from src.opc.usage import UsageLedger
 
-_BENCH_SECRET = "mekong-bench-ephemeral-approval-secret-2026"
-_WRONG_SECRET = "attacker-wrong-approval-secret-2026"
+_BENCH_HMAC_KEY = "mekong-bench-ephemeral-hmac-key-2026"
+_FORGED_HMAC_KEY = "attacker-wrong-approval-hmac-key-2026"
 
 
 def run_layers_6_to_15(
@@ -41,14 +41,14 @@ def run_layers_6_to_15(
 
 
 def _l6_human_approval_interruption(work_dir: Path, mk: Callable[..., Any], pf: Callable[[], BusinessProfile], ef: Callable[..., ZaloWebhookEvent]) -> Any:
-    wf = PilotAWorkflow(db_path=work_dir / "l6.db", profile=pf(), approval_secret=_BENCH_SECRET)
+    wf = PilotAWorkflow(db_path=work_dir / "l6.db", profile=pf(), approval_secret=_BENCH_HMAC_KEY)
     card = wf.handle_webhook(ef("l6_gate"))
     eng, p = wf.engine.approval_engine, card.action_payload
     rejected = eng.issue_token(card.run_id, p, decision=ApprovalDecision.REJECT)
     expired = eng.issue_token(card.run_id, p, custom_ttl=-10)
     revoked = eng.issue_token(card.run_id, p)
     eng.revoke_token(revoked)
-    forged = PayloadBoundApprovalEngine(secret_key=_WRONG_SECRET).issue_token(card.run_id, p)
+    forged = PayloadBoundApprovalEngine(secret_key=_FORGED_HMAC_KEY).issue_token(card.run_id, p)
     tampered = dataclasses.replace(card, action_payload=dataclasses.replace(p, content="Tampered 0 VND"))
     blocked = 0
     for idx, tok in enumerate((rejected, expired, revoked, forged)):
@@ -65,8 +65,8 @@ def _l6_human_approval_interruption(work_dir: Path, mk: Callable[..., Any], pf: 
 
 def _l7_resume_after_restart(work_dir: Path, mk: Callable[..., Any], pf: Callable[[], BusinessProfile], ef: Callable[..., ZaloWebhookEvent]) -> Any:
     db_file = work_dir / "l7_restart.db"
-    card = PilotAWorkflow(db_path=db_file, profile=pf(), approval_secret=_BENCH_SECRET).handle_webhook(ef("l7_pause"))
-    wf2 = PilotAWorkflow(db_path=db_file, profile=pf(), approval_secret=_BENCH_SECRET)
+    card = PilotAWorkflow(db_path=db_file, profile=pf(), approval_secret=_BENCH_HMAC_KEY).handle_webhook(ef("l7_pause"))
+    wf2 = PilotAWorkflow(db_path=db_file, profile=pf(), approval_secret=_BENCH_HMAC_KEY)
     stored, tok = wf2.state.get_run(card.run_id), wf2.state.get_approval(card.approval_token.token_id)
     assert stored is not None and tok is not None
     ad = stored["action_payload"]
@@ -116,7 +116,7 @@ def _l9_prompt_injection_corpus(mk: Callable[..., Any]) -> Any:
 
 def _l10_cross_tenant_isolation(work_dir: Path, mk: Callable[..., Any], pf: Callable[[], BusinessProfile], ef: Callable[..., ZaloWebhookEvent]) -> Any:
     t_dir = work_dir / "tenants"
-    wf_a = PilotAWorkflow(db_path=None, profile=pf(), approval_secret=_BENCH_SECRET, tenant_id="tenant_alpha", tenant_db_dir=t_dir)
+    wf_a = PilotAWorkflow(db_path=None, profile=pf(), approval_secret=_BENCH_HMAC_KEY, tenant_id="tenant_alpha", tenant_db_dir=t_dir)
     db_b = resolve_tenant_db_path(t_dir, "tenant_bravo", active_tenant_id="tenant_bravo")
     card_a = wf_a.handle_webhook(ef("l10_a"))
     cross_blocked, trav_blocked = False, False
@@ -125,7 +125,7 @@ def _l10_cross_tenant_isolation(work_dir: Path, mk: Callable[..., Any], pf: Call
     except TenantIsolationError:
         cross_blocked = True
     try:
-        PilotAWorkflow(db_path=None, profile=pf(), approval_secret=_BENCH_SECRET, tenant_id="../escape_root", tenant_db_dir=t_dir)
+        PilotAWorkflow(db_path=None, profile=pf(), approval_secret=_BENCH_HMAC_KEY, tenant_id="../escape_root", tenant_db_dir=t_dir)
     except TenantIsolationError:
         trav_blocked = True
     return mk("L10", "Multi-Tenant SQLite Isolation & Traversal Guard", cross_blocked and trav_blocked and StateStore(db_b).get_run(card_a.run_id) is None, 3, f"cross_blocked={cross_blocked}, leak=0")
@@ -156,7 +156,7 @@ def _l13_compensating_partial_failure(work_dir: Path, mk: Callable[..., Any], pf
     except ZaloTierPolicyError:
         tier_blocked = True
     conn = ZaloOAConnector(access_token="tok_growth_valid", oa_tier="growth", transport=lambda *_a: (200, b'{"error":-201,"message":"User blocked OA"}'))
-    wf = PilotAWorkflow(db_path=work_dir / "l13.db", profile=pf(), zalo_connector=conn, approval_secret=_BENCH_SECRET, require_webhook_mac=False)
+    wf = PilotAWorkflow(db_path=work_dir / "l13.db", profile=pf(), zalo_connector=conn, approval_secret=_BENCH_HMAC_KEY, require_webhook_mac=False)
     card = wf.handle_webhook(ef("l13_fail"))
     out = wf.approve_and_send(card, idempotency_key="idem_l13")
     stored = wf.state.get_run(card.run_id)
@@ -175,7 +175,7 @@ def _l14_long_context_compaction_moim(mk: Callable[..., Any]) -> Any:
 
 
 def _l15_stale_price_revalidation(work_dir: Path, mk: Callable[..., Any], pf: Callable[[], BusinessProfile], ef: Callable[..., ZaloWebhookEvent]) -> Any:
-    wf = PilotAWorkflow(db_path=work_dir / "l15.db", profile=pf(), approval_secret=_BENCH_SECRET)
+    wf = PilotAWorkflow(db_path=work_dir / "l15.db", profile=pf(), approval_secret=_BENCH_HMAC_KEY)
     stale_card = wf.handle_webhook(ef("l15_stale"))
     wf.profile = dataclasses.replace(pf(), services={"tu_van_ai": Decimal("700000"), "tich_hop_vietqr": Decimal("500000")})
     fresh_card = wf.handle_webhook(ef("l15_fresh"))
