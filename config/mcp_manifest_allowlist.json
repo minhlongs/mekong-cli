@@ -1,0 +1,14 @@
+{
+  "schema_version": "opc-mcp-allowlist/v1",
+  "hash_algorithm": "canonical-json-sha256",
+  "manifests": {
+    "client-proposal-followup": {
+      "path": "src/opc/packs/client-proposal-followup/pack.json",
+      "sha256": "758a83ec6f1e376ba0f722c38b7c99a107c4690c842ff5580b89a537cd8b5c2a"
+    },
+    "vn-sme-ops": {
+      "path": "src/opc/packs/vn-sme-ops/pack.json",
+      "sha256": "089ef0d02c7093f517f618df3d103427e2ee21b010e7866c2a0800976e33c593"
+    }
+  }
+}

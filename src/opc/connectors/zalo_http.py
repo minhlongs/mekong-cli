@@ -163,7 +163,7 @@ class ZaloOAConnector:
             return ConnectorResult(False, self.connector_id, "failed", {}, "Non-object JSON from Zalo OpenAPI.")
 
         err_code = parsed.get("error", -1)
-        if type(err_code) is not int or err_code != 0:
+        if isinstance(err_code, bool) or not isinstance(err_code, int) or err_code != 0:
             err_msg = str(parsed.get("message", "Unknown Zalo OpenAPI error"))
             return ConnectorResult(
                 False, self.connector_id, "failed",

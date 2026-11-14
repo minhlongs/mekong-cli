@@ -11,6 +11,7 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 
+from src.cli.commands.opc_strategy_c_cmd import register_strategy_c_commands
 from src.opc.approval import ApprovalSecurityError, compute_action_digest
 from src.opc.connectors.mock import MockConnector
 from src.opc.connectors.zalo_http import ZaloOAConnector, ZaloTierPolicyError, ZaloWebhookMacError
@@ -365,3 +366,7 @@ def run_mekong_bench(
         typer.echo(runner.format_markdown_table(result))
     if result.passed_count != result.total_count:
         raise typer.Exit(code=1)
+
+
+register_strategy_c_commands(opc_app)
+

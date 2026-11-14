@@ -1,0 +1,58 @@
+version: "1.0.0"
+title: "Pilot A — Zalo OA Lead-to-Quote + VietQR + Pre-Accounting Draft"
+description: >
+  Declarative Goose-compatible workflow recipe for Vietnamese SMEs: ingests Zalo OA
+  customer inquiries inside the 48h window, extracts line items against a flat VND
+  price-sheet schema, enforces deterministic math and >= 0.85 confidence, pauses at
+  INTERRUPT_AUTHORIZE for owner HMAC approval, and exports DRAFT_PENDING_TVAN drafts.
+
+instructions: |
+  Execute the 5-stage governed workflow (INGEST_CLASSIFY -> DRAFT_COMPUTE ->
+  VERIFY_REPAIR -> INTERRUPT_AUTHORIZE -> COMMIT_RECONCILE). Never auto-dispatch
+  external messages without owner HMAC approval and never emit ISSUED e-invoices.
+
+min_confidence: 0.85
+low_confidence_action: HANDOFF_ZALO_OA_MANAGER
+accounting_draft_status: DRAFT_PENDING_TVAN
+
+stages:
+  - INGEST_CLASSIFY
+  - DRAFT_COMPUTE
+  - VERIFY_REPAIR
+  - INTERRUPT_AUTHORIZE
+  - COMMIT_RECONCILE
+
+required_capabilities:
+  - proposal.generate_draft
+  - followup.create_draft
+  - vn.vietqr_payment_draft
+  - vn.zalo_oa_followup
+
+price_sheet_schema:
+  type: object
+  required:
+    - business_name
+    - currency
+    - services
+    - vat_rate_pct
+  properties:
+    business_name:
+      type: string
+      minLength: 1
+    currency:
+      type: string
+      enum: ["VND"]
+    vat_rate_pct:
+      type: integer
+      enum: [0, 5, 8, 10]
+    bank_id:
+      type: string
+      default: "MB"
+    account_no:
+      type: string
+    services:
+      type: object
+      description: "Flat Vietnamese SME service catalog mapping service_slug -> unit_price_vnd"
+      additionalProperties:
+        type: integer
+        minimum: 0
