@@ -157,6 +157,7 @@ def test_file_loc_ceiling() -> None:
         "test_quarantine_floor.py",
         "test_strategy_e_pilot_a.py",
         "test_strategy_e_billing_reconcile.py",
+        "test_strategy_c_runtime.py",
     )
     for t_name in opc_test_files:
         t_file = REPO_ROOT / "tests" / t_name

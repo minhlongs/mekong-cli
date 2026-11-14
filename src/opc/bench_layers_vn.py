@@ -15,6 +15,7 @@ from src.opc.privacy_guard import HaltForHumanError, TenantIsolationError, compa
 from src.opc.quarantine import QuarantineFloor
 from src.opc.quota import WorkflowQuotaGuard
 from src.opc.state import StateStore
+from src.opc.state_graph import GovernedStateGraph, GraphStage, SqliteGraphCheckpointer
 from src.opc.usage import UsageLedger
 
 _BENCH_HMAC_KEY = "mekong-bench-ephemeral-hmac-key-2026"
@@ -67,15 +68,16 @@ def _l7_resume_after_restart(work_dir: Path, mk: Callable[..., Any], pf: Callabl
     db_file = work_dir / "l7_restart.db"
     card = PilotAWorkflow(db_path=db_file, profile=pf(), approval_secret=_BENCH_HMAC_KEY).handle_webhook(ef("l7_pause"))
     wf2 = PilotAWorkflow(db_path=db_file, profile=pf(), approval_secret=_BENCH_HMAC_KEY)
+    cp_before = SqliteGraphCheckpointer(db_file).get(card.run_id)
     stored, tok = wf2.state.get_run(card.run_id), wf2.state.get_approval(card.approval_token.token_id)
-    assert stored is not None and tok is not None
-    ad = stored["action_payload"]
+    assert stored is not None and tok is not None and cp_before is not None and cp_before.interrupted is True
+    ad, early_runs = stored["action_payload"], list[int]()
     payload = ActionPayload(ad["principal"], ad["capability"], ad["connector"], ad["recipient"], ad["content"], ad["parameters"], tuple(ad.get("attachments", [])), ad["budget_amount"], ad["budget_currency"], int(ad["expires_at"]))
-    r1 = wf2.engine.execute_approved_action(tok, payload, idempotency_key=f"l7_{card.run_id}")
-    t_dup = wf2.engine.approval_engine.issue_token(card.run_id, payload)
-    wf2.state.save_approval(t_dup)
-    r2 = wf2.engine.execute_approved_action(t_dup, payload, idempotency_key=f"l7_{card.run_id}")
-    return mk("L7", "Resume After Process Restart (SQLite WAL)", r1["status"] == "completed" and r2["status"] == "deduplicated", 3, f"resume={r1['status']}, replay={r2['status']}")
+    graph = GovernedStateGraph(SqliteGraphCheckpointer(db_file), {GraphStage.INGEST_CLASSIFY: lambda s: (early_runs.__iadd__([1]), s)[1]})
+    cp_done = graph.resume(card.run_id, tok.token_id, tok.action_digest, lambda _s: wf2.engine.execute_approved_action(tok, payload, idempotency_key=f"l7_{card.run_id}"))
+    cp_dup = graph.resume(card.run_id, tok.token_id, tok.action_digest, lambda _s: {"status": "should_not_run"})
+    ok = cp_done.state["commit_result"]["status"] == "completed" and cp_dup.state["side_effect_deduplicated"] is True and len(early_runs) == 0
+    return mk("L7", "Resume After Process Restart (SQLite WAL)", ok, 4, f"resume={cp_done.state['commit_result']['status']}, early_reruns={len(early_runs)}")
 
 
 def _l8_invalid_tool_math_output(mk: Callable[..., Any]) -> Any:
