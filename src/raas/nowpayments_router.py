@@ -5,7 +5,9 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
 
 from src.raas.nowpayments_provider import NowPaymentsProvider
 from src.raas.nowpayments_webhook_handler import handle_ipn  # Re-export for backward-compat / patch targets
@@ -27,8 +29,8 @@ def set_payment_provider(provider: NowPaymentsProvider) -> None:
     _provider = provider
 
 
-@router.post("/webhooks/nowpayments")
-async def nowpayments_ipn(request: Request):
+@router.post("/webhooks/nowpayments", response_model=None)
+async def nowpayments_ipn(request: Request) -> JSONResponse | dict[str, Any]:
     """NOWPayments IPN webhook endpoint routing through PaymentProvider."""
     try:
         body = await request.body()
@@ -43,6 +45,16 @@ async def nowpayments_ipn(request: Request):
 
         if not result.get("ok"):
             logger.warning("[NP] IPN failed: %s", result.get("error"))
+            if result.get("error") == "rail_not_permitted_for_jurisdiction":
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "status": "error",
+                        "detail": result["error"],
+                        "jurisdiction": result.get("jurisdiction", "VN"),
+                        "allowed_rails": result.get("allowed_rails", ["vietqr"]),
+                    },
+                )
             return {"status": "error", "detail": result.get("error")}
 
         logger.info("[NP] IPN success: %s", result)

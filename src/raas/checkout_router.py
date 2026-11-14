@@ -44,8 +44,15 @@ COMMERCIAL_TIERS: dict[str, dict[str, int]] = {
 VN_SME_WORKFLOW_TIERS: dict[str, dict[str, int]] = {
     "starter": {"vnd": 790_000, "usd": 31, "workflows": 300},
     "pilot_a": {"vnd": 990_000, "usd": 39, "workflows": 500},
-    "growth": {"vnd": 1_990_000, "usd": 78, "workflows": 1_500},
-    "agency": {"vnd": 4_900_000, "usd": 195, "workflows": 5_000},
+    "growth": {"vnd": 1_990_000, "usd": 78, "workflows": 1_000},
+    "agency": {"vnd": 4_900_000, "usd": 195, "workflows": 3_500},
+}
+
+VN_SME_COMMITMENT_PRICING: dict[str, dict[str, Optional[int]]] = {
+    "starter": {"commitment_6m_vnd": 690_000, "setup_fee_vnd": 0},
+    "pilot_a": {"commitment_6m_vnd": None, "setup_fee_vnd": 0},
+    "growth": {"commitment_6m_vnd": 1_690_000, "setup_fee_vnd": 0},
+    "agency": {"commitment_6m_vnd": None, "setup_fee_vnd": 5_000_000},
 }
 
 
@@ -106,10 +113,12 @@ class CheckoutStatusResponse(BaseModel):
 
 
 _VND_TO_SME_TIER: dict[int, tuple[str, int, CanonicalLicenseTier]] = {
+    690_000: ("starter", 300, CanonicalLicenseTier.BASIC),
     790_000: ("starter", 300, CanonicalLicenseTier.BASIC),
     990_000: ("pilot_a", 500, CanonicalLicenseTier.BASIC),
-    1_990_000: ("growth", 1_500, CanonicalLicenseTier.PREMIUM),
-    4_900_000: ("agency", 5_000, CanonicalLicenseTier.ENTERPRISE),
+    1_690_000: ("growth", 1_000, CanonicalLicenseTier.PREMIUM),
+    1_990_000: ("growth", 1_000, CanonicalLicenseTier.PREMIUM),
+    4_900_000: ("agency", 3_500, CanonicalLicenseTier.ENTERPRISE),
 }
 _VND_TO_COMMERCIAL_TIER: dict[int, CanonicalLicenseTier] = {
     4_975_000: CanonicalLicenseTier.BASIC,
@@ -248,7 +257,8 @@ async def activate_license(req: LicenseActivateRequest) -> LicenseStatusResponse
     if not res.valid or not res.tier:
         raise HTTPException(status_code=400, detail={"error": "invalid_license_key", "reason": res.error})
     tenant_store = TenantStore()
-    tenant = tenant_store.find_by_email(res.tenant_id) or tenant_store.create_tenant(name=res.tenant_id)
+    tenant_label = res.tenant_id or "default"
+    tenant = tenant_store.find_by_email(tenant_label) or tenant_store.create_tenant(name=tenant_label)
     mcu = COMMERCIAL_TIERS.get(res.tier.value.lower(), {}).get("mcu", 1500)
     idem_key = f"act_{hashlib.sha256(req.license_key.encode('utf-8')).hexdigest()}"
     CreditStore().add_credits(

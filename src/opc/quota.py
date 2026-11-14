@@ -10,8 +10,8 @@ from pathlib import Path
 VN_SME_TIER_WORKFLOW_QUOTAS: dict[str, int] = {
     "starter": 300,
     "pilot_a": 500,
-    "growth": 1_500,
-    "agency": 5_000,
+    "growth": 1_000,
+    "agency": 3_500,
 }
 
 
