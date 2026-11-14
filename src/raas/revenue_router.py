@@ -128,7 +128,7 @@ async def get_pricing(tenant: str | None = None) -> dict:
     the Vietnamese rail set when the caller cannot be attributed elsewhere.
     """
     from src.api.tenant_config_loader import get_tenant_config
-    from src.raas.checkout_router import rails_allowed_for_jurisdiction
+    from src.raas.checkout_router import VN_SME_WORKFLOW_TIERS, rails_allowed_for_jurisdiction
 
     tenant_config = get_tenant_config(tenant) if tenant else None
     checkout_base = "/v1/checkout"
@@ -146,9 +146,22 @@ async def get_pricing(tenant: str | None = None) -> dict:
         }
         for tier_info in _PRICING_TIERS
     ]
+    vn_sme_tiers = [
+        {
+            "tier": tier_key,
+            "price_vnd": info["vnd"],
+            "price_usd_approx": info["usd"],
+            "verified_workflows_per_month": info["workflows"],
+            "billing_unit": "verified_workflows_per_month",
+            "rails": ["vietqr"],
+            "checkout_url": f"/v1/checkout?tier={tier_key}",
+        }
+        for tier_key, info in VN_SME_WORKFLOW_TIERS.items()
+    ]
 
     result: dict = {
         "tiers": tiers_with_urls,
+        "vn_sme_workflow_tiers": vn_sme_tiers,
         "checkout_url": checkout_base,
         "allowed_rails": allowed_rails,
         "jurisdiction": jurisdiction,

@@ -144,10 +144,21 @@ def test_criterion_l_and_n_legacy_raas_and_zero_secrets() -> None:
 
 
 def test_file_loc_ceiling() -> None:
-    """Criterion O: Verify all src/opc modules and test files stay strictly <= 185 LOC."""
+    """Criterion O: Verify all src/opc modules and OPC contract test files stay strictly <= 185 LOC."""
     for py_file in (REPO_ROOT / "src" / "opc").rglob("*.py"):
         lines = len(py_file.read_text(encoding="utf-8").splitlines())
         assert lines <= 185, f"{py_file.name} exceeds 185 LOC ({lines})"
-    for t_file in (REPO_ROOT / "tests" / "test_opc_platform_contract.py", REPO_ROOT / "tests" / "test_opc_approval_security.py"):
+    opc_test_files = (
+        "test_opc_platform_contract.py",
+        "test_opc_approval_security.py",
+        "test_opc_production_callers.py",
+        "test_pilot_a_e2e.py",
+        "test_mekong_bench.py",
+        "test_quarantine_floor.py",
+        "test_strategy_e_pilot_a.py",
+        "test_strategy_e_billing_reconcile.py",
+    )
+    for t_name in opc_test_files:
+        t_file = REPO_ROOT / "tests" / t_name
         lines = len(t_file.read_text(encoding="utf-8").splitlines())
         assert lines <= 185, f"{t_file.name} exceeds 185 LOC ({lines})"

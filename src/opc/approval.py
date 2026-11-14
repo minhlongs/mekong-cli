@@ -18,12 +18,26 @@ class ApprovalSecurityError(ValueError):
     """Raised when an approval token fails cryptographic or lifecycle validation."""
 
 
+_MIN_SECRET_BYTES = 16
+
+
 def _normalize_secret(secret_key: str | bytes | None = None) -> bytes:
-    raw = secret_key if secret_key is not None else os.getenv("MEKONG_APPROVAL_SECRET", _LOCAL_FALLBACK_HMAC_KEY)
-    if isinstance(raw, bytes):
-        return raw if raw else _LOCAL_FALLBACK_HMAC_KEY.encode("utf-8")
-    text = str(raw).strip()
-    return (text if text else _LOCAL_FALLBACK_HMAC_KEY).encode("utf-8")
+    if secret_key is not None:
+        raw_bytes = secret_key.strip() if isinstance(secret_key, bytes) else str(secret_key).strip().encode("utf-8")
+        if len(raw_bytes) < _MIN_SECRET_BYTES:
+            raise ApprovalSecurityError(
+                f"Explicit approval secret_key must be at least {_MIN_SECRET_BYTES} UTF-8 bytes."
+            )
+        return raw_bytes
+
+    env_bytes = os.getenv("MEKONG_APPROVAL_SECRET", "").strip().encode("utf-8")
+    if len(env_bytes) >= _MIN_SECRET_BYTES:
+        return env_bytes
+    if len(env_bytes) == 0 and os.getenv("PYTEST_CURRENT_TEST"):
+        return _LOCAL_FALLBACK_HMAC_KEY.encode("utf-8")
+    raise ApprovalSecurityError(
+        f"MEKONG_APPROVAL_SECRET must be set to at least {_MIN_SECRET_BYTES} bytes outside pytest (fail-closed)."
+    )
 
 
 def compute_action_digest(payload: ActionPayload) -> str:

@@ -1,4 +1,4 @@
-"""Tests for MEKONG-BENCH 5-Layer Deterministic Runtime Evaluation Suite."""
+"""Tests for MEKONG-BENCH v1.0 15-Layer Deterministic Runtime Evaluation Suite."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -6,15 +6,15 @@ from pathlib import Path
 from src.opc.mekong_bench import MekongBenchRunner
 
 
-def test_mekong_bench_all_five_layers_pass_deterministically(tmp_path: Path) -> None:
-    """All 5 MEKONG-BENCH layers must pass their programmatic oracles with pass_rate == 1.0."""
+def test_mekong_bench_all_fifteen_layers_pass_deterministically(tmp_path: Path) -> None:
+    """All 15 MEKONG-BENCH v1.0 layers must pass their programmatic oracles with pass_rate == 1.0."""
     runner = MekongBenchRunner()
     result = runner.run_all(tmp_dir=tmp_path / "bench_run")
 
-    assert result.total_count == 5
-    assert result.passed_count == 5
+    assert result.total_count == 15
+    assert result.passed_count == 15
     assert result.pass_rate == 1.0
-    assert [layer.layer_id for layer in result.layers] == ["L1", "L2", "L3", "L4", "L5"]
+    assert [layer.layer_id for layer in result.layers] == [f"L{i}" for i in range(1, 16)]
     for layer in result.layers:
         assert layer.passed is True, f"Layer {layer.layer_id} failed: {layer.evidence}"
         assert layer.assertions_checked >= 2
@@ -22,13 +22,13 @@ def test_mekong_bench_all_five_layers_pass_deterministically(tmp_path: Path) -> 
 
 
 def test_mekong_bench_markdown_table_rendering(tmp_path: Path) -> None:
-    """format_markdown_table renders a deterministic 5-row Markdown table with PASS verdicts."""
+    """format_markdown_table renders a deterministic 15-row Markdown table with PASS verdicts."""
     runner = MekongBenchRunner()
     result = runner.run_all(tmp_dir=tmp_path / "bench_md")
     table = runner.format_markdown_table(result)
 
     assert "| Layer | Benchmark Name | Verdict | Assertions | Programmatic Oracle Evidence |" in table
-    for layer_id in ("L1", "L2", "L3", "L4", "L5"):
-        assert f"| {layer_id} |" in table
+    for idx in range(1, 16):
+        assert f"| L{idx} |" in table
     assert "FAIL" not in table
-    assert "5/5 layers passed (`pass_rate=100.00%`)" in table
+    assert "15/15 layers passed (`pass_rate=100.00%`)" in table

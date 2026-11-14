@@ -35,11 +35,12 @@ class OPCEngine:
     def __init__(
         self, pack_manifest: PackManifest, state_store: StateStore, usage_ledger: UsageLedger,
         connectors: dict[str, ConnectorProtocol] | None = None, capability_bus: CapabilityBus | None = None,
+        approval_secret: str | bytes | None = None,
     ) -> None:
         self.manifest = pack_manifest
         self.state = state_store
         self.usage = usage_ledger
-        self.approval_engine = PayloadBoundApprovalEngine()
+        self.approval_engine = PayloadBoundApprovalEngine(secret_key=approval_secret)
         self.quarantine = QuarantineFloor()
         self.connectors: dict[str, ConnectorProtocol] = connectors or {"mock_followup_draft": MockConnector()}
         self.bus = capability_bus or InMemoryCapabilityBus(Governance())

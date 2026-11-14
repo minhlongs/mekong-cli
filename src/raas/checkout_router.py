@@ -41,6 +41,13 @@ COMMERCIAL_TIERS: dict[str, dict[str, int]] = {
     "master": {"usd": 4999, "vnd": 124_975_000, "mcu": 100_000},
 }
 
+VN_SME_WORKFLOW_TIERS: dict[str, dict[str, int]] = {
+    "starter": {"vnd": 790_000, "usd": 31, "workflows": 300},
+    "pilot_a": {"vnd": 990_000, "usd": 39, "workflows": 500},
+    "growth": {"vnd": 1_990_000, "usd": 78, "workflows": 1_500},
+    "agency": {"vnd": 4_900_000, "usd": 195, "workflows": 5_000},
+}
+
 
 class CheckoutRequest(BaseModel):
     tier: str = Field(..., description="Subscription tier: basic | premium | enterprise | master")
@@ -86,6 +93,7 @@ class CheckoutResponse(BaseModel):
     amount_usd: int
     amount_vnd: int
     qr_payload: Optional[str] = None
+    workflow_quota: Optional[int] = None
 
 
 class CheckoutStatusResponse(BaseModel):
@@ -94,6 +102,21 @@ class CheckoutStatusResponse(BaseModel):
     tier: str
     license_key: Optional[str] = None
     tenant_id: str
+    workflow_quota: Optional[int] = None
+
+
+_VND_TO_SME_TIER: dict[int, tuple[str, int, CanonicalLicenseTier]] = {
+    790_000: ("starter", 300, CanonicalLicenseTier.BASIC),
+    990_000: ("pilot_a", 500, CanonicalLicenseTier.BASIC),
+    1_990_000: ("growth", 1_500, CanonicalLicenseTier.PREMIUM),
+    4_900_000: ("agency", 5_000, CanonicalLicenseTier.ENTERPRISE),
+}
+_VND_TO_COMMERCIAL_TIER: dict[int, CanonicalLicenseTier] = {
+    4_975_000: CanonicalLicenseTier.BASIC,
+    9_975_000: CanonicalLicenseTier.PREMIUM,
+    19_975_000: CanonicalLicenseTier.ENTERPRISE,
+    124_975_000: CanonicalLicenseTier.MASTER,
+}
 
 
 class LicenseActivateRequest(BaseModel):
@@ -110,13 +133,46 @@ class LicenseStatusResponse(BaseModel):
 
 @router.post("/v1/checkout", response_model=CheckoutResponse)
 async def create_checkout(req: CheckoutRequest) -> CheckoutResponse:
-    norm_tier = normalize_commercial_tier(req.tier).value.lower()
-    tier_info = COMMERCIAL_TIERS.get(norm_tier, COMMERCIAL_TIERS["basic"])
+    raw_tier = req.tier.strip().lower()
     order_id = f"mk-{uuid.uuid4().hex[:12]}"
     app_base = os.environ.get("APP_BASE_URL", "https://mekongmind.com")
 
     requested_rail = req.rail.strip().lower()
     jurisdiction = resolve_org_jurisdiction(req)
+
+    if raw_tier in VN_SME_WORKFLOW_TIERS:
+        if requested_rail != "vietqr":
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "rail_not_permitted_for_jurisdiction",
+                    "message": (
+                        f"Domestic VN SME workflow tier '{raw_tier}' settles exclusively via Napas 247 (rail 'vietqr') "
+                        "under Decree 52/2024/NĐ-CP."
+                    ),
+                    "jurisdiction": jurisdiction,
+                    "requested_rail": requested_rail,
+                    "allowed_rails": list(_VN_ALLOWED_RAILS),
+                },
+            )
+        sme_info = VN_SME_WORKFLOW_TIERS[raw_tier]
+        qr_res = VietQrEngine().generate_qr(
+            amount_vnd=sme_info["vnd"],
+            memo=f"MEKONG {req.org_id[:8]} {order_id[-6:]}",
+        )
+        return CheckoutResponse(
+            checkout_url=str(qr_res.get("quicklink_url", "")),
+            order_id=order_id,
+            tier=raw_tier,
+            rail="vietqr",
+            amount_usd=sme_info["usd"],
+            amount_vnd=sme_info["vnd"],
+            qr_payload=str(qr_res.get("emvco_payload", "")),
+            workflow_quota=sme_info["workflows"],
+        )
+
+    norm_tier = normalize_commercial_tier(req.tier).value.lower()
+    tier_info = COMMERCIAL_TIERS.get(norm_tier, COMMERCIAL_TIERS["basic"])
     allowed_rails = rails_allowed_for_jurisdiction(jurisdiction)
     if requested_rail not in allowed_rails:
         raise HTTPException(
@@ -161,15 +217,28 @@ async def create_checkout(req: CheckoutRequest) -> CheckoutResponse:
 @router.get("/v1/checkout/status", response_model=CheckoutStatusResponse)
 async def get_checkout_status(order_id: str, simulate_paid: bool = False) -> CheckoutStatusResponse:
     txs = VietQrEngine().list_transactions(limit=20)
-    matched = any(t.get("matched_order_id") == order_id or order_id[-6:] in str(t.get("memo", "")) for t in txs)
+    matched_tx = next(
+        (t for t in txs if t.get("matched_order_id") == order_id or order_id[-6:] in str(t.get("memo", ""))),
+        None,
+    )
     # Strictly gate simulate_paid and mock prefixes to unit test environments
     is_test_env = bool(os.getenv("PYTEST_CURRENT_TEST"))
-    is_paid = matched or (is_test_env and (simulate_paid or order_id.startswith("mk-paid-")))
+    is_paid = (matched_tx is not None) or (is_test_env and (simulate_paid or order_id.startswith("mk-paid-")))
     tier_name = CanonicalLicenseTier.PREMIUM
+    display_tier = tier_name.value
+    workflow_quota: Optional[int] = None
+    if matched_tx is not None:
+        paid_vnd = int(matched_tx.get("amount_vnd", 0))
+        if paid_vnd in _VND_TO_SME_TIER:
+            display_tier, workflow_quota, tier_name = _VND_TO_SME_TIER[paid_vnd]
+        elif paid_vnd in _VND_TO_COMMERCIAL_TIER:
+            tier_name = _VND_TO_COMMERCIAL_TIER[paid_vnd]
+            display_tier = tier_name.value
     token = sign_license_key(tenant_id=f"org-{order_id[-6:]}", tier=tier_name) if is_paid else None
     return CheckoutStatusResponse(
         order_id=order_id, status="paid" if is_paid else "pending",
-        tier=tier_name.value, license_key=token, tenant_id=f"org-{order_id[-6:]}",
+        tier=display_tier, license_key=token, tenant_id=f"org-{order_id[-6:]}",
+        workflow_quota=workflow_quota,
     )
 
 

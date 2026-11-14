@@ -36,7 +36,7 @@
       "report_id": { "type": "string" }
     }
   },
-  "connectors": ["mock_followup_draft", "zalo_oa_sandbox"],
+  "connectors": ["mock_followup_draft", "zalo_oa_sandbox", "zalo_oa"],
   "credential_refs": [],
   "capabilities": [
     "proposal.generate_draft",
@@ -47,7 +47,8 @@
   "permissions": [
     "state:read_write",
     "connector:mock_followup_draft",
-    "connector:zalo_oa_sandbox"
+    "connector:zalo_oa_sandbox",
+    "connector:zalo_oa"
   ],
   "external_effects": [
     "create_followup_draft",

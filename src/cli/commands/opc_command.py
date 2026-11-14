@@ -13,12 +13,15 @@ from rich.panel import Panel
 
 from src.opc.approval import ApprovalSecurityError, compute_action_digest
 from src.opc.connectors.mock import MockConnector
+from src.opc.connectors.zalo_http import ZaloOAConnector, ZaloTierPolicyError, ZaloWebhookMacError
 from src.opc.engine import OPCEngine
 from src.opc.manifest import ManifestValidationError, load_pack_manifest
 from src.opc.mekong_bench import MekongBenchRunner, _bench_event, _bench_profile
 from src.opc.models import ActionPayload, ApprovalDecision, BusinessProfile, ProposalInput, WorkflowStatus
 from src.opc.pilot_a import PilotAWorkflow, ZaloInteractionWindowError, ZaloSandboxConnector
+from src.opc.privacy_guard import ConsentRequiredError, HaltForHumanError, TenantIsolationError
 from src.opc.quarantine import QuarantineFloor, QuarantineViolationError
+from src.opc.quota import WorkflowQuotaExceededError
 from src.opc.state import StateStore
 from src.opc.usage import UsageLedger
 
@@ -59,10 +62,15 @@ def _resolve_pack_manifest_path(pack_id: str | None) -> Path:
 
 
 def _default_connectors() -> dict[str, Any]:
-    return {
+    conns: dict[str, Any] = {
         "mock_followup_draft": MockConnector(),
         "zalo_oa_sandbox": ZaloSandboxConnector(),
     }
+    try:
+        conns["zalo_oa"] = ZaloOAConnector()
+    except ZaloTierPolicyError:
+        pass
+    return conns
 
 
 @opc_app.command(name="validate-pack")
@@ -100,7 +108,11 @@ def run_proposal_flow(
     manifest = load_pack_manifest(manifest_file)
     state = StateStore(db_path)
     usage = UsageLedger(db_path)
-    engine = OPCEngine(manifest, state, usage, connectors=_default_connectors())
+    try:
+        engine = OPCEngine(manifest, state, usage, connectors=_default_connectors())
+    except ApprovalSecurityError as exc:
+        console.print(f"[bold red]Approval Security Error:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
     profile = _load_profile(Path(profile_path))
     intake = _load_intake(Path(request_path))
 
@@ -161,7 +173,11 @@ def decide_proposal(
         console.print(f"[bold red]Run {run_id} is in status '{run_data['status'].value}'; expected pending_approval or revise_requested.[/bold red]")
         raise typer.Exit(code=1)
     manifest = load_pack_manifest(_resolve_pack_manifest_path(run_data.get("pack_id")))
-    engine = OPCEngine(manifest, state, usage, connectors=_default_connectors())
+    try:
+        engine = OPCEngine(manifest, state, usage, connectors=_default_connectors())
+    except ApprovalSecurityError as exc:
+        console.print(f"[bold red]Approval Security Error:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
     action_dict = run_data.get("action_payload")
     if not action_dict:
         console.print(f"[bold red]No ActionPayload recorded for run:[/bold red] {run_id}")
@@ -264,17 +280,47 @@ def quarantine_inspect(
 @opc_app.command(name="pilot-a")
 def run_pilot_a(
     db_path: str = typer.Option(str(_DEFAULT_DB), "--db", help="SQLite state DB path"),
+    tenant_id: str = typer.Option("default", "--tenant-id", help="Tenant slug for multi-tenant isolation & quota"),
+    sme_tier: str = typer.Option("pilot_a", "--sme-tier", help="VN SME workflow tier: starter | pilot_a | growth | agency"),
     message: str = typer.Option("Nhờ báo giá gói tư vấn AI và VietQR 10 giờ.", "--message", "-m", help="Incoming Zalo OA message text"),
-    approve_and_send: bool = typer.Option(False, "--approve-and-send", help="Immediately verify HMAC approval token and dispatch to Zalo OA sandbox"),
+    connector: str = typer.Option("zalo_oa_sandbox", "--connector", help="Connector: zalo_oa_sandbox | zalo_oa"),
+    oa_tier: str = typer.Option("growth", "--oa-tier", help="Zalo OA subscription tier (growth | enterprise)"),
+    require_consent: bool = typer.Option(False, "--require-consent", help="Enforce Decree 13/2023/NĐ-CP consent gate"),
+    grant_consent: bool = typer.Option(False, "--grant-consent", help="Record Decree 13 consent for sender before intake"),
+    export_draft: bool = typer.Option(False, "--export-draft", help="Build pre-accounting DRAFT_PENDING_TVAN payload"),
+    approve_and_send: bool = typer.Option(False, "--approve-and-send", help="Immediately verify HMAC approval token and dispatch"),
     as_json: bool = typer.Option(False, "--json", help="Emit JSON output"),
 ) -> None:
-    """Execute the Pilot A vertical slice (Zalo OA → Quarantine → Quote + VietQR → Approval Card)."""
-    wf = PilotAWorkflow(db_path=str(_resolve_opt(db_path, str(_DEFAULT_DB))), profile=_bench_profile())
-    event = _bench_event(event_id="cli_pilot_a_01", message=str(_resolve_opt(message, "Nhờ báo giá gói tư vấn AI và VietQR 10 giờ.")))
+    """Execute the Pilot A vertical slice (Zalo OA → Consent/Quarantine → Quote + VietQR → Approval Card)."""
+    from src.opc.accounting_draft import build_accounting_draft_export
+
+    conn_name = str(_resolve_opt(connector, "zalo_oa_sandbox")).strip().lower()
+    tier_name = str(_resolve_opt(oa_tier, "growth")).strip()
     try:
+        zalo_conn: Any = ZaloOAConnector(oa_tier=tier_name) if conn_name == "zalo_oa" else ZaloSandboxConnector()
+        wf = PilotAWorkflow(
+            db_path=str(_resolve_opt(db_path, str(_DEFAULT_DB))),
+            profile=_bench_profile(),
+            zalo_connector=zalo_conn,
+            enforce_consent=bool(_resolve_opt(require_consent, conn_name == "zalo_oa")),
+            tenant_id=str(_resolve_opt(tenant_id, "default")),
+            sme_tier=str(_resolve_opt(sme_tier, "pilot_a")),
+        )
+        event = _bench_event(event_id="cli_pilot_a_01", message=str(_resolve_opt(message, "Nhờ báo giá gói tư vấn AI và VietQR 10 giờ.")))
+        if bool(_resolve_opt(grant_consent, False)):
+            wf.privacy_guard.record_subject_consent(event.sender_id)
         card = wf.handle_webhook(event)
         dispatch_res = wf.approve_and_send(card) if bool(_resolve_opt(approve_and_send, False)) else None
-    except (QuarantineViolationError, ZaloInteractionWindowError, ApprovalSecurityError) as exc:
+        acc_draft = (
+            dataclasses.asdict(build_accounting_draft_export(card.run_id, card.client_name, card.line_items, card.total_amount_vnd))
+            if bool(_resolve_opt(export_draft, False))
+            else None
+        )
+    except (
+        QuarantineViolationError, ZaloInteractionWindowError, ApprovalSecurityError,
+        ZaloTierPolicyError, ZaloWebhookMacError, ConsentRequiredError,
+        HaltForHumanError, TenantIsolationError, WorkflowQuotaExceededError,
+    ) as exc:
         if bool(_resolve_opt(as_json, False)):
             typer.echo(json.dumps({"status": "blocked", "error": str(exc)}, ensure_ascii=False))
         else:
@@ -290,7 +336,9 @@ def run_pilot_a(
         "vietqr_emvco": card.vietqr_emvco,
         "vietqr_quicklink": card.vietqr_quicklink,
         "approval_token_id": card.approval_token.token_id,
+        "redacted_notes": card.redacted_notes,
         "dispatch": dispatch_res,
+        "accounting_draft": acc_draft,
     }
     if bool(_resolve_opt(as_json, False)):
         typer.echo(json.dumps(out, ensure_ascii=False))
@@ -302,7 +350,7 @@ def run_pilot_a(
 def run_mekong_bench(
     as_json: bool = typer.Option(False, "--json", help="Emit JSON output instead of Markdown table"),
 ) -> None:
-    """Run all 5 deterministic MEKONG-BENCH layers and verify programmatic oracles."""
+    """Run all 15 deterministic MEKONG-BENCH v1.0 layers and verify programmatic oracles."""
     runner = MekongBenchRunner()
     result = runner.run_all()
     if bool(_resolve_opt(as_json, False)):

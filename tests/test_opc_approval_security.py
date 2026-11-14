@@ -169,7 +169,7 @@ def test_hmac_signature_binding_and_token_tampering(tmp_path: Path) -> None:
         with pytest.raises(ApprovalSecurityError, match="HMAC signature mismatch"):
             engine.execute_approved_action(mutated_tok, payload, idempotency_key=f"k_hmac_{idx}")
 
-    forged = PayloadBoundApprovalEngine(secret_key="attacker-secret").issue_token(run_id, payload)
+    forged = PayloadBoundApprovalEngine(secret_key="attacker-wrong-secret-key").issue_token(run_id, payload)
     with pytest.raises(ApprovalSecurityError, match="HMAC signature mismatch"):
         engine.execute_approved_action(forged, payload, idempotency_key="k_hmac_forged")
 

@@ -88,7 +88,7 @@ _INJECTION_RULES: Final[tuple[tuple[str, re.Pattern[str], float], ...]] = (
         "secret_exfiltration",
         re.compile(
             r"\b(?:print|dump|leak|exfiltrate|send|reveal|show)\b.{0,35}\b(?:env|environ|secret|api[-_\s]?key|private[-_\s]?key|access[-_\s]?token|hmac|password|credentials?)\b"
-            r"|(?:tiết\s+lộ|in\s+ra|gửi\s+ra\s+ngoài|đọc\s+file|xuất\s+ra)\s+.{0,35}(?:khóa\s+bí\s+mật|mật\s+khẩu|biến\s+môi\s+trường|api\s*key|token\s+admin|\.env)",
+            r"|(?:tiết\s+lộ|in\s+ra|gửi\s+ra\s+ngoài|đọc\s+file|xuất(?:\s+ra)?)\s+.{0,35}(?:khóa\s+bí\s+mật|mật\s+khẩu|biến\s+môi\s+trường|api\s*key|token\s+admin|\.env|RAAS_LICENSE_SECRET)",
             re.IGNORECASE | re.DOTALL,
         ),
         1.0,

@@ -1,0 +1,673 @@
+{
+  "audit_version": "mekong-forensic-audit/v1.0",
+  "executed_at_utc": "2026-11-14T09:43:39Z",
+  "target_repository": "minhlongs/mekong-cli",
+  "worktree": "/Users/macbook/mekong-cli-atoz-strategy-e",
+  "branch": "feat/strategy-e-forensic-pilot-a-bench15",
+  "baseline_head_sha": "30cf3895d6ee409b592f66627c9aaad1b2790cbf",
+  "working_tree_clean_at_audit": true,
+  "registered_typer_groups_actual": 189,
+  "registered_typer_groups_documented_claim": 39,
+  "secret_env_presence_masked": {
+    "MEKONG_APPROVAL_SECRET": {
+      "is_set": false,
+      "length": 0
+    },
+    "RAAS_LICENSE_SECRET": {
+      "is_set": false,
+      "length": 0
+    },
+    "ZALO_OA_ACCESS_TOKEN": {
+      "is_set": false,
+      "length": 0
+    },
+    "ZALO_OA_SECRET_KEY": {
+      "is_set": false,
+      "length": 0
+    },
+    "VIETQR_WEBHOOK_SECRET": {
+      "is_set": false,
+      "length": 0
+    },
+    "OPENAI_API_KEY": {
+      "is_set": false,
+      "length": 0
+    },
+    "ANTHROPIC_API_KEY": {
+      "is_set": false,
+      "length": 0
+    }
+  },
+  "steps": {
+    "V-01": {
+      "status": "PASS",
+      "head_sha": "30cf3895d6ee409b592f66627c9aaad1b2790cbf",
+      "git_status_short": "",
+      "recent_commits": [
+        "30cf3895d 2026-11-09 19:17:05 +0700 feat(promise): bind 18 C-Suite/BizOps and VN commercial/financial/cyber statutory commands to execution spine (#152)",
+        "0e0a8439b 2026-11-09 16:52:26 +0700 feat(promise): deliver executable operations across all 10 departments and VN digital/IP law (#150)",
+        "3c542d207 2026-11-09 12:38:54 +0700 feat(promise): bind C-Suite, BizOps, and VN legal operations to unlock L0-L5 milestone gates (#148)",
+        "677c906ad 2026-11-09 10:01:50 +0700 fix(promise): align approval token expiry with payload digest across second boundaries (#146)",
+        "ca7914e74 2026-11-09 09:38:56 +0700 feat(promise): add OPC and Zalo OA executable operations and wire CI gates (#145)"
+      ],
+      "finding": "Clean working tree at 40-char SHA 30cf3895d6ee409b592f66627c9aaad1b2790cbf; build_app() registers 189 CLI groups vs 39 claimed in docs."
+    },
+    "V-02": {
+      "status": "PASS",
+      "returncode": 0,
+      "duration_ms": 3535.2,
+      "summary_tail": [
+        "",
+        "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+        "========================= 8 passed, 1 warning in 1.46s ========================="
+      ]
+    },
+    "V-03": {
+      "status": "PASS",
+      "exists": true,
+      "loc": 51,
+      "classes": [
+        "OpenCorePhase",
+        "OpenCoreStepSpec"
+      ],
+      "functions": [],
+      "classification": "STATIC_DECLARATIVE_CATALOG_PLUS_DATACLASS",
+      "finding": "phase_559_opencore_25_step_catalog.py is 51 LOC of declarative dataclass metadata (OpenCorePhase, OpenCoreStepSpec, TWENTY_FIVE_OPENCORE_STEPS) with 0 runtime functions."
+    },
+    "V-04": {
+      "status": "PASS",
+      "total_py_files_scanned": 1242,
+      "integrations_dir_exists": true,
+      "directory_breakdown": {
+        "integrations": {
+          "files": 2,
+          "loc": 126,
+          "functions_total": 8,
+          "implemented": 8,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/__init__.py": {
+          "files": 1,
+          "loc": 4,
+          "functions_total": 0,
+          "implemented": 0,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 0.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/a2ui": {
+          "files": 2,
+          "loc": 200,
+          "functions_total": 21,
+          "implemented": 21,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/agents": {
+          "files": 23,
+          "loc": 4479,
+          "functions_total": 134,
+          "implemented": 132,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 2,
+          "implemented_pct": 98.51,
+          "stub_or_static_pct": 1.49
+        },
+        "src/ai": {
+          "files": 2,
+          "loc": 244,
+          "functions_total": 6,
+          "implemented": 6,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/analytics": {
+          "files": 3,
+          "loc": 602,
+          "functions_total": 16,
+          "implemented": 16,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/api": {
+          "files": 45,
+          "loc": 8932,
+          "functions_total": 259,
+          "implemented": 258,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 1,
+          "implemented_pct": 99.61,
+          "stub_or_static_pct": 0.39
+        },
+        "src/auth": {
+          "files": 16,
+          "loc": 5132,
+          "functions_total": 239,
+          "implemented": 235,
+          "stub_pass_or_ellipsis": 4,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 98.33,
+          "stub_or_static_pct": 1.67
+        },
+        "src/billing": {
+          "files": 7,
+          "loc": 313,
+          "functions_total": 6,
+          "implemented": 6,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/cli": {
+          "files": 229,
+          "loc": 71679,
+          "functions_total": 1690,
+          "implemented": 1687,
+          "stub_pass_or_ellipsis": 1,
+          "stub_not_implemented": 0,
+          "static_return": 2,
+          "implemented_pct": 99.82,
+          "stub_or_static_pct": 0.18
+        },
+        "src/command_fabric": {
+          "files": 47,
+          "loc": 6079,
+          "functions_total": 217,
+          "implemented": 200,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 17,
+          "implemented_pct": 92.17,
+          "stub_or_static_pct": 7.83
+        },
+        "src/commands": {
+          "files": 39,
+          "loc": 12369,
+          "functions_total": 291,
+          "implemented": 290,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 1,
+          "static_return": 0,
+          "implemented_pct": 99.66,
+          "stub_or_static_pct": 0.34
+        },
+        "src/commercial": {
+          "files": 6,
+          "loc": 312,
+          "functions_total": 12,
+          "implemented": 12,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/components": {
+          "files": 1,
+          "loc": 3,
+          "functions_total": 0,
+          "implemented": 0,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 0.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/config": {
+          "files": 3,
+          "loc": 171,
+          "functions_total": 6,
+          "implemented": 6,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/core": {
+          "files": 471,
+          "loc": 218582,
+          "functions_total": 6627,
+          "implemented": 6492,
+          "stub_pass_or_ellipsis": 98,
+          "stub_not_implemented": 4,
+          "static_return": 33,
+          "implemented_pct": 97.96,
+          "stub_or_static_pct": 2.04
+        },
+        "src/daemon": {
+          "files": 20,
+          "loc": 4504,
+          "functions_total": 167,
+          "implemented": 167,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/db": {
+          "files": 9,
+          "loc": 1707,
+          "functions_total": 71,
+          "implemented": 71,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/design_intelligence": {
+          "files": 10,
+          "loc": 1413,
+          "functions_total": 78,
+          "implemented": 71,
+          "stub_pass_or_ellipsis": 6,
+          "stub_not_implemented": 1,
+          "static_return": 0,
+          "implemented_pct": 91.03,
+          "stub_or_static_pct": 8.97
+        },
+        "src/finance": {
+          "files": 1,
+          "loc": 4,
+          "functions_total": 0,
+          "implemented": 0,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 0.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/gateway.py": {
+          "files": 1,
+          "loc": 154,
+          "functions_total": 2,
+          "implemented": 2,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/gateway_health.py": {
+          "files": 1,
+          "loc": 96,
+          "functions_total": 4,
+          "implemented": 4,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/governance": {
+          "files": 7,
+          "loc": 3076,
+          "functions_total": 85,
+          "implemented": 84,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 1,
+          "implemented_pct": 98.82,
+          "stub_or_static_pct": 1.18
+        },
+        "src/graph": {
+          "files": 5,
+          "loc": 2165,
+          "functions_total": 62,
+          "implemented": 62,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/harness": {
+          "files": 33,
+          "loc": 5351,
+          "functions_total": 212,
+          "implemented": 212,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/jobs": {
+          "files": 2,
+          "loc": 749,
+          "functions_total": 16,
+          "implemented": 15,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 1,
+          "implemented_pct": 93.75,
+          "stub_or_static_pct": 6.25
+        },
+        "src/learning": {
+          "files": 3,
+          "loc": 715,
+          "functions_total": 22,
+          "implemented": 22,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/lib": {
+          "files": 9,
+          "loc": 2412,
+          "functions_total": 90,
+          "implemented": 89,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 1,
+          "static_return": 0,
+          "implemented_pct": 98.89,
+          "stub_or_static_pct": 1.11
+        },
+        "src/main.py": {
+          "files": 1,
+          "loc": 21,
+          "functions_total": 0,
+          "implemented": 0,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 0.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/marketing": {
+          "files": 1,
+          "loc": 4,
+          "functions_total": 0,
+          "implemented": 0,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 0.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/mekong": {
+          "files": 38,
+          "loc": 8262,
+          "functions_total": 225,
+          "implemented": 225,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/mekongcli": {
+          "files": 23,
+          "loc": 3695,
+          "functions_total": 99,
+          "implemented": 97,
+          "stub_pass_or_ellipsis": 2,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 97.98,
+          "stub_or_static_pct": 2.02
+        },
+        "src/middleware": {
+          "files": 6,
+          "loc": 651,
+          "functions_total": 25,
+          "implemented": 25,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/models": {
+          "files": 3,
+          "loc": 1081,
+          "functions_total": 38,
+          "implemented": 38,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/opc": {
+          "files": 13,
+          "loc": 1654,
+          "functions_total": 64,
+          "implemented": 63,
+          "stub_pass_or_ellipsis": 1,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 98.44,
+          "stub_or_static_pct": 1.56
+        },
+        "src/pages": {
+          "files": 1,
+          "loc": 3,
+          "functions_total": 0,
+          "implemented": 0,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 0.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/plugins": {
+          "files": 9,
+          "loc": 1329,
+          "functions_total": 69,
+          "implemented": 69,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/polymarket": {
+          "files": 25,
+          "loc": 4985,
+          "functions_total": 233,
+          "implemented": 232,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 1,
+          "implemented_pct": 99.57,
+          "stub_or_static_pct": 0.43
+        },
+        "src/providers": {
+          "files": 3,
+          "loc": 740,
+          "functions_total": 18,
+          "implemented": 18,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/raas": {
+          "files": 76,
+          "loc": 19166,
+          "functions_total": 654,
+          "implemented": 649,
+          "stub_pass_or_ellipsis": 1,
+          "stub_not_implemented": 0,
+          "static_return": 4,
+          "implemented_pct": 99.24,
+          "stub_or_static_pct": 0.76
+        },
+        "src/research": {
+          "files": 3,
+          "loc": 51,
+          "functions_total": 2,
+          "implemented": 2,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/security": {
+          "files": 3,
+          "loc": 529,
+          "functions_total": 19,
+          "implemented": 19,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/seed": {
+          "files": 13,
+          "loc": 1012,
+          "functions_total": 40,
+          "implemented": 37,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 3,
+          "implemented_pct": 92.5,
+          "stub_or_static_pct": 7.5
+        },
+        "src/services": {
+          "files": 17,
+          "loc": 4349,
+          "functions_total": 161,
+          "implemented": 151,
+          "stub_pass_or_ellipsis": 10,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 93.79,
+          "stub_or_static_pct": 6.21
+        },
+        "src/strategies": {
+          "files": 2,
+          "loc": 8,
+          "functions_total": 0,
+          "implemented": 0,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 0.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/studio": {
+          "files": 2,
+          "loc": 252,
+          "functions_total": 0,
+          "implemented": 0,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 0.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/telemetry": {
+          "files": 2,
+          "loc": 410,
+          "functions_total": 12,
+          "implemented": 12,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        },
+        "src/usage": {
+          "files": 3,
+          "loc": 1023,
+          "functions_total": 44,
+          "implemented": 44,
+          "stub_pass_or_ellipsis": 0,
+          "stub_not_implemented": 0,
+          "static_return": 0,
+          "implemented_pct": 100.0,
+          "stub_or_static_pct": 0.0
+        }
+      }
+    },
+    "V-05": {
+      "status": "PASS",
+      "pytest_returncode": 0,
+      "pytest_tail": [
+        "",
+        "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+        "========================= 6 passed, 1 warning in 0.43s ========================="
+      ],
+      "unconfigured_secret_probe": "False RAAS_LICENSE_SECRET must be configured in production"
+    },
+    "V-06": {
+      "status": "PASS",
+      "pytest_returncode": 0,
+      "pytest_tail": [
+        "  /Users/macbook/mekong-cli/.venv/lib/python3.11/site-packages/opentelemetry/util/_importlib_metadata.py:32: DeprecationWarning: SelectableGroups dict interface is deprecated. Use select.",
+        "    return EntryPoints(ep for group_eps in eps.values() for ep in group_eps)",
+        "",
+        "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+        "================= 13 passed, 5 deselected, 1 warning in 1.64s =================="
+      ],
+      "finding": "/webhook/polar returns HTTP 410 Gone; CreditStore SQLite WAL deduplicates act_<sha256>; /v1/checkout already blocks NOWPayments for VN & undeclared jurisdictions (HTTP 403)."
+    },
+    "V-07": {
+      "status": "HOLD_REQUIRES_FAIL_CLOSED_SECRET",
+      "pytest_returncode": 0,
+      "payload_digest_bound": true,
+      "atomic_sqlite_consumption": true,
+      "unconfigured_secret_probe": "SILENT_FALLBACK_ALLOWED",
+      "finding": "PayloadBoundApprovalEngine binds recipient, budget_amount, content, attachments, and parameters via SHA-256 + HMAC-SHA256 and consumes atomically in SQLite, BUT silently falls back to hardcoded _LOCAL_FALLBACK_HMAC_KEY when MEKONG_APPROVAL_SECRET is unset outside pytest (must be hardened in Deliverable 2)."
+    },
+    "V-08": {
+      "status": "PASS_WITH_CI_NOTE",
+      "committed_sbom_file_exists": false,
+      "generator_script": "scripts/generate-sbom.py",
+      "generator_returncode": 0,
+      "bomFormat": "CycloneDX",
+      "specVersion": "1.5",
+      "components_count": 1240,
+      "pyproject_license_mit": true,
+      "gates_bandit_exit_zero_flag": true,
+      "gates_semgrep_continue_on_error": true,
+      "gates_trivy_exit_code_zero": true,
+      "finding": "CycloneDX 1.5 SBOM generated dynamically via scripts/generate-sbom.py (>1000 components, MIT license). Note: G2 security scanners in gates.yml use --exit-zero / continue-on-error: true (non-blocking)."
+    }
+  },
+  "gates_g0_g13_baseline": {
+    "G0_exact_source_and_architecture_baseline": "PASS",
+    "G1_verified_customer_pain": "OUT_OF_SCOPE_COMMERCIAL_FIELDWORK",
+    "G2_verified_buyer_and_wtp": "FAIL_AT_LEGACY_USD_TIERS_REMEDIATING_PARALLEL_VND_SME_TIERS",
+    "G3_repository_license_compatibility": "PASS_VN_CRYPTO_BLOCKED_MIT_SBOM_VERIFIED",
+    "G4_architecture_and_contract_integrity": "PASS",
+    "G5_runtime_fail_closed_reliability": "HOLD_APPROVAL_SECRET_FALLBACK_OPEN_AT_BASELINE",
+    "G6_authorization_and_credential_safety": "HOLD_APPROVAL_SECRET_FALLBACK_OPEN_AT_BASELINE",
+    "G7_multi_tenant_isolation": "NOT_VERIFIED_AT_BASELINE_5_LAYER_BENCH",
+    "G8_idempotency_and_recovery": "PASS_PARTIAL_EXTENDING_TO_15_LAYER_BENCH",
+    "G9_deterministic_evaluation_coverage": "HOLD_NEEDS_MATH_MISMATCH_AND_15_LAYER_BENCH",
+    "G10_provider_api_compliance": "FAIL_AT_BASELINE_MISSING_ZALO_HTTP_TIER_GATE_AND_PDPD_PILOT_WIRE",
+    "G11_performance_and_cost_benchmark": "HOLD_NEEDS_ATOMIC_WORKFLOW_QUOTA_AND_BENCH_L11_L12",
+    "G12_paid_pilot_and_contribution_economics": "OUT_OF_SCOPE_60_DAY_COMMERCIAL_COHORT",
+    "G13_independent_owner_approval": "PASS_LOCKED_AT_AK_ATOZ_GATES_1_AND_2"
+  }
+}

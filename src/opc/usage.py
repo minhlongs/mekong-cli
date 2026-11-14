@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Generator
 from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 from src.opc.models import CostAccounting, UsageRecord, UsageStage
+from src.opc.quota import QuotaReservationResult, WorkflowQuotaGuard
 
 
 class UsageLedger:
@@ -17,9 +19,16 @@ class UsageLedger:
         self.db_path = Path(db_path).resolve()
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
+        self.quota_guard = WorkflowQuotaGuard(self.db_path)
+
+    def reserve_workflow_quota(
+        self, tenant_id: str, workflow_id: str, period_ym: str, now: int,
+        limit_override: int | None = None, tier: str = "pilot_a",
+    ) -> QuotaReservationResult:
+        return self.quota_guard.reserve_workflow_slot(tenant_id, workflow_id, period_ym, now, limit_override, tier)
 
     @contextmanager
-    def _get_connection(self) -> Iterator[sqlite3.Connection]:
+    def _get_connection(self) -> Generator[sqlite3.Connection, None, None]:
         conn = sqlite3.connect(str(self.db_path), timeout=30.0)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode = WAL")
@@ -34,23 +43,11 @@ class UsageLedger:
     def _init_db(self) -> None:
         with self._get_connection() as conn:
             conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS opc_usage_events (
-                    event_id TEXT PRIMARY KEY,
-                    run_id TEXT NOT NULL,
-                    attempt INTEGER NOT NULL,
-                    stage TEXT NOT NULL,
-                    provider TEXT NOT NULL,
-                    model TEXT NOT NULL,
-                    tokens INTEGER,
-                    tool_fee TEXT,
-                    amount TEXT,
-                    currency TEXT NOT NULL,
-                    payer TEXT NOT NULL,
-                    pricing_source TEXT NOT NULL,
-                    created_at INTEGER NOT NULL
-                );
-                """
+                "CREATE TABLE IF NOT EXISTS opc_usage_events ("
+                "event_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, attempt INTEGER NOT NULL, "
+                "stage TEXT NOT NULL, provider TEXT NOT NULL, model TEXT NOT NULL, tokens INTEGER, "
+                "tool_fee TEXT, amount TEXT, currency TEXT NOT NULL, payer TEXT NOT NULL, "
+                "pricing_source TEXT NOT NULL, created_at INTEGER NOT NULL);"
             )
 
     def record_usage(self, record: UsageRecord) -> bool:
