@@ -302,6 +302,17 @@
         ],
         "verdict": "reviewed",
         "note": "Issue #142 OPC production-caller and fourth-door closure for QuarantineFloor, HMAC approval verification, PilotAWorkflow, and MekongBenchRunner; top-level command surface unchanged (opc group grandfathered in dna/command-surface.json, 189 CLI groups preserved)."
+      },
+      {
+        "pr": 155,
+        "branch": "feat/strategy-e-forensic-pilot-a-bench15",
+        "feature_surface_changes": [
+          "src/cli/commands/opc_command.py — add --tenant-id, --sme-tier, --connector, --oa-tier, --require-consent, --grant-consent, and --export-draft flags to mekong opc pilot-a; catch ApprovalSecurityError cleanly across proposal, decide, and pilot-a; update mekong opc bench to run all 15 deterministic MEKONG-BENCH v1.0 layers",
+          "src/opc/ (approval.py, connectors/zalo_http.py, verifier.py, privacy_guard.py, accounting_draft.py, quota.py, pilot_a.py, mekong_bench.py, bench_layers_vn.py) — fail-closed >=16-byte HMAC secret enforcement, pure-stdlib ZaloOAConnector with Growth/Enterprise tier & webhook MAC gates, Decree 13 consent & SQL-safe <72h DSAR erasure, two-stage math/NaN verifier, MOIM context compactor, signed VietQR replay-safe reconciliation + DRAFT_PENDING_TVAN export, atomic SQLite WAL workflow quota, and 15/15 MEKONG-BENCH oracles",
+          "src/raas/checkout_router.py, src/raas/revenue_router.py — add parallel domestic VN_SME_WORKFLOW_TIERS (starter/pilot_a/growth/agency, vietqr-only) without modifying COMMERCIAL_TIERS"
+        ],
+        "verdict": "reviewed",
+        "note": "Issue #153 Strategy E Forensic Audit (V-01..V-08), Fail-Closed Pilot A, VN SME Workflow Tiers & 15-Layer MEKONG-BENCH; top-level command surface unchanged (opc group grandfathered in dna/command-surface.json, 189 CLI groups preserved)."
       }
     ]
   }
