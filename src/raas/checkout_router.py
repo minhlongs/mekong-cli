@@ -44,8 +44,15 @@ COMMERCIAL_TIERS: dict[str, dict[str, int]] = {
 VN_SME_WORKFLOW_TIERS: dict[str, dict[str, int]] = {
     "starter": {"vnd": 790_000, "usd": 31, "workflows": 300},
     "pilot_a": {"vnd": 990_000, "usd": 39, "workflows": 500},
-    "growth": {"vnd": 1_990_000, "usd": 78, "workflows": 1_500},
-    "agency": {"vnd": 4_900_000, "usd": 195, "workflows": 5_000},
+    "growth": {"vnd": 1_990_000, "usd": 78, "workflows": 1_000},
+    "agency": {"vnd": 4_900_000, "usd": 195, "workflows": 3_500},
+}
+
+VN_SME_COMMITMENT_PRICING: dict[str, dict[str, Optional[int]]] = {
+    "starter": {"commitment_6m_vnd": 690_000, "setup_fee_vnd": 0},
+    "pilot_a": {"commitment_6m_vnd": None, "setup_fee_vnd": 0},
+    "growth": {"commitment_6m_vnd": 1_690_000, "setup_fee_vnd": 0},
+    "agency": {"commitment_6m_vnd": None, "setup_fee_vnd": 5_000_000},
 }
 
 
@@ -108,9 +115,12 @@ class CheckoutStatusResponse(BaseModel):
 _VND_TO_SME_TIER: dict[int, tuple[str, int, CanonicalLicenseTier]] = {
     790_000: ("starter", 300, CanonicalLicenseTier.BASIC),
     990_000: ("pilot_a", 500, CanonicalLicenseTier.BASIC),
-    1_990_000: ("growth", 1_500, CanonicalLicenseTier.PREMIUM),
-    4_900_000: ("agency", 5_000, CanonicalLicenseTier.ENTERPRISE),
+    1_990_000: ("growth", 1_000, CanonicalLicenseTier.PREMIUM),
+    4_140_000: ("starter", 300, CanonicalLicenseTier.BASIC),  # 6m commitment: 6 * 690,000 VND
+    4_900_000: ("agency", 3_500, CanonicalLicenseTier.ENTERPRISE),
+    10_140_000: ("growth", 1_000, CanonicalLicenseTier.PREMIUM),  # 6m commitment: 6 * 1,690,000 VND
 }
+_EXPECTED_CHECKOUT_AMOUNTS: dict[str, tuple[int, str, Optional[int], CanonicalLicenseTier]] = {}
 _VND_TO_COMMERCIAL_TIER: dict[int, CanonicalLicenseTier] = {
     4_975_000: CanonicalLicenseTier.BASIC,
     9_975_000: CanonicalLicenseTier.PREMIUM,
@@ -156,6 +166,11 @@ async def create_checkout(req: CheckoutRequest) -> CheckoutResponse:
                 },
             )
         sme_info = VN_SME_WORKFLOW_TIERS[raw_tier]
+        sme_canonical = (
+            CanonicalLicenseTier.ENTERPRISE if raw_tier == "agency"
+            else (CanonicalLicenseTier.PREMIUM if raw_tier == "growth" else CanonicalLicenseTier.BASIC)
+        )
+        _EXPECTED_CHECKOUT_AMOUNTS[order_id] = (sme_info["vnd"], raw_tier, sme_info["workflows"], sme_canonical)
         qr_res = VietQrEngine().generate_qr(
             amount_vnd=sme_info["vnd"],
             memo=f"MEKONG {req.org_id[:8]} {order_id[-6:]}",
@@ -203,6 +218,7 @@ async def create_checkout(req: CheckoutRequest) -> CheckoutResponse:
         )
 
     # Default to VietQR Napas 247
+    _EXPECTED_CHECKOUT_AMOUNTS[order_id] = (tier_info["vnd"], norm_tier.upper(), None, normalize_commercial_tier(req.tier))
     qr_res = VietQrEngine().generate_qr(
         amount_vnd=tier_info["vnd"],
         memo=f"MEKONG {req.org_id[:8]} {order_id[-6:]}",
@@ -227,9 +243,14 @@ async def get_checkout_status(order_id: str, simulate_paid: bool = False) -> Che
     tier_name = CanonicalLicenseTier.PREMIUM
     display_tier = tier_name.value
     workflow_quota: Optional[int] = None
+    expected_spec = _EXPECTED_CHECKOUT_AMOUNTS.get(order_id)
     if matched_tx is not None:
         paid_vnd = int(matched_tx.get("amount_vnd", 0))
-        if paid_vnd in _VND_TO_SME_TIER:
+        if expected_spec is not None and paid_vnd < expected_spec[0]:
+            is_paid = False
+        elif expected_spec is not None:
+            _, display_tier, workflow_quota, tier_name = expected_spec
+        elif paid_vnd in _VND_TO_SME_TIER:
             display_tier, workflow_quota, tier_name = _VND_TO_SME_TIER[paid_vnd]
         elif paid_vnd in _VND_TO_COMMERCIAL_TIER:
             tier_name = _VND_TO_COMMERCIAL_TIER[paid_vnd]
@@ -247,10 +268,11 @@ async def activate_license(req: LicenseActivateRequest) -> LicenseStatusResponse
     res = verify_license_key(req.license_key)
     if not res.valid or not res.tier:
         raise HTTPException(status_code=400, detail={"error": "invalid_license_key", "reason": res.error})
-    tenant_store = TenantStore()
-    tenant = tenant_store.find_by_email(res.tenant_id) or tenant_store.create_tenant(name=res.tenant_id)
-    mcu = COMMERCIAL_TIERS.get(res.tier.value.lower(), {}).get("mcu", 1500)
     idem_key = f"act_{hashlib.sha256(req.license_key.encode('utf-8')).hexdigest()}"
+    tenant_store = TenantStore()
+    tenant_label: str = (res.tenant_id or "").strip() or f"lic-{idem_key[:16]}"
+    tenant = tenant_store.find_by_email(tenant_label) or tenant_store.create_tenant(name=tenant_label)
+    mcu = COMMERCIAL_TIERS.get(res.tier.value.lower(), {}).get("mcu", 1500)
     CreditStore().add_credits(
         tenant_id=tenant.id,
         amount=mcu,

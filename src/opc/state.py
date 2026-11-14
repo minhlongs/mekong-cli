@@ -54,7 +54,8 @@ class StateStore:
                 INSERT INTO opc_runs (run_id, pack_id, status, business_profile_json, proposal_input_json, proposal_draft_json, action_payload_json, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(run_id) DO UPDATE SET
-                    status=excluded.status, proposal_draft_json=coalesce(excluded.proposal_draft_json, opc_runs.proposal_draft_json),
+                    status=excluded.status, proposal_input_json=excluded.proposal_input_json,
+                    proposal_draft_json=coalesce(excluded.proposal_draft_json, opc_runs.proposal_draft_json),
                     action_payload_json=coalesce(excluded.action_payload_json, opc_runs.action_payload_json), updated_at=excluded.updated_at
                 """,
                 (
@@ -145,6 +146,12 @@ class StateStore:
                 return True
             except sqlite3.IntegrityError:
                 return False
+
+    def get_action_status(self, idempotency_key: str) -> str | None:
+        """Return persisted status for an action attempt, if any."""
+        with self._get_connection() as conn:
+            row = conn.execute("SELECT status FROM opc_actions WHERE idempotency_key = ?", (idempotency_key,)).fetchone()
+            return str(row["status"]) if row and row["status"] else None
 
     def mark_action_result(
         self, idempotency_key: str, status: str,

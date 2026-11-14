@@ -1,6 +1,7 @@
 """OPC Proposal Workflow Engine executing Intake → Quote → Approval → Follow-up via Core Runtime."""
 from __future__ import annotations
 
+import inspect
 import time
 import uuid
 from decimal import Decimal
@@ -13,20 +14,21 @@ from src.opc.approval import ApprovalSecurityError, PayloadBoundApprovalEngine
 from src.opc.connectors.base import ConnectorProtocol
 from src.opc.connectors.mock import MockConnector
 from src.opc.models import (
-    ActionPayload,
-    ApprovalDecision,
-    ApprovalToken,
-    BusinessProfile,
-    PackManifest,
-    ProposalDraft,
-    ProposalInput,
-    UsageRecord,
-    UsageStage,
-    WorkflowStatus,
+    ActionPayload, ApprovalDecision, ApprovalToken, BusinessProfile, PackManifest,
+    ProposalDraft, ProposalInput, UsageRecord, UsageStage, WorkflowStatus,
 )
+from src.opc.privacy_guard import redact_vietnamese_pii
 from src.opc.quarantine import QuarantineFloor
 from src.opc.state import StateStore
 from src.opc.usage import UsageLedger
+
+
+def _accepts_now_kwarg(fn: Any) -> bool:
+    try:
+        params = inspect.signature(fn).parameters
+        return "now" in params or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values())
+    except (TypeError, ValueError):
+        return False
 
 
 class OPCEngine:
@@ -66,22 +68,10 @@ class OPCEngine:
     def build_followup_draft(self, decision: ApprovalDecision, project_title: str, lang: str = "en", notes: str = "") -> str:
         """Generate decision-specific follow-up draft in EN or VI."""
         if decision == ApprovalDecision.APPROVE:
-            return (
-                f"[DRAFT - DO NOT AUTO-SEND] Xin chào, báo giá dự án '{project_title}' đã sẵn sàng để gửi."
-                if lang == "vi"
-                else f"[DRAFT - DO NOT AUTO-SEND] Follow-up: Proposal for '{project_title}' is approved and ready."
-            )
+            return f"[DRAFT - DO NOT AUTO-SEND] Xin chào, báo giá dự án '{project_title}' đã sẵn sàng để gửi." if lang == "vi" else f"[DRAFT - DO NOT AUTO-SEND] Follow-up: Proposal for '{project_title}' is approved and ready."
         if decision == ApprovalDecision.REVISE:
-            return (
-                f"[REVISION NEEDED] Cần chỉnh sửa báo giá '{project_title}': {notes}"
-                if lang == "vi"
-                else f"[REVISION NEEDED] Proposal '{project_title}' requires revision: {notes}"
-            )
-        return (
-            f"[REJECTED - INTERNAL ARCHIVE] Đã từ chối báo giá '{project_title}'."
-            if lang == "vi"
-            else f"[REJECTED - INTERNAL ARCHIVE] Proposal '{project_title}' was declined by owner."
-        )
+            return f"[REVISION NEEDED] Cần chỉnh sửa báo giá '{project_title}': {notes}" if lang == "vi" else f"[REVISION NEEDED] Proposal '{project_title}' requires revision: {notes}"
+        return f"[REJECTED - INTERNAL ARCHIVE] Đã từ chối báo giá '{project_title}'." if lang == "vi" else f"[REJECTED - INTERNAL ARCHIVE] Proposal '{project_title}' was declined by owner."
 
     def generate_draft(
         self, profile: BusinessProfile, intake: ProposalInput, run_id: str | None = None,
@@ -124,10 +114,11 @@ class OPCEngine:
             attachments=intake.attachments, budget_amount="0.00", budget_currency=profile.currency,
             expires_at=now + 86400,
         )
+        safe_notes = redact_vietnamese_pii(intake.notes).redacted_text if intake.notes else ""
         self.state.save_run(
             run_id=active_run_id, pack_id=self.manifest.pack_id, status=WorkflowStatus.PENDING_APPROVAL,
             profile_data={"business_name": profile.business_name, "owner_name": profile.owner_name, "currency": profile.currency, "language": profile.language},
-            input_data={"request_id": intake.request_id, "client_name": intake.client_name, "project_title": intake.project_title, "language": intake.language},
+            input_data={"request_id": intake.request_id, "client_name": intake.client_name, "project_title": intake.project_title, "language": intake.language, "notes": safe_notes},
             draft_data={"total_amount": str(total), "rendered": rendered, "missing_fields": missing},
             action_payload_data=action_payload.__dict__, now=now,
         )
@@ -146,8 +137,12 @@ class OPCEngine:
         hard_budget_limit: str | None = None, now: int | None = None,
     ) -> dict[str, Any]:
         """Goal 2: Verify approval, reserve budget, and dispatch external connector effect."""
+        explicit_now = now
         now = int(time.time()) if now is None else now
         self._assert_manifest_allows(payload.capability, payload.connector)
+        connector = self.connectors.get(payload.connector)
+        if not connector:
+            raise ValueError(f"Unknown connector: '{payload.connector}'")
         if (stored := self.state.get_approval(token.token_id)) is not None:
             self.approval_engine.verify_and_consume(stored, payload, now=now)
         elif not token.consumed and not token.revoked:
@@ -155,17 +150,18 @@ class OPCEngine:
         self.approval_engine.verify_and_consume(token, payload, now=now)
         if not self.state.consume_approval_atomic(token.token_id, token.action_digest, now):
             raise ApprovalSecurityError(f"Atomic SQLite approval lock failed for token '{token.token_id}'.")
-
-        connector = self.connectors.get(payload.connector)
-        if not connector:
-            raise ValueError(f"Unknown connector: '{payload.connector}'")
         if not self.state.record_action_attempt(idempotency_key, token.run_id, payload.capability, payload.connector, payload, now):
+            prior = self.state.get_action_status(idempotency_key)
+            if prior in ("uncertain", "failed", "budget_exceeded", "in_flight"):
+                mapped = "reconciliation_required" if prior == "uncertain" else prior
+                return {"status": mapped, "deduplicated": True, "message": f"Prior action status preserved: {mapped}."}
             return {"status": "deduplicated", "message": "Action already dispatched previously."}
         if not self.usage.reserve_budget(f"res_{idempotency_key}", token.run_id, payload.budget_amount, payload.budget_currency, "owner", now, hard_budget_limit):
             self.state.mark_action_result(idempotency_key, "budget_exceeded", None, "Hard budget ceiling exceeded.", now)
             return {"status": "budget_exceeded", "error": "Hard budget ceiling exceeded."}
 
-        res = connector.dispatch(idempotency_key, payload)
+        dispatch_fn: Any = connector.dispatch
+        res = dispatch_fn(idempotency_key, payload, now=explicit_now) if (explicit_now is not None and _accepts_now_kwarg(dispatch_fn)) else connector.dispatch(idempotency_key, payload)
         lang = str(payload.parameters.get("language", "en"))
         title = str(payload.parameters.get("project_title", "Project"))
         followup = self.build_followup_draft(ApprovalDecision.APPROVE, title, lang)

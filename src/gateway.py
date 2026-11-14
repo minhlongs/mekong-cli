@@ -42,6 +42,7 @@ from src.api.billing_routes import router as billing_router
 from src.api.metrics_routes import router as metrics_router
 from src.api.opencore_status_routes import router as opencore_status_router
 from src.api.cli_promise_routes import router as cli_promise_router
+from src.api.pilot_a_routes import router as pilot_a_router
 from src.api.quota_status_endpoints import quota_router
 from src.api.tier_config_routes import router as tier_config_router
 from src.middleware.csrf_middleware import CSRFMiddleware
@@ -89,6 +90,7 @@ for _r in (
     vn_pricing_router, vn_pilot_router, vn_payments_router, org_router,
     billing_router, autopilot_router, marketplace_router, metrics_router,
     quota_router, tier_config_router, opencore_status_router, cli_promise_router,
+    pilot_a_router,
 ):
     app.include_router(_r)
 

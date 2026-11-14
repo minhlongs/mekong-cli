@@ -3,25 +3,28 @@
 
 """NOWPayments IPN webhook handler — verify + process crypto payment callbacks.
 
-Verifies HMAC signature, updates credit balance on successful payment.
-Mirrors polar_webhook_handler.py pattern for consistency.
+Verifies HMAC signature, enforces Decree 52/2024/ND-CP domestic rail restrictions
+against Vietnamese jurisdictions, and updates credit balance on valid overseas payments.
 
 Env vars:
     NOWPAYMENTS_IPN_SECRET — IPN secret for HMAC verification
 """
 from __future__ import annotations
 
+from contextlib import closing
+from datetime import datetime, timezone
 import hashlib
 import hmac
 import json
 import logging
 import os
-from datetime import datetime, timezone
 from pathlib import Path
+import re
 from typing import Any
 
-from src.raas.nowpayments_checkout import TIERS
 from src.raas.credit_account_repository import CreditAccountRepository
+from src.raas.nowpayments_checkout import TIERS
+from src.raas.tenant import TenantStore
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +39,17 @@ STATUS_EXPIRED = "expired"
 STATUS_FAILED = "failed"
 STATUS_REFUNDED = "refunded"
 
-# Tier detection from order_description or order_id
-
-
 # Ledger path for audit trail
 LEDGER_DIR = Path.home() / ".mekong" / "raas" / "payments"
+
+_UUID_RE = re.compile(
+    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+)
+_VN_ONLY_TIER_TOKENS = ("pilot_a", "pilot-a", "agency", "agency_vn", "starter_vn", "growth_vn", "pro_vn")
+
+
+def _clean_log_val(val: object) -> str:
+    return str(val or "").replace("\r", " ").replace("\n", " ")[:160]
 
 
 def verify_ipn_signature(payload_json: str, received_sig: str) -> bool:
@@ -69,6 +78,74 @@ def _extract_tier(data: dict) -> str:
         if tier in order_id or tier in description:
             return tier
     return "starter"  # fallback
+
+
+def _is_vn_jurisdiction_ipn(data: dict[str, Any], order_id: str, workspace_id: str) -> bool:
+    """Return True when any Decree 52/2024 Vietnamese jurisdiction signal is present."""
+    for key in ("jurisdiction", "country"):
+        val = str(data.get(key) or "").strip().upper()
+        if val.startswith("VN"):
+            return True
+
+    for curr_key in ("price_currency", "pay_currency"):
+        if str(data.get(curr_key) or "").strip().lower() == "vnd":
+            return True
+
+    explicit_ws = str(data.get("workspace_id") or data.get("org_id") or data.get("tenant_id") or "").strip()
+    for ident in (order_id, workspace_id, explicit_ws):
+        low = ident.strip().lower()
+        if low == "vn" or low.startswith(("vn-", "vn_")):
+            return True
+
+    order_low = order_id.lower()
+    desc_low = str(data.get("order_description") or "").lower()
+    tier_low = str(data.get("tier") or "").strip().lower()
+    if tier_low in _VN_ONLY_TIER_TOKENS:
+        return True
+    if any(tok in order_low or tok in desc_low for tok in _VN_ONLY_TIER_TOKENS):
+        return True
+
+    candidates: list[str] = []
+    if explicit_ws:
+        candidates.append(explicit_ws)
+    if workspace_id and workspace_id != "default":
+        candidates.append(workspace_id)
+    if order_id:
+        candidates.append(order_id)
+        candidates.extend(_UUID_RE.findall(order_id))
+        parts = order_id.split("-")
+        for idx in range(1, len(parts)):
+            candidates.append("-".join(parts[:idx]))
+    customer_email = str(data.get("customer_email") or "").strip()
+    if customer_email:
+        candidates.append(customer_email)
+
+    if not candidates:
+        return True
+
+    resolved_non_vn = False
+    env_db = os.environ.get("MEKONG_RAAS_DB")
+    try:
+        store = TenantStore(Path(env_db)) if env_db else TenantStore()
+        with closing(store._connect()) as conn:
+            for candidate in dict.fromkeys(candidates):
+                row = conn.execute(
+                    "SELECT jurisdiction FROM tenants WHERE id = ? OR name = ?",
+                    (candidate, candidate),
+                ).fetchone()
+                if row is not None:
+                    jur = str(row["jurisdiction"] or "").strip().upper()
+                    if not jur or jur.startswith("VN"):
+                        return True
+                    resolved_non_vn = True
+    except Exception as exc:
+        logger.error("[NP] TenantStore lookup error during jurisdiction check (failing closed): %s", exc)
+        return True
+
+    if order_low.startswith("mk-") and not resolved_non_vn:
+        return True
+
+    return False
 
 
 def _log_payment(data: dict, tier: str, credits: int) -> None:
@@ -105,16 +182,34 @@ def handle_ipn(payload_json: str, signature: str = "") -> dict[str, Any]:
     Returns:
         dict with status, action taken, and any error
     """
-    # Verify signature
-    if signature and not verify_ipn_signature(payload_json, signature):
-        logger.warning("[NP] IPN signature mismatch — rejecting")
+    # Verify signature (mandatory whenever IPN_SECRET is configured or in production)
+    is_prod = os.getenv("MEKONG_ENV", "development").strip().lower() == "production"
+    if (IPN_SECRET or signature or is_prod) and not verify_ipn_signature(payload_json, signature):
+        logger.warning("[NP] IPN signature mismatch or missing — rejecting")
         return {"ok": False, "error": "signature_mismatch"}
 
     data = json.loads(payload_json)
-    payment_status = data.get("payment_status", "")
-    payment_id = data.get("payment_id", "unknown")
+    payment_status = _clean_log_val(data.get("payment_status", ""))
+    payment_id = _clean_log_val(data.get("payment_id", "unknown"))
+    order_id = str(data.get("order_id") or "")
+    lead_uuid = _UUID_RE.match(order_id)
+    explicit_ws = str(data.get("workspace_id") or data.get("org_id") or data.get("tenant_id") or "").strip()
+    if order_id.lower().startswith("mk-") and explicit_ws:
+        workspace_id = explicit_ws
+    else:
+        workspace_id = lead_uuid.group(0) if lead_uuid else (order_id.split("-")[0] if "-" in order_id else "default")
 
-    logger.info(f"[NP] IPN received: payment={payment_id} status={payment_status}")
+    logger.info("[NP] IPN received: payment=%s status=%s", payment_id, payment_status)
+
+    # Decree 52/2024/ND-CP fourth-door guard: domestic VN entities settle exclusively via VietQR
+    if _is_vn_jurisdiction_ipn(data, order_id=order_id, workspace_id=workspace_id):
+        logger.warning("[NP] Blocked VN jurisdiction crypto IPN: order_id=%s", _clean_log_val(order_id))
+        return {
+            "ok": False,
+            "error": "rail_not_permitted_for_jurisdiction",
+            "jurisdiction": "VN",
+            "allowed_rails": ["vietqr"],
+        }
 
     # Only process completed payments
     if payment_status not in (STATUS_FINISHED, STATUS_CONFIRMED):
@@ -128,10 +223,6 @@ def handle_ipn(payload_json: str, signature: str = "") -> dict[str, Any]:
     # Extract tier and grant credits
     tier = _extract_tier(data)
     credits = TIERS.get(tier, {}).get("credits", 0)
-
-    # Grant credits via CreditAccountRepository
-    order_id = data.get("order_id", "")
-    workspace_id = order_id.split("-")[0] if "-" in order_id else "default"
 
     try:
         repo = CreditAccountRepository()

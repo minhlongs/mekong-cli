@@ -1,0 +1,46 @@
+# LiteLLM v1.95.0+ Selective AI Gateway Configuration (Strategy C — Profile 4)
+# Enforces 1.5s local MLX timeout, ordered cloud failover, and fail-closed budget guard.
+
+model_list:
+  - model_name: local-qwen-14b-mlx
+    litellm_params:
+      model: openai/mlx-community/Qwen2.5-14B-Instruct-4bit
+      api_base: os.environ/MLX_BASE_URL
+      api_key: os.environ/MLX_API_KEY
+      timeout: 1.5
+      max_retries: 0
+
+  - model_name: gemini-2.5-flash
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+      timeout: 8.0
+      max_retries: 1
+
+  - model_name: claude-sonnet-5-5
+    litellm_params:
+      model: anthropic/claude-sonnet-5-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+      timeout: 12.0
+      max_retries: 1
+
+litellm_settings:
+  timeout: 1.5
+  num_retries: 0
+  fallbacks:
+    - local-qwen-14b-mlx:
+        - gemini-2.5-flash
+        - claude-sonnet-5-5
+    - gemini-2.5-flash:
+        - claude-sonnet-5-5
+
+router_settings:
+  routing_strategy: simple-shuffle
+  timeout: 1.5
+  allowed_fails: 1
+  cooldown_time: 15
+
+general_settings:
+  fail_closed_budget_enforcement: true
+  master_key: os.environ/LITELLM_MASTER_KEY
+  disable_spend_logs: false

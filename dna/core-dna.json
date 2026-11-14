@@ -322,6 +322,18 @@
         ],
         "verdict": "reviewed",
         "note": "Issue #154 G2 blocking security scanners (Bandit, Semgrep, Trivy, pip-audit) & 189 CLI group count reconciliation; command surface unchanged (dna/command-surface.json not modified, 189 CLI groups preserved)."
+      },
+      {
+        "pr": 159,
+        "branch": "feat/strategy-c-gateway-stategraph-misa",
+        "feature_surface_changes": [
+          "src/cli/commands/opc_command.py, src/cli/commands/opc_strategy_c_cmd.py — register provision-tenant and validate-recipe subcommands under existing mekong opc group (189 top-level CLI groups preserved)",
+          "src/opc/ (state_graph.py, selective_router.py, recipe_loader.py, misa_export.py, tenant_provisioner.py, pilot_a.py, engine.py, privacy_guard.py) — 5-stage GovernedStateGraph + SqliteGraphCheckpointer, Profile 4 SelectiveRouter with source_span provenance, Goose YAML recipe & SHA-256 MCP manifest allowlist verifier, MISA/Sapo DRAFT_PENDING_TVAN CSV/XML/JSON serializer, and 0o600 isolated tenant provisioner",
+          "src/api/pilot_a_routes.py, src/api/pilot_a_card_view.py, src/gateway.py — mount /v1/opc/pilot-a/* endpoints with signed card/API-key owner auth, <15KB mobile Vietnamese approval card, and Zalo/LarkSuite interactive notification cards",
+          "src/api/vn_pricing_routes.py, src/raas/checkout_router.py, src/raas/nowpayments_webhook_handler.py, src/raas/nowpayments_router.py — purge Polar.sh/USD claims from /v1/pricing/vn, align Section 10.3 VN SME workflow tiers (300/500/1000/3500 + 6-month commitment), and enforce Decree 52/2024 fail-closed HTTP 403 on VN crypto IPNs"
+        ],
+        "verdict": "reviewed",
+        "note": "Issue #157 Strategy C Governed StateGraph, Profile 4 SelectiveRouter, Pilot A FastAPI Gateway/Card, VN-first Dashboard OPC Cockpit & Legal Fourth-Door Closure; top-level command surface unchanged (opc group grandfathered in dna/command-surface.json, 189 CLI groups preserved)."
       }
     ]
   }
