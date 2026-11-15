@@ -95,6 +95,7 @@ export interface DualRailCheckoutResponse {
   amount_vnd: number
   checkout_url: string
   qr_code_url?: string
+  checkout_secret?: string
   status: string
 }
 
@@ -242,11 +243,17 @@ export async function createDualRailCheckout(
 }
 
 export async function getCheckoutStatus(
-  orderId: string
+  orderId: string,
+  checkoutSecret?: string
 ): Promise<CheckoutStatusResponse | null> {
   try {
+    const trimmedSecret = checkoutSecret?.trim()
     const response = await fetch(
-      `${AGENTOPS_API}/v1/checkout/status?order_id=${encodeURIComponent(orderId)}`
+      `${AGENTOPS_API}/v1/checkout/status?order_id=${encodeURIComponent(orderId)}`,
+      {
+        headers: trimmedSecret ? { 'X-Checkout-Secret': trimmedSecret } : undefined,
+        cache: 'no-store',
+      }
     )
     if (!response.ok) throw new Error('Failed to fetch checkout status')
     return (await response.json()) as CheckoutStatusResponse

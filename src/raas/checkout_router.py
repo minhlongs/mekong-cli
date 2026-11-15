@@ -13,12 +13,17 @@ Endpoints:
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import hashlib
+import hmac
 import logging
 import os
+from pathlib import Path
+import secrets
+import sqlite3
 import uuid
 from typing import Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, EmailStr, Field
 
 from src.core.raas_license_verifier import (
@@ -79,6 +84,38 @@ def rails_allowed_for_jurisdiction(jurisdiction: str) -> list[str]:
     return list(_VN_ALLOWED_RAILS) if not normalised or normalised.startswith("VN") else list(_NON_VN_ALLOWED_RAILS)
 
 
+_BOOT_RAAS_DB = os.environ.get("MEKONG_RAAS_DB", "").strip()
+
+
+def _is_production() -> bool:
+    return os.getenv("MEKONG_ENV", "").strip().lower() == "production"
+
+
+def _get_tenant_store() -> TenantStore:
+    env_db = os.environ.get("MEKONG_RAAS_DB", "").strip()
+    if env_db and env_db != _BOOT_RAAS_DB:
+        return TenantStore(Path(env_db))
+    return TenantStore()
+
+
+def _get_credit_store() -> CreditStore:
+    env_db = os.environ.get("MEKONG_RAAS_DB", "").strip()
+    if env_db and env_db != _BOOT_RAAS_DB:
+        return CreditStore(Path(env_db))
+    return CreditStore()
+
+
+def _normalize_checkout_org_id(raw_org_id: Optional[str], email: str) -> str:
+    clean_email = str(email).strip().lower()
+    raw_org = (raw_org_id or "").strip()
+    if not raw_org:
+        return clean_email
+    if raw_org.lower() == "default":
+        digest = hashlib.sha256(clean_email.encode("utf-8")).hexdigest()[:12]
+        return f"org-{digest}"
+    return raw_org
+
+
 def resolve_org_jurisdiction(req: CheckoutRequest) -> str:
     """Resolve the jurisdiction governing a checkout request.
 
@@ -89,7 +126,7 @@ def resolve_org_jurisdiction(req: CheckoutRequest) -> str:
     """
     if req.jurisdiction and req.jurisdiction.strip():
         return req.jurisdiction.strip().upper()
-    return TenantStore().jurisdiction_for(req.org_id)
+    return _get_tenant_store().jurisdiction_for(req.org_id)
 
 
 class CheckoutResponse(BaseModel):
@@ -101,6 +138,7 @@ class CheckoutResponse(BaseModel):
     amount_vnd: int
     qr_payload: Optional[str] = None
     workflow_quota: Optional[int] = None
+    checkout_secret: Optional[str] = None
 
 
 class CheckoutStatusResponse(BaseModel):
@@ -110,23 +148,6 @@ class CheckoutStatusResponse(BaseModel):
     license_key: Optional[str] = None
     tenant_id: str
     workflow_quota: Optional[int] = None
-
-
-_VND_TO_SME_TIER: dict[int, tuple[str, int, CanonicalLicenseTier]] = {
-    790_000: ("starter", 300, CanonicalLicenseTier.BASIC),
-    990_000: ("pilot_a", 500, CanonicalLicenseTier.BASIC),
-    1_990_000: ("growth", 1_000, CanonicalLicenseTier.PREMIUM),
-    4_140_000: ("starter", 300, CanonicalLicenseTier.BASIC),  # 6m commitment: 6 * 690,000 VND
-    4_900_000: ("agency", 3_500, CanonicalLicenseTier.ENTERPRISE),
-    10_140_000: ("growth", 1_000, CanonicalLicenseTier.PREMIUM),  # 6m commitment: 6 * 1,690,000 VND
-}
-_EXPECTED_CHECKOUT_AMOUNTS: dict[str, tuple[int, str, Optional[int], CanonicalLicenseTier]] = {}
-_VND_TO_COMMERCIAL_TIER: dict[int, CanonicalLicenseTier] = {
-    4_975_000: CanonicalLicenseTier.BASIC,
-    9_975_000: CanonicalLicenseTier.PREMIUM,
-    19_975_000: CanonicalLicenseTier.ENTERPRISE,
-    124_975_000: CanonicalLicenseTier.MASTER,
-}
 
 
 class LicenseActivateRequest(BaseModel):
@@ -141,10 +162,88 @@ class LicenseStatusResponse(BaseModel):
     features: list[str] = Field(default_factory=list)
 
 
+def _authorize_checkout_status(
+    order: Optional[dict],
+    x_checkout_secret: Optional[str],
+    authorization: Optional[str],
+    x_api_key: Optional[str],
+) -> tuple[bool, bool]:
+    """Return (is_authorized, matched_checkout_secret) for GET /v1/checkout/status."""
+    if order is None:
+        return (False, False)
+
+    expected_hash = str(order.get("checkout_secret_sha256") or "")
+    if x_checkout_secret and x_checkout_secret.strip() and expected_hash:
+        candidate_hash = hashlib.sha256(
+            x_checkout_secret.strip().encode("utf-8")
+        ).hexdigest()
+        if hmac.compare_digest(candidate_hash, expected_hash):
+            return (True, True)
+
+    api_keys: list[str] = []
+    if x_api_key and x_api_key.strip():
+        api_keys.append(x_api_key.strip())
+    if authorization and authorization.strip().lower().startswith("bearer "):
+        bearer_tok = authorization.strip()[7:].strip()
+        if bearer_tok:
+            api_keys.append(bearer_tok)
+
+    if api_keys:
+        store = _get_tenant_store()
+        target_org = str(order.get("org_id") or "")
+        for key in api_keys:
+            tenant = store.get_by_api_key(key)
+            if (
+                tenant is not None
+                and tenant.is_active
+                and target_org
+                and (tenant.id == target_org or tenant.name == target_org)
+            ):
+                return (True, False)
+
+    return (False, False)
+
+
+def _ensure_tenant_for_activation(tenant_store: TenantStore, exact_tenant_id: str) -> str:
+    """Atomically resolve or register a TenantStore record bound to exact_tenant_id."""
+    conn = sqlite3.connect(str(tenant_store.db_path), timeout=30.0, isolation_level=None)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA busy_timeout = 30000")
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        row = conn.execute(
+            "SELECT id FROM tenants WHERE id = ? OR name = ? ORDER BY created_at ASC LIMIT 1",
+            (exact_tenant_id, exact_tenant_id),
+        ).fetchone()
+        if row is not None:
+            conn.execute("COMMIT")
+            return str(row["id"])
+
+        raw_key = f"mk_{secrets.token_hex(16)}"
+        key_hash = hashlib.sha256(raw_key.encode("utf-8")).hexdigest()
+        created_at = datetime.now(timezone.utc).isoformat()
+        conn.execute(
+            "INSERT INTO tenants (id, name, api_key_hash, created_at, is_active, jurisdiction) "
+            "VALUES (?, ?, ?, ?, 1, 'VN')",
+            (exact_tenant_id, exact_tenant_id, key_hash, created_at),
+        )
+        conn.execute("COMMIT")
+        return exact_tenant_id
+    except Exception:
+        conn.execute("ROLLBACK")
+        raise
+    finally:
+        conn.close()
+
+
 @router.post("/v1/checkout", response_model=CheckoutResponse)
 async def create_checkout(req: CheckoutRequest) -> CheckoutResponse:
     raw_tier = req.tier.strip().lower()
-    order_id = f"mk-{uuid.uuid4().hex[:12]}"
+    order_id = f"mk-{uuid.uuid4().hex[:16]}"
+    checkout_secret = f"chk_{secrets.token_urlsafe(24)}"
+    checkout_secret_sha256 = hashlib.sha256(checkout_secret.encode("utf-8")).hexdigest()
+    clean_email = str(req.email).strip().lower()
+    eff_org_id = _normalize_checkout_org_id(req.org_id, clean_email)
     app_base = os.environ.get("APP_BASE_URL", "https://mekongmind.com")
 
     requested_rail = req.rail.strip().lower()
@@ -170,10 +269,23 @@ async def create_checkout(req: CheckoutRequest) -> CheckoutResponse:
             CanonicalLicenseTier.ENTERPRISE if raw_tier == "agency"
             else (CanonicalLicenseTier.PREMIUM if raw_tier == "growth" else CanonicalLicenseTier.BASIC)
         )
-        _EXPECTED_CHECKOUT_AMOUNTS[order_id] = (sme_info["vnd"], raw_tier, sme_info["workflows"], sme_canonical)
-        qr_res = VietQrEngine().generate_qr(
+        engine = VietQrEngine()
+        engine.create_checkout_order(
+            order_id=order_id,
+            org_id=eff_org_id,
+            customer_email=clean_email,
+            expected_amount_vnd=sme_info["vnd"],
+            expected_amount_usd=sme_info["usd"],
+            currency="VND",
+            rail="vietqr",
+            display_tier=raw_tier,
+            canonical_tier=sme_canonical.value,
+            workflow_quota=sme_info["workflows"],
+            checkout_secret_sha256=checkout_secret_sha256,
+        )
+        qr_res = engine.generate_qr(
             amount_vnd=sme_info["vnd"],
-            memo=f"MEKONG {req.org_id[:8]} {order_id[-6:]}",
+            memo=f"MEKONG {eff_org_id} {order_id}",
         )
         return CheckoutResponse(
             checkout_url=str(qr_res.get("quicklink_url", "")),
@@ -184,9 +296,11 @@ async def create_checkout(req: CheckoutRequest) -> CheckoutResponse:
             amount_vnd=sme_info["vnd"],
             qr_payload=str(qr_res.get("emvco_payload", "")),
             workflow_quota=sme_info["workflows"],
+            checkout_secret=checkout_secret,
         )
 
-    norm_tier = normalize_commercial_tier(req.tier).value.lower()
+    canonical_enum = normalize_commercial_tier(req.tier)
+    norm_tier = canonical_enum.value.lower()
     tier_info = COMMERCIAL_TIERS.get(norm_tier, COMMERCIAL_TIERS["basic"])
     allowed_rails = rails_allowed_for_jurisdiction(jurisdiction)
     if requested_rail not in allowed_rails:
@@ -204,10 +318,24 @@ async def create_checkout(req: CheckoutRequest) -> CheckoutResponse:
             },
         )
 
+    engine = VietQrEngine()
     if requested_rail == "nowpayments":
+        engine.create_checkout_order(
+            order_id=order_id,
+            org_id=eff_org_id,
+            customer_email=clean_email,
+            expected_amount_vnd=tier_info["vnd"],
+            expected_amount_usd=tier_info["usd"],
+            currency="USD",
+            rail="nowpayments",
+            display_tier=canonical_enum.value,
+            canonical_tier=canonical_enum.value,
+            workflow_quota=None,
+            checkout_secret_sha256=checkout_secret_sha256,
+        )
         from src.raas.nowpayments_checkout import create_invoice
         try:
-            inv = create_invoice(norm_tier, order_id=order_id, customer_email=str(req.email),
+            inv = create_invoice(norm_tier, order_id=order_id, customer_email=clean_email,
                                  jurisdiction=jurisdiction)
             checkout_url = inv.get("invoice_url") or f"{app_base}/checkout?order_id={order_id}"
         except Exception:
@@ -215,51 +343,94 @@ async def create_checkout(req: CheckoutRequest) -> CheckoutResponse:
         return CheckoutResponse(
             checkout_url=checkout_url, order_id=order_id, tier=norm_tier,
             rail="nowpayments", amount_usd=tier_info["usd"], amount_vnd=tier_info["vnd"],
+            checkout_secret=checkout_secret,
         )
 
     # Default to VietQR Napas 247
-    _EXPECTED_CHECKOUT_AMOUNTS[order_id] = (tier_info["vnd"], norm_tier.upper(), None, normalize_commercial_tier(req.tier))
-    qr_res = VietQrEngine().generate_qr(
+    engine.create_checkout_order(
+        order_id=order_id,
+        org_id=eff_org_id,
+        customer_email=clean_email,
+        expected_amount_vnd=tier_info["vnd"],
+        expected_amount_usd=tier_info["usd"],
+        currency="VND",
+        rail="vietqr",
+        display_tier=canonical_enum.value,
+        canonical_tier=canonical_enum.value,
+        workflow_quota=None,
+        checkout_secret_sha256=checkout_secret_sha256,
+    )
+    qr_res = engine.generate_qr(
         amount_vnd=tier_info["vnd"],
-        memo=f"MEKONG {req.org_id[:8]} {order_id[-6:]}",
+        memo=f"MEKONG {eff_org_id} {order_id}",
     )
     return CheckoutResponse(
         checkout_url=str(qr_res.get("quicklink_url", "")), order_id=order_id, tier=norm_tier,
         rail="vietqr", amount_usd=tier_info["usd"], amount_vnd=tier_info["vnd"],
         qr_payload=str(qr_res.get("emvco_payload", "")),
+        checkout_secret=checkout_secret,
     )
 
 
 @router.get("/v1/checkout/status", response_model=CheckoutStatusResponse)
-async def get_checkout_status(order_id: str, simulate_paid: bool = False) -> CheckoutStatusResponse:
-    txs = VietQrEngine().list_transactions(limit=20)
-    matched_tx = next(
-        (t for t in txs if t.get("matched_order_id") == order_id or order_id[-6:] in str(t.get("memo", ""))),
-        None,
+async def get_checkout_status(
+    order_id: str,
+    simulate_paid: bool = False,
+    x_checkout_secret: Optional[str] = Header(default=None, alias="X-Checkout-Secret"),
+    authorization: Optional[str] = Header(default=None, alias="Authorization"),
+    x_api_key: Optional[str] = Header(default=None, alias="X-API-Key"),
+) -> CheckoutStatusResponse:
+    if _is_production() and simulate_paid:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "simulation_forbidden_in_production",
+                "message": "Simulated payment settlement is forbidden in production.",
+            },
+        )
+
+    engine = VietQrEngine()
+    order = engine.get_checkout_order(order_id)
+    is_authed, matched_secret = _authorize_checkout_status(
+        order, x_checkout_secret, authorization, x_api_key
     )
-    # Strictly gate simulate_paid and mock prefixes to unit test environments
-    is_test_env = bool(os.getenv("PYTEST_CURRENT_TEST"))
-    is_paid = (matched_tx is not None) or (is_test_env and (simulate_paid or order_id.startswith("mk-paid-")))
-    tier_name = CanonicalLicenseTier.PREMIUM
-    display_tier = tier_name.value
-    workflow_quota: Optional[int] = None
-    expected_spec = _EXPECTED_CHECKOUT_AMOUNTS.get(order_id)
-    if matched_tx is not None:
-        paid_vnd = int(matched_tx.get("amount_vnd", 0))
-        if expected_spec is not None and paid_vnd < expected_spec[0]:
-            is_paid = False
-        elif expected_spec is not None:
-            _, display_tier, workflow_quota, tier_name = expected_spec
-        elif paid_vnd in _VND_TO_SME_TIER:
-            display_tier, workflow_quota, tier_name = _VND_TO_SME_TIER[paid_vnd]
-        elif paid_vnd in _VND_TO_COMMERCIAL_TIER:
-            tier_name = _VND_TO_COMMERCIAL_TIER[paid_vnd]
-            display_tier = tier_name.value
-    token = sign_license_key(tenant_id=f"org-{order_id[-6:]}", tier=tier_name) if is_paid else None
+    if not is_authed or order is None:
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "error": "unauthorized_checkout_status",
+                "message": "Valid X-Checkout-Secret or owning tenant API key is required.",
+            },
+        )
+
+    allow_sim = bool(
+        simulate_paid
+        and not _is_production()
+        and bool(os.getenv("PYTEST_CURRENT_TEST"))
+        and matched_secret
+    )
+    settled = engine.settle_checkout_order_atomic(
+        order_id=order_id,
+        license_signer=lambda org_id, tier: sign_license_key(tenant_id=org_id, tier=tier),
+        allow_test_simulation=allow_sim,
+    )
+    if settled is None:
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "error": "unauthorized_checkout_status",
+                "message": "Valid X-Checkout-Secret or owning tenant API key is required.",
+            },
+        )
+
+    is_paid = settled.get("payment_state") == "paid" and bool(settled.get("issued_license_key"))
     return CheckoutStatusResponse(
-        order_id=order_id, status="paid" if is_paid else "pending",
-        tier=display_tier, license_key=token, tenant_id=f"org-{order_id[-6:]}",
-        workflow_quota=workflow_quota,
+        order_id=str(settled["order_id"]),
+        status="paid" if is_paid else "pending",
+        tier=str(settled["display_tier"]),
+        license_key=str(settled["issued_license_key"]) if is_paid else None,
+        tenant_id=str(settled["org_id"]),
+        workflow_quota=settled.get("workflow_quota"),
     )
 
 
@@ -268,20 +439,29 @@ async def activate_license(req: LicenseActivateRequest) -> LicenseStatusResponse
     res = verify_license_key(req.license_key)
     if not res.valid or not res.tier:
         raise HTTPException(status_code=400, detail={"error": "invalid_license_key", "reason": res.error})
+    exact_tenant_id = (res.tenant_id or "").strip()
+    if not exact_tenant_id:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "invalid_license_key", "reason": "missing_tenant_id"},
+        )
+
     idem_key = f"act_{hashlib.sha256(req.license_key.encode('utf-8')).hexdigest()}"
-    tenant_store = TenantStore()
-    tenant_label: str = (res.tenant_id or "").strip() or f"lic-{idem_key[:16]}"
-    tenant = tenant_store.find_by_email(tenant_label) or tenant_store.create_tenant(name=tenant_label)
+    tenant_store = _get_tenant_store()
+    resolved_tenant_id = _ensure_tenant_for_activation(tenant_store, exact_tenant_id)
     mcu = COMMERCIAL_TIERS.get(res.tier.value.lower(), {}).get("mcu", 1500)
-    CreditStore().add_credits(
-        tenant_id=tenant.id,
+    _get_credit_store().add_credits(
+        tenant_id=resolved_tenant_id,
         amount=mcu,
         reason="license_activation",
         idempotency_key=idem_key,
     )
     return LicenseStatusResponse(
-        valid=True, tier=res.tier.value, tenant_id=res.tenant_id or tenant.id,
-        expires_at=res.expires_at, features=list(res.features),
+        valid=True,
+        tier=res.tier.value,
+        tenant_id=exact_tenant_id,
+        expires_at=res.expires_at,
+        features=list(res.features),
     )
 
 

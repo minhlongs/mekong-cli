@@ -1,8 +1,11 @@
 """Tests for Dual-Rail Checkout (VietQR + NOWPayments) & Polar.sh decommission."""
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+import pytest
 
 from src.core.raas_license_verifier import verify_license_key
 from src.raas.checkout_router import router as checkout_router
@@ -12,6 +15,11 @@ app = FastAPI()
 app.include_router(checkout_router)
 app.include_router(revenue_router)
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def _isolated_vietqr_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MEKONG_VIETQR_DB", str(tmp_path / "vietqr_checkout.db"))
 
 
 def test_get_pricing_tiers() -> None:
@@ -141,32 +149,67 @@ def test_org_prefix_alone_is_not_proof_of_jurisdiction() -> None:
 
 
 def test_checkout_status_and_license_provisioning() -> None:
-    # 1. Pending status
-    res = client.get("/v1/checkout/status?order_id=ord-pending-123")
+    # Unauthenticated status check on unknown order returns 401
+    unauth_unknown = client.get("/v1/checkout/status?order_id=ord-pending-123")
+    assert unauth_unknown.status_code == 401
+
+    # Create persisted checkout order
+    co = client.post(
+        "/v1/checkout",
+        json={"tier": "PREMIUM", "rail": "vietqr", "email": "founder@mekong.ai", "org_id": "founder-org"},
+    )
+    assert co.status_code == 200
+    co_data = co.json()
+    order_id = co_data["order_id"]
+    secret = co_data["checkout_secret"]
+    assert secret and secret.startswith("chk_")
+
+    # Unauthenticated status check on existing order also returns 401
+    unauth_existing = client.get(f"/v1/checkout/status?order_id={order_id}")
+    assert unauth_existing.status_code == 401
+
+    # 1. Pending status with valid X-Checkout-Secret
+    res = client.get(
+        f"/v1/checkout/status?order_id={order_id}",
+        headers={"X-Checkout-Secret": secret},
+    )
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "pending"
     assert data["license_key"] is None
+    assert data["tenant_id"] == "founder-org"
 
-    # 2. Simulated paid status returns a valid HMAC-SHA256 RAAS_LICENSE_KEY
-    res_paid = client.get("/v1/checkout/status?order_id=ord-paid-789&simulate_paid=true")
+    # 2. Simulated paid status returns a valid HMAC-SHA256 RAAS_LICENSE_KEY bound to exact org_id
+    res_paid = client.get(
+        f"/v1/checkout/status?order_id={order_id}&simulate_paid=true",
+        headers={"X-Checkout-Secret": secret},
+    )
     assert res_paid.status_code == 200
     data_paid = res_paid.json()
     assert data_paid["status"] == "paid"
     assert data_paid["license_key"] is not None
+    assert data_paid["tenant_id"] == "founder-org"
 
     key = data_paid["license_key"]
     verified = verify_license_key(key)
     assert verified.valid is True
     assert verified.tier.value == "PREMIUM"
+    assert verified.tenant_id == "founder-org"
 
 
 def test_activate_license_and_check_status() -> None:
     from src.raas.credits import CreditStore
     from src.raas.tenant import TenantStore
 
-    # Get a real signed key
-    res_paid = client.get("/v1/checkout/status?order_id=ord-paid-999&simulate_paid=true")
+    co = client.post(
+        "/v1/checkout",
+        json={"tier": "PREMIUM", "rail": "vietqr", "email": "activate@mekong.ai", "org_id": "activate-org"},
+    ).json()
+    res_paid = client.get(
+        f"/v1/checkout/status?order_id={co['order_id']}&simulate_paid=true",
+        headers={"X-Checkout-Secret": co["checkout_secret"]},
+    )
+    assert res_paid.status_code == 200
     key = res_paid.json()["license_key"]
     tenant_name = res_paid.json()["tenant_id"]
 
@@ -176,10 +219,12 @@ def test_activate_license_and_check_status() -> None:
     act_data = act_res.json()
     assert act_data["valid"] is True
     assert act_data["tier"] == "PREMIUM"
+    assert act_data["tenant_id"] == "activate-org"
 
     tenant = TenantStore().find_by_email(tenant_name)
     assert tenant is not None
     bal_first = CreditStore().get_balance(tenant.id)
+    assert bal_first == 4000
 
     # Activate second time with the exact same license key — must be idempotent (no credit inflation)
     act_res_2 = client.post("/v1/license/activate", json={"license_key": key})

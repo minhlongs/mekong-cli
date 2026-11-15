@@ -477,28 +477,21 @@ export function canonicalizePayload(payload: OpcActionPayload): string {
 }
 
 export async function computeSha256Hex(input: string): Promise<string> {
+  const subtle = globalThis.crypto?.subtle
   if (
-    typeof window !== 'undefined' &&
-    window.crypto &&
-    window.crypto.subtle &&
-    typeof globalThis.TextEncoder !== 'undefined'
+    !subtle ||
+    typeof subtle.digest !== 'function' ||
+    typeof globalThis.TextEncoder === 'undefined'
   ) {
-    const encoder = new globalThis.TextEncoder()
-    const data = encoder.encode(input)
-    const hashBuffer = await window.crypto.subtle.digest('SHA-256', data)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+    throw new Error(
+      'CRYPTO_UNAVAILABLE: Web Crypto SubtleCrypto SHA-256 is required for cryptographic approval.'
+    )
   }
-  // Deterministic fallback when Web Crypto is unavailable
-  let h1 = 0xdeadbeef ^ input.length
-  let h2 = 0x41c6ce57 ^ input.length
-  for (let i = 0, ch: number; i < input.length; i++) {
-    ch = input.charCodeAt(i)
-    h1 = Math.imul(h1 ^ ch, 2654435761)
-    h2 = Math.imul(h2 ^ ch, 1597334677)
-  }
-  const hex = (n: number) => (n >>> 0).toString(16).padStart(8, '0')
-  return (hex(h1) + hex(h2)).repeat(4)
+  const encoder = new globalThis.TextEncoder()
+  const data = encoder.encode(input)
+  const hashBuffer = await subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
 export function formatDeterministicTimestamp(unixSeconds: number, timezone: string, language: SupportedLanguage): string {
@@ -517,48 +510,168 @@ export function formatDeterministicTimestamp(unixSeconds: number, timezone: stri
   }
 }
 
+export type BffSyncMode = 'live_gateway' | 'unverified_idle' | 'failed_closed'
+
 export interface GatewaySyncResult {
   synced: boolean
   endpoint: string
-  mode: 'live_gateway' | 'offline_webcrypto'
+  mode: BffSyncMode
   serverRunId?: string
   serverActionDigest?: string
-  serverCardSig?: string
-  serverRejected?: boolean
+  serverRejected: boolean
+  failedClosed: boolean
   httpStatus?: number
+  errorCode?: string
   detail: string
 }
 
-function getGatewayBaseUrl(): string {
-  const configured =
-    process.env.NEXT_PUBLIC_MEKONG_API_URL || process.env.NEXT_PUBLIC_GATEWAY_API_URL || ''
-  return configured.replace(/\/+$/, '')
+export interface OpcClientSessionStatus {
+  authenticated: boolean
+  sub?: string
+  workspaceId?: string
+  allowedTenants?: string[]
+  role?: 'owner' | 'operator' | 'viewer'
+  exp?: number
+  error?: string
+  message?: string
 }
 
-function buildGatewayUrl(path: string): string {
-  const base = getGatewayBaseUrl()
-  return base ? `${base}${path}` : path
+export interface PilotARunInspection {
+  ok: boolean
+  httpStatus: number
+  runId?: string
+  status?: string
+  checkpointStage?: string | null
+  actionDigest?: string
+  error?: string
+}
+
+export interface PilotADraftExportResult {
+  ok: boolean
+  httpStatus: number
+  content?: string
+  error?: string
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function buildGatewayHeaders(): Record<string, string> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  const apiKey = (process.env.NEXT_PUBLIC_MEKONG_TENANT_API_KEY || '').trim()
-  if (apiKey) {
-    headers['X-API-Key'] = apiKey
+function extractBffErrorDetail(body: unknown, status: number): { errorCode?: string; detail: string } {
+  if (isRecord(body)) {
+    const rawDetail = isRecord(body.detail) ? body.detail : body
+    const errCode =
+      typeof rawDetail.error === 'string'
+        ? rawDetail.error
+        : typeof body.error === 'string'
+        ? body.error
+        : undefined
+    const msg =
+      typeof rawDetail.message === 'string'
+        ? rawDetail.message
+        : typeof body.message === 'string'
+        ? body.message
+        : undefined
+    if (errCode && msg) {
+      return { errorCode: errCode, detail: `HTTP ${status} (${errCode}): ${msg}` }
+    }
+    if (errCode) {
+      return { errorCode: errCode, detail: `HTTP ${status} (${errCode})` }
+    }
   }
-  return headers
+  return { detail: `HTTP ${status}` }
 }
 
-function getTenantId(): string {
-  const configured = (process.env.NEXT_PUBLIC_MEKONG_TENANT_ID || '').trim()
-  return configured || 'default'
+export async function inspectPilotABffSession(): Promise<OpcClientSessionStatus> {
+  try {
+    const response = await fetch('/api/opc/pilot-a/session', {
+      method: 'GET',
+      credentials: 'same-origin',
+      cache: 'no-store',
+    })
+    const body: unknown = await response.json()
+    if (!response.ok || !isRecord(body) || body.authenticated !== true) {
+      return {
+        authenticated: false,
+        error: isRecord(body) && typeof body.error === 'string' ? body.error : `http_${response.status}`,
+        message: isRecord(body) && typeof body.message === 'string' ? body.message : undefined,
+      }
+    }
+    return {
+      authenticated: true,
+      sub: typeof body.sub === 'string' ? body.sub : undefined,
+      workspaceId: typeof body.workspaceId === 'string' ? body.workspaceId : undefined,
+      allowedTenants: Array.isArray(body.allowedTenants)
+        ? body.allowedTenants.filter((t): t is string => typeof t === 'string')
+        : [],
+      role:
+        body.role === 'owner' || body.role === 'operator' || body.role === 'viewer'
+          ? body.role
+          : undefined,
+      exp: typeof body.exp === 'number' ? body.exp : undefined,
+    }
+  } catch {
+    return { authenticated: false, error: 'bff_session_unreachable' }
+  }
+}
+
+export async function loginPilotABffSession(params: {
+  credential: string
+  workspaceId: string
+  tenantId: string
+  role?: 'owner' | 'operator' | 'viewer'
+}): Promise<OpcClientSessionStatus> {
+  try {
+    const response = await fetch('/api/opc/pilot-a/session', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        credential: params.credential,
+        workspace_id: params.workspaceId,
+        tenant_id: params.tenantId,
+        role: params.role || 'owner',
+      }),
+    })
+    const body: unknown = await response.json()
+    if (!response.ok || !isRecord(body) || body.authenticated !== true) {
+      return {
+        authenticated: false,
+        error: isRecord(body) && typeof body.error === 'string' ? body.error : `http_${response.status}`,
+        message: isRecord(body) && typeof body.message === 'string' ? body.message : undefined,
+      }
+    }
+    return {
+      authenticated: true,
+      sub: typeof body.sub === 'string' ? body.sub : undefined,
+      workspaceId: typeof body.workspaceId === 'string' ? body.workspaceId : undefined,
+      allowedTenants: Array.isArray(body.allowedTenants)
+        ? body.allowedTenants.filter((t): t is string => typeof t === 'string')
+        : [],
+      role:
+        body.role === 'owner' || body.role === 'operator' || body.role === 'viewer'
+          ? body.role
+          : undefined,
+      exp: typeof body.exp === 'number' ? body.exp : undefined,
+    }
+  } catch {
+    return { authenticated: false, error: 'bff_login_network_error' }
+  }
+}
+
+export async function logoutPilotABffSession(): Promise<void> {
+  try {
+    await fetch('/api/opc/pilot-a/session', {
+      method: 'DELETE',
+      credentials: 'same-origin',
+    })
+  } catch {
+    // Fail-safe cookie clear attempt; local session state resets regardless.
+  }
 }
 
 export async function syncPilotAZaloWebhook(payload: {
+  tenantId: string
   eventId: string
   senderName: string
   senderContact: string
@@ -570,15 +683,17 @@ export async function syncPilotAZaloWebhook(payload: {
   language: SupportedLanguage
   extractionConfidence: number
 }): Promise<GatewaySyncResult> {
-  const endpoint = buildGatewayUrl('/v1/opc/pilot-a/webhook/zalo')
+  const endpoint = '/api/opc/pilot-a/webhook/zalo'
   const controller =
     typeof globalThis.AbortController !== 'undefined' ? new globalThis.AbortController() : null
-  const timer = setTimeout(() => controller?.abort(), 1500)
+  const timer = setTimeout(() => controller?.abort(), 5000)
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: buildGatewayHeaders(),
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        tenant_id: payload.tenantId,
         event_id: payload.eventId,
         oa_id: 'oa_mekong_vn_01',
         sender_id: payload.senderContact.replace(/^zalo:/, ''),
@@ -590,35 +705,41 @@ export async function syncPilotAZaloWebhook(payload: {
         currency: payload.currency,
         language: payload.language,
         extraction_confidence: payload.extractionConfidence,
-        tenant_id: getTenantId(),
       }),
       signal: controller?.signal,
     })
     clearTimeout(timer)
+    let body: unknown = null
+    try {
+      body = await response.json()
+    } catch {
+      body = null
+    }
     if (!response.ok) {
+      const { errorCode, detail } = extractBffErrorDetail(body, response.status)
       return {
         synced: false,
         endpoint,
-        mode: 'offline_webcrypto',
-        serverRejected: response.status >= 400 && response.status < 500,
+        mode: 'failed_closed',
+        serverRejected: true,
+        failedClosed: true,
         httpStatus: response.status,
-        detail: `HTTP ${response.status}`,
+        errorCode,
+        detail,
       }
     }
-    const body: unknown = await response.json()
     const serverRunId =
       isRecord(body) && typeof body.run_id === 'string' ? body.run_id : undefined
     const serverActionDigest =
       isRecord(body) && typeof body.action_digest === 'string' ? body.action_digest : undefined
-    const serverCardSig =
-      isRecord(body) && typeof body.card_sig === 'string' ? body.card_sig : undefined
     return {
       synced: true,
       endpoint,
       mode: 'live_gateway',
       serverRunId,
       serverActionDigest,
-      serverCardSig,
+      serverRejected: false,
+      failedClosed: false,
       httpStatus: response.status,
       detail: 'OK',
     }
@@ -627,46 +748,58 @@ export async function syncPilotAZaloWebhook(payload: {
     return {
       synced: false,
       endpoint,
-      mode: 'offline_webcrypto',
-      detail: 'offline_fallback',
+      mode: 'failed_closed',
+      serverRejected: true,
+      failedClosed: true,
+      errorCode: 'bff_network_unreachable',
+      detail: 'BFF_UNREACHABLE',
     }
   }
 }
 
 export async function syncPilotADecision(payload: {
+  tenantId: string
   runId: string
   decision: 'approve' | 'reject' | 'handoff'
   actionDigest: string
-  cardSig?: string
   revisionNotes: string
 }): Promise<GatewaySyncResult> {
-  const endpoint = buildGatewayUrl('/v1/opc/pilot-a/decide')
+  const endpoint = '/api/opc/pilot-a/decide'
   const controller =
     typeof globalThis.AbortController !== 'undefined' ? new globalThis.AbortController() : null
-  const timer = setTimeout(() => controller?.abort(), 1500)
+  const timer = setTimeout(() => controller?.abort(), 5000)
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: buildGatewayHeaders(),
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        tenant_id: payload.tenantId,
         run_id: payload.runId,
-        tenant_id: getTenantId(),
         decision: payload.decision,
         action_digest: payload.actionDigest,
-        card_sig: payload.cardSig || '',
         revision_notes: payload.revisionNotes,
       }),
       signal: controller?.signal,
     })
     clearTimeout(timer)
+    let body: unknown = null
+    try {
+      body = await response.json()
+    } catch {
+      body = null
+    }
     if (!response.ok) {
+      const { errorCode, detail } = extractBffErrorDetail(body, response.status)
       return {
         synced: false,
         endpoint,
-        mode: 'live_gateway',
-        serverRejected: response.status >= 400 && response.status < 500,
+        mode: 'failed_closed',
+        serverRejected: true,
+        failedClosed: true,
         httpStatus: response.status,
-        detail: `HTTP ${response.status}`,
+        errorCode,
+        detail,
       }
     }
     return {
@@ -674,6 +807,8 @@ export async function syncPilotADecision(payload: {
       endpoint,
       mode: 'live_gateway',
       serverRunId: payload.runId,
+      serverRejected: false,
+      failedClosed: false,
       httpStatus: response.status,
       detail: 'OK',
     }
@@ -682,8 +817,95 @@ export async function syncPilotADecision(payload: {
     return {
       synced: false,
       endpoint,
-      mode: 'offline_webcrypto',
-      detail: 'offline_fallback',
+      mode: 'failed_closed',
+      serverRejected: true,
+      failedClosed: true,
+      errorCode: 'bff_network_unreachable',
+      detail: 'BFF_UNREACHABLE',
     }
+  }
+}
+
+export async function fetchPilotARunSummary(
+  runId: string,
+  tenantId: string
+): Promise<PilotARunInspection> {
+  try {
+    const query = new URLSearchParams({ tenant_id: tenantId })
+    const response = await fetch(
+      `/api/opc/pilot-a/runs/${encodeURIComponent(runId)}?${query.toString()}`,
+      {
+        method: 'GET',
+        credentials: 'same-origin',
+        cache: 'no-store',
+      }
+    )
+    const body: unknown = await response.json()
+    if (!response.ok || !isRecord(body)) {
+      const { errorCode, detail } = extractBffErrorDetail(body, response.status)
+      return {
+        ok: false,
+        httpStatus: response.status,
+        error: errorCode || detail,
+      }
+    }
+    return {
+      ok: true,
+      httpStatus: response.status,
+      runId: typeof body.run_id === 'string' ? body.run_id : runId,
+      status: typeof body.status === 'string' ? body.status : undefined,
+      checkpointStage:
+        typeof body.checkpoint_stage === 'string' ? body.checkpoint_stage : null,
+      actionDigest: typeof body.action_digest === 'string' ? body.action_digest : undefined,
+    }
+  } catch {
+    return { ok: false, httpStatus: 502, error: 'bff_network_unreachable' }
+  }
+}
+
+export async function fetchPilotADraftExport(params: {
+  runId: string
+  tenantId: string
+  format: TvanExportFormat
+  vatRatePct: VatRatePct
+  provider: AccountingTargetProvider
+}): Promise<PilotADraftExportResult> {
+  try {
+    const query = new URLSearchParams({
+      tenant_id: params.tenantId,
+      fmt: params.format.toLowerCase(),
+      vat_rate_pct: String(params.vatRatePct),
+      target_provider: params.provider,
+    })
+    const response = await fetch(
+      `/api/opc/pilot-a/draft-export/${encodeURIComponent(params.runId)}?${query.toString()}`,
+      {
+        method: 'GET',
+        credentials: 'same-origin',
+        cache: 'no-store',
+      }
+    )
+    if (!response.ok) {
+      let body: unknown = null
+      try {
+        body = await response.json()
+      } catch {
+        body = null
+      }
+      const { errorCode, detail } = extractBffErrorDetail(body, response.status)
+      return {
+        ok: false,
+        httpStatus: response.status,
+        error: errorCode || detail,
+      }
+    }
+    const content = await response.text()
+    return {
+      ok: true,
+      httpStatus: response.status,
+      content,
+    }
+  } catch {
+    return { ok: false, httpStatus: 502, error: 'bff_network_unreachable' }
   }
 }

@@ -121,8 +121,6 @@ def render_mobile_approval_card_html(
     esc_notes = html_escape(clipped_notes)
     esc_memo = html_escape(vietqr_memo[:80])
     esc_digest = html_escape(action_digest[:80])
-    esc_tenant = html_escape(tenant_id[:64])
-    esc_sig_q = f"&amp;sig={html_escape(card_sig)}" if card_sig else ""
     fmt_total = f"{int(total_amount_vnd):,}".replace(",", ".")
 
     item_rows: list[str] = []
@@ -156,6 +154,7 @@ def render_mobile_approval_card_html(
     return (
         "<!doctype html><html lang='vi'><head><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+        "<meta name='referrer' content='no-referrer'>"
         f"<title>Mekong Pilot A — Duyệt Báo Giá {esc_run}</title>"
         "<style>"
         "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f7f5;color:#102a1d;margin:0;padding:12px}"
@@ -186,12 +185,22 @@ def render_mobile_approval_card_html(
         "✅ DUYỆT &amp; GỬI BÁO GIÁ + VIETQR</button>"
         f"<button id='bHo' class='btn-ho' {disabled_attr} onclick=\"sendDecide('handoff')\">"
         "👤 CHUYỂN NHÂN VIÊN CHAT TAY (ZALO OA MANAGER)</button>"
-        f"<p><a href='/v1/opc/pilot-a/draft-export/{esc_run}?fmt=csv&amp;tenant_id={esc_tenant}{esc_sig_q}'>Tải nháp MISA CSV</a> • "
-        f"<a href='/v1/opc/pilot-a/draft-export/{esc_run}?fmt=xml&amp;tenant_id={esc_tenant}{esc_sig_q}'>Tải nháp MISA XML</a></p>"
+        "<p><a href='#' onclick=\"dlDraft('csv');return false\">Tải nháp MISA CSV</a> • "
+        "<a href='#' onclick=\"dlDraft('xml');return false\">Tải nháp MISA XML</a></p>"
         "<div id='msg' role='status'></div>"
         f"<script>const CFG={js_cfg};"
+        "if(window.history&&window.history.replaceState){const u=new URL(window.location.href);"
+        "u.searchParams.delete('sig');window.history.replaceState(null,'',u.pathname+u.search);}"
+        "async function dlDraft(fmt){const m=document.getElementById('msg');"
+        "const r=await fetch('/v1/opc/pilot-a/draft-export/'+encodeURIComponent(CFG.runId)"
+        "+'?fmt='+encodeURIComponent(fmt)+'&tenant_id='+encodeURIComponent(CFG.tenantId),"
+        "{headers:{'X-Card-Sig':CFG.sig},referrerPolicy:'no-referrer'});"
+        "if(!r.ok){m.textContent='Từ chối tải nháp: '+r.status;return;}"
+        "const b=await r.blob();const u=URL.createObjectURL(b);const a=document.createElement('a');"
+        "a.href=u;a.download=CFG.runId+'.'+fmt;a.click();URL.revokeObjectURL(u);}"
         "async function sendDecide(d){const m=document.getElementById('msg');m.textContent='Đang xử lý...';"
-        "const r=await fetch('/v1/opc/pilot-a/decide',{method:'POST',headers:{'Content-Type':'application/json'},"
+        "const r=await fetch('/v1/opc/pilot-a/decide',{method:'POST',"
+        "headers:{'Content-Type':'application/json','X-Card-Sig':CFG.sig},referrerPolicy:'no-referrer',"
         "body:JSON.stringify({run_id:CFG.runId,tenant_id:CFG.tenantId,decision:d,action_digest:CFG.digest,card_sig:CFG.sig})});"
         "const j=await r.json();if(r.ok){m.textContent='Đã xử lý: '+(j.status||d);document.getElementById('bOk').disabled=true;"
         "document.getElementById('bHo').disabled=true;}else{m.textContent='Từ chối an toàn: '+JSON.stringify(j.detail||j);}}"

@@ -166,12 +166,12 @@ class TestIpnDelegation:
             mock.assert_called_once_with('{"x": 1}', "some-sig")
             assert result is True
 
-    def test_process_ipn_bad_signature(self):
+    def test_process_ipn_bad_signature(self, monkeypatch):
         """process_ipn with bad sig → handler returns ok=False."""
         from src.raas import nowpayments_webhook_handler as handler_mod
         provider = NowPaymentsProvider()
 
-        handler_mod.IPN_SECRET = "provider-test-secret"
+        monkeypatch.setattr(handler_mod, "IPN_SECRET", "provider-test-secret")
         payload = json.dumps({"payment_id": "p_bad", "payment_status": "finished"})
 
         with patch.object(handler_mod, "_log_payment"):

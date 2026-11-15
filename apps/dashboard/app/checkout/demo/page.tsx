@@ -68,13 +68,13 @@ export default function CheckoutDemoPage() {
     if (!checkoutSession?.order_id || provisionedKey) return
 
     const timer = setInterval(async () => {
-      const status = await getCheckoutStatus(checkoutSession.order_id)
+      const status = await getCheckoutStatus(
+        checkoutSession.order_id,
+        checkoutSession.checkout_secret
+      )
       if (status && status.status === 'paid' && status.license_key) {
         setProvisionedKey(status.license_key)
         setStatusMessage(`Đã kích hoạt tự động gói ${status.tier}!`)
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem('RAAS_LICENSE_KEY', status.license_key)
-        }
       }
     }, 3000)
 
@@ -133,7 +133,7 @@ export default function CheckoutDemoPage() {
                     <p className="text-white/60 text-sm">{plan.description}</p>
                   </div>
                   <div className="text-right">
-                    <div className="text-xl font-bold text-white">${plan.priceUsd.toLocaleString()}</div>
+                    <div className="text-xl font-bold text-white">${plan.priceUsd.toLocaleString('en-US')}</div>
                     <div className="text-xs text-emerald-400">{plan.priceVnd}</div>
                   </div>
                 </div>
@@ -171,7 +171,7 @@ export default function CheckoutDemoPage() {
               disabled={isLoading}
               className="w-full py-3 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
             >
-              {isLoading ? 'Đang khởi tạo...' : `Tạo Đơn Thanh Toán ${selectedTier.id} ($${selectedTier.priceUsd.toLocaleString()})`}
+              {isLoading ? 'Đang khởi tạo...' : `Tạo Đơn Thanh Toán ${selectedTier.id} ($${selectedTier.priceUsd.toLocaleString('en-US')})`}
             </button>
 
             <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-3">

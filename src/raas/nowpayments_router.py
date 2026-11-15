@@ -55,6 +55,11 @@ async def nowpayments_ipn(request: Request) -> JSONResponse | dict[str, Any]:
                         "allowed_rails": result.get("allowed_rails", ["vietqr"]),
                     },
                 )
+            if result.get("retryable") or result.get("error") == "ipn_secret_unconfigured":
+                return JSONResponse(
+                    status_code=503,
+                    content={"status": "error", "detail": result.get("error")},
+                )
             return {"status": "error", "detail": result.get("error")}
 
         logger.info("[NP] IPN success: %s", result)

@@ -18,9 +18,12 @@ from __future__ import annotations
 import datetime
 import hashlib
 import hmac
+import os
 import pathlib
+import re
 import sqlite3
 import typing
+import urllib.parse
 import uuid
 
 # ---------------------------------------------------------------------------
@@ -128,24 +131,86 @@ def build_emvco_payload(
 # ---------------------------------------------------------------------------
 
 
+_MK_HEX_ORDER_TOKEN_RE = re.compile(
+    r"(?<![A-Za-z0-9_-])mk-[0-9a-fA-F]+(?![A-Za-z0-9_-])",
+    re.IGNORECASE,
+)
+_MK_ANY_TOKEN_RE = re.compile(
+    r"(?<![A-Za-z0-9_-])mk-[A-Za-z0-9_-]+(?![A-Za-z0-9_-])",
+    re.IGNORECASE,
+)
+_ORG_TAG_RE = re.compile(r"(?<![A-Za-z0-9_-])ORG:([^\s,;]+)", re.IGNORECASE)
+
+
+def _memo_matches_order_exclusively(
+    memo: str,
+    order_id: str,
+    org_id: str,
+    *,
+    require_order_token: bool,
+) -> bool:
+    """Validate unambiguous order and tenant binding in a bank transfer memo."""
+    clean_memo = str(memo or "")
+    hex_tokens = _MK_HEX_ORDER_TOKEN_RE.findall(clean_memo)
+    if len(hex_tokens) > 1 or any(tok != order_id for tok in hex_tokens):
+        return False
+
+    other_mk_tokens = [
+        tok for tok in _MK_ANY_TOKEN_RE.findall(clean_memo) if tok != org_id
+    ]
+    if len(other_mk_tokens) > 1 or any(tok != order_id for tok in other_mk_tokens):
+        return False
+
+    exact_order_re = re.compile(
+        rf"(?<![A-Za-z0-9_-]){re.escape(order_id)}(?![A-Za-z0-9_-])"
+    )
+    if require_order_token and exact_order_re.search(clean_memo) is None:
+        return False
+
+    org_tags = _ORG_TAG_RE.findall(clean_memo)
+    if any(tag != org_id for tag in org_tags):
+        return False
+
+    mekong_org_re = re.compile(
+        rf"(?<![A-Za-z0-9_-])MEKONG\s+(\S+)\s+{re.escape(order_id)}(?![A-Za-z0-9_-])"
+    )
+    for candidate_org in mekong_org_re.findall(clean_memo):
+        if candidate_org != org_id:
+            return False
+
+    return True
+
+
 class VietQrEngine:
     """Autonomous VietQR / Napas 247 Instant Payment & Reconciliation Engine."""
 
     def __init__(self, db_path: str | pathlib.Path | None = None) -> None:
         if db_path is None:
-            base_dir = pathlib.Path(".mekong")
-            base_dir.mkdir(parents=True, exist_ok=True)
-            self.db_path = base_dir / "vietqr.db"
+            env_db = os.environ.get("MEKONG_VIETQR_DB", "").strip()
+            if env_db:
+                self.db_path = pathlib.Path(env_db)
+                self.db_path.parent.mkdir(parents=True, exist_ok=True)
+            else:
+                base_dir = pathlib.Path(".mekong")
+                base_dir.mkdir(parents=True, exist_ok=True)
+                self.db_path = base_dir / "vietqr.db"
         else:
             self.db_path = pathlib.Path(db_path)
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
         self._init_db()
 
-    def _get_connection(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(str(self.db_path))
+    def _get_connection(
+        self,
+        isolation_level: typing.Literal["DEFERRED", "EXCLUSIVE", "IMMEDIATE"] | None = "DEFERRED",
+    ) -> sqlite3.Connection:
+        conn = sqlite3.connect(
+            str(self.db_path), timeout=30.0, isolation_level=isolation_level
+        )
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA busy_timeout = 30000")
+        if isolation_level is not None:
+            conn.execute("PRAGMA journal_mode = WAL")
         return conn
 
     def _init_db(self) -> None:
@@ -192,6 +257,32 @@ class VietQrEngine:
                     received_at TEXT NOT NULL
                 )
                 """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS checkout_orders (
+                    order_id TEXT PRIMARY KEY,
+                    org_id TEXT NOT NULL,
+                    customer_email TEXT NOT NULL DEFAULT '',
+                    expected_amount_vnd INTEGER NOT NULL,
+                    expected_amount_usd INTEGER NOT NULL DEFAULT 0,
+                    currency TEXT NOT NULL DEFAULT 'VND',
+                    rail TEXT NOT NULL DEFAULT 'vietqr',
+                    display_tier TEXT NOT NULL,
+                    canonical_tier TEXT NOT NULL,
+                    workflow_quota INTEGER,
+                    checkout_secret_sha256 TEXT NOT NULL,
+                    payment_state TEXT NOT NULL DEFAULT 'pending',
+                    settled_bank_tx_id TEXT UNIQUE,
+                    issued_license_key TEXT,
+                    created_at TEXT NOT NULL,
+                    settled_at TEXT
+                )
+                """
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_transactions_matched_order "
+                "ON transactions(matched_order_id)"
             )
             conn.commit()
 
@@ -273,7 +364,6 @@ class VietQrEngine:
 
         # QuickLink image URL for frictionless UI rendering
         # Format: https://img.vietqr.io/image/<BANK_BIN>-<ACCOUNT_NO>-compact2.png?amount=<AMOUNT>&addInfo=<MEMO>&accountName=<ACCOUNT_NAME>
-        import urllib.parse
         encoded_acc_name = urllib.parse.quote(target_acc_name)
         encoded_memo = urllib.parse.quote(clean_memo)
         quicklink = f"https://img.vietqr.io/image/{bank_info['bin']}-{target_acc_num}-compact2.png"
@@ -357,7 +447,7 @@ class VietQrEngine:
         now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
         tx_id = f"VTX-{str(uuid.uuid4())[:8].upper()}"
 
-        with self._get_connection() as conn:
+        with self._get_connection(isolation_level="IMMEDIATE") as conn:
             existing = conn.execute(
                 "SELECT * FROM transactions WHERE bank_tx_id = ?", (bank_tx_id,)
             ).fetchone()
@@ -370,7 +460,7 @@ class VietQrEngine:
             if save:
                 conn.execute(
                     """
-                    INSERT INTO transactions (
+                    INSERT OR IGNORE INTO transactions (
                         transaction_id, bank_tx_id, bin_code, amount_vnd,
                         memo, matched_order_id, status, received_at
                     )
@@ -388,6 +478,14 @@ class VietQrEngine:
                     ),
                 )
                 conn.commit()
+                inserted = conn.execute(
+                    "SELECT * FROM transactions WHERE bank_tx_id = ?", (bank_tx_id,)
+                ).fetchone()
+                if inserted and inserted["transaction_id"] != tx_id:
+                    d = dict(inserted)
+                    d["ok"] = True
+                    d["is_duplicate"] = True
+                    return d
 
         return {
             "ok": True,
@@ -401,6 +499,244 @@ class VietQrEngine:
             "is_duplicate": False,
             "received_at": now_iso,
         }
+
+    def create_checkout_order(
+        self,
+        order_id: str,
+        org_id: str,
+        expected_amount_vnd: int,
+        display_tier: str,
+        canonical_tier: str,
+        checkout_secret_sha256: str,
+        customer_email: str = "",
+        expected_amount_usd: int = 0,
+        currency: str = "VND",
+        rail: str = "vietqr",
+        workflow_quota: int | None = None,
+    ) -> dict[str, typing.Any]:
+        """Persist a chargeable checkout order prior to payment."""
+        clean_order_id = str(order_id or "").strip()
+        clean_org_id = str(org_id or "").strip()
+        clean_secret_hash = str(checkout_secret_sha256 or "").strip()
+        clean_vnd = int(expected_amount_vnd)
+        clean_usd = int(expected_amount_usd)
+        if not clean_order_id or not clean_org_id or not clean_secret_hash or clean_vnd <= 0:
+            raise ValueError("Invalid checkout order parameters")
+
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        with self._get_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO checkout_orders (
+                    order_id, org_id, customer_email, expected_amount_vnd,
+                    expected_amount_usd, currency, rail, display_tier,
+                    canonical_tier, workflow_quota, checkout_secret_sha256,
+                    payment_state, settled_bank_tx_id, issued_license_key,
+                    created_at, settled_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NULL, NULL, ?, NULL)
+                """,
+                (
+                    clean_order_id,
+                    clean_org_id,
+                    str(customer_email or "").strip().lower(),
+                    clean_vnd,
+                    clean_usd,
+                    str(currency or "VND").strip().upper(),
+                    str(rail or "vietqr").strip().lower(),
+                    str(display_tier).strip(),
+                    str(canonical_tier).strip(),
+                    int(workflow_quota) if workflow_quota is not None else None,
+                    clean_secret_hash,
+                    now_iso,
+                ),
+            )
+            conn.commit()
+            row = conn.execute(
+                "SELECT * FROM checkout_orders WHERE order_id = ?",
+                (clean_order_id,),
+            ).fetchone()
+            return dict(row) if row else {}
+
+    def get_checkout_order(self, order_id: str) -> dict[str, typing.Any] | None:
+        """Fetch a persisted checkout order by exact order_id."""
+        clean_order_id = str(order_id or "").strip()
+        if not clean_order_id:
+            return None
+        with self._get_connection() as conn:
+            row = conn.execute(
+                "SELECT * FROM checkout_orders WHERE order_id = ?",
+                (clean_order_id,),
+            ).fetchone()
+            return dict(row) if row else None
+
+    def settle_checkout_order_atomic(
+        self,
+        order_id: str,
+        license_signer: typing.Callable[[str, str], str],
+        allow_test_simulation: bool = False,
+    ) -> dict[str, typing.Any] | None:
+        """Atomically reconcile and settle a checkout order with 1:1 bank tx binding."""
+        clean_order_id = str(order_id or "").strip()
+        if not clean_order_id:
+            return None
+
+        conn = self._get_connection(isolation_level=None)
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            order_row = conn.execute(
+                "SELECT * FROM checkout_orders WHERE order_id = ?",
+                (clean_order_id,),
+            ).fetchone()
+            if order_row is None:
+                conn.execute("ROLLBACK")
+                return None
+
+            if order_row["payment_state"] == "paid" and order_row["issued_license_key"]:
+                conn.execute("COMMIT")
+                return dict(order_row)
+
+            expected_vnd = int(order_row["expected_amount_vnd"])
+            org_id = str(order_row["org_id"])
+
+            candidate_txs = conn.execute(
+                """
+                SELECT * FROM transactions
+                WHERE status = 'success'
+                  AND amount_vnd >= ?
+                  AND (matched_order_id = ? OR matched_order_id IS NULL)
+                  AND bank_tx_id NOT IN (
+                      SELECT settled_bank_tx_id
+                      FROM checkout_orders
+                      WHERE settled_bank_tx_id IS NOT NULL
+                  )
+                ORDER BY
+                  CASE WHEN matched_order_id = ? THEN 0 ELSE 1 END,
+                  received_at ASC,
+                  rowid ASC
+                """,
+                (expected_vnd, clean_order_id, clean_order_id),
+            ).fetchall()
+
+            settled_bank_tx_id: str | None = None
+            for tx in candidate_txs:
+                is_unmatched = tx["matched_order_id"] is None
+                if not _memo_matches_order_exclusively(
+                    str(tx["memo"] or ""),
+                    clean_order_id,
+                    org_id,
+                    require_order_token=is_unmatched,
+                ):
+                    continue
+                if is_unmatched:
+                    upd = conn.execute(
+                        "UPDATE transactions SET matched_order_id = ? "
+                        "WHERE transaction_id = ? AND matched_order_id IS NULL",
+                        (clean_order_id, tx["transaction_id"]),
+                    )
+                    if upd.rowcount != 1:
+                        continue
+                settled_bank_tx_id = str(tx["bank_tx_id"])
+                break
+
+            if settled_bank_tx_id is None:
+                is_prod = os.getenv("MEKONG_ENV", "").strip().lower() == "production"
+                can_simulate = bool(
+                    allow_test_simulation
+                    and not is_prod
+                    and bool(os.getenv("PYTEST_CURRENT_TEST"))
+                )
+                if not can_simulate:
+                    conn.execute("COMMIT")
+                    return dict(order_row)
+                settled_bank_tx_id = f"TEST-SIM-{clean_order_id}"
+
+            license_key = license_signer(org_id, str(order_row["canonical_tier"]))
+            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            conn.execute(
+                """
+                UPDATE checkout_orders
+                SET payment_state = 'paid',
+                    settled_bank_tx_id = ?,
+                    issued_license_key = ?,
+                    settled_at = ?
+                WHERE order_id = ?
+                """,
+                (settled_bank_tx_id, license_key, now_iso, clean_order_id),
+            )
+            updated = conn.execute(
+                "SELECT * FROM checkout_orders WHERE order_id = ?",
+                (clean_order_id,),
+            ).fetchone()
+            conn.execute("COMMIT")
+            return dict(updated) if updated else None
+        except Exception:
+            conn.execute("ROLLBACK")
+            raise
+        finally:
+            conn.close()
+
+    def settle_external_order_atomic(
+        self,
+        order_id: str,
+        external_tx_id: str,
+        license_signer: typing.Callable[[str, str], str],
+    ) -> dict[str, typing.Any] | None:
+        """Atomically settle a persisted non-VietQR order (e.g., NOWPayments IPN)."""
+        clean_order_id = str(order_id or "").strip()
+        clean_ext_tx = str(external_tx_id or "").strip()
+        if not clean_order_id or not clean_ext_tx:
+            return None
+
+        conn = self._get_connection(isolation_level=None)
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            order_row = conn.execute(
+                "SELECT * FROM checkout_orders WHERE order_id = ?",
+                (clean_order_id,),
+            ).fetchone()
+            if order_row is None:
+                conn.execute("ROLLBACK")
+                return None
+
+            if order_row["payment_state"] == "paid" and order_row["issued_license_key"]:
+                conn.execute("COMMIT")
+                return dict(order_row)
+
+            dup = conn.execute(
+                "SELECT 1 FROM checkout_orders WHERE settled_bank_tx_id = ?",
+                (clean_ext_tx,),
+            ).fetchone()
+            if dup is not None:
+                conn.execute("ROLLBACK")
+                return dict(order_row)
+
+            license_key = license_signer(
+                str(order_row["org_id"]), str(order_row["canonical_tier"])
+            )
+            now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            conn.execute(
+                """
+                UPDATE checkout_orders
+                SET payment_state = 'paid',
+                    settled_bank_tx_id = ?,
+                    issued_license_key = ?,
+                    settled_at = ?
+                WHERE order_id = ?
+                """,
+                (clean_ext_tx, license_key, now_iso, clean_order_id),
+            )
+            updated = conn.execute(
+                "SELECT * FROM checkout_orders WHERE order_id = ?",
+                (clean_order_id,),
+            ).fetchone()
+            conn.execute("COMMIT")
+            return dict(updated) if updated else None
+        except Exception:
+            conn.execute("ROLLBACK")
+            raise
+        finally:
+            conn.close()
 
     def list_transactions(self, limit: int = 20) -> list[dict[str, typing.Any]]:
         """List recent incoming bank transfer transactions."""

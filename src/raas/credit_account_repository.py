@@ -4,13 +4,14 @@
 """Credit account repository for workspace-level billing (SQLite version)."""
 from __future__ import annotations
 
+import json
 import logging
 import sqlite3
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -57,11 +58,18 @@ class CreditAccountRepository:
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
 
-    def _connect(self) -> sqlite3.Connection:
+    def _connect(
+        self,
+        isolation_level: Literal["DEFERRED", "EXCLUSIVE", "IMMEDIATE"] | None = "DEFERRED",
+    ) -> sqlite3.Connection:
         """Open WAL-mode connection."""
-        conn = sqlite3.connect(str(self._db_path), timeout=10)
+        conn = sqlite3.connect(
+            str(self._db_path), timeout=30.0, isolation_level=isolation_level
+        )
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA busy_timeout=30000;")
+        if isolation_level is not None:
+            conn.execute("PRAGMA journal_mode=WAL;")
         return conn
 
     def _init_db(self) -> None:
@@ -352,6 +360,82 @@ class CreditAccountRepository:
                 return True
         except sqlite3.Error:
             return False  # Already processed (duplicate key)
+
+    def grant_event_credits_once(
+        self,
+        event_id: str,
+        event_type: str,
+        workspace_id: str,
+        amount: int,
+        reason: str,
+        metadata: dict | None = None,
+    ) -> tuple[bool, int]:
+        """Atomically grant credits once per event_id using BEGIN IMMEDIATE."""
+        clean_event_id = str(event_id or "").strip()
+        clean_event_type = str(event_type or "").strip()
+        clean_ws = str(workspace_id or "").strip()
+        if not clean_event_id or not clean_event_type or not clean_ws:
+            raise ValueError("event_id, event_type, and workspace_id must be non-empty")
+        if amount <= 0:
+            raise ValueError("Credit amount must be positive")
+
+        now = self._now_iso()
+        meta_json = json.dumps(metadata or {})
+
+        try:
+            conn = self._connect(isolation_level=None)
+            try:
+                conn.execute("BEGIN IMMEDIATE")
+                existing = conn.execute(
+                    "SELECT 1 FROM processed_events WHERE event_id = ?",
+                    (clean_event_id,),
+                ).fetchone()
+                if existing is not None:
+                    bal_row = conn.execute(
+                        "SELECT balance FROM credit_accounts WHERE workspace_id = ?",
+                        (clean_ws,),
+                    ).fetchone()
+                    conn.execute("COMMIT")
+                    return (False, int(bal_row["balance"]) if bal_row else 0)
+
+                conn.execute(
+                    """
+                    INSERT INTO processed_events (event_id, event_type, workspace_id, processed_at)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (clean_event_id, clean_event_type, clean_ws, now),
+                )
+                conn.execute(
+                    """
+                    INSERT INTO credit_accounts (workspace_id, balance, total_earned, total_spent, created_at, updated_at)
+                    VALUES (?, ?, ?, 0, ?, ?)
+                    ON CONFLICT(workspace_id) DO UPDATE SET
+                        balance = balance + excluded.balance,
+                        total_earned = total_earned + excluded.total_earned,
+                        updated_at = excluded.updated_at
+                    """,
+                    (clean_ws, amount, amount, now, now),
+                )
+                conn.execute(
+                    """
+                    INSERT INTO credit_transactions (id, workspace_id, amount, reason, timestamp, metadata)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (str(uuid.uuid4()), clean_ws, amount, reason, now, meta_json),
+                )
+                bal_row = conn.execute(
+                    "SELECT balance FROM credit_accounts WHERE workspace_id = ?",
+                    (clean_ws,),
+                ).fetchone()
+                conn.execute("COMMIT")
+                return (True, int(bal_row["balance"]) if bal_row else amount)
+            except Exception:
+                conn.execute("ROLLBACK")
+                raise
+            finally:
+                conn.close()
+        except sqlite3.Error as exc:
+            raise RuntimeError(f"Failed to grant event credits atomically: {exc}") from exc
 
     def is_event_processed(self, event_id: str) -> bool:
         """Check if an event has already been processed."""
