@@ -78,19 +78,21 @@ export const commonSchemas = {
     .string()
     .regex(/^\d+$/, 'Invalid page number')
     .transform(Number)
-    .pipe(z.number().min(1).max(1000).default(1)),
+    .pipe(z.number().min(1).max(1000))
+    .default(1),
   limit: z
     .string()
     .regex(/^\d+$/, 'Invalid limit')
     .transform(Number)
-    .pipe(z.number().min(1).max(100).default(20)),
+    .pipe(z.number().min(1).max(100))
+    .default(20),
 
   // Sort
   sortBy: z.string().optional(),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 
   // IP Address
-  ipAddress: z.string().ip('Invalid IP address'),
+  ipAddress: z.union([z.ipv4(), z.ipv6()], { message: 'Invalid IP address' }),
 
   // Currency amount
   amount: z
@@ -358,8 +360,8 @@ export function createValidationMiddleware(config: ValidationConfig) {
       return { success: true, data: validatedData }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const fieldErrors = error.errors.map(err => ({
-          field: err.path.join('.'),
+        const fieldErrors = error.issues.map(err => ({
+          field: err.path.map(String).join('.'),
           message: err.message,
           code: err.code,
         }))
