@@ -113,10 +113,13 @@ def test_audit_never_claims_visual_without_render(runner, app) -> None:
     assert "static" in data["visual_qa_note"].lower()
 
 
-def test_audit_render_without_playwright_stays_static(runner, app) -> None:
+def test_audit_render_without_playwright_stays_static(runner, app, monkeypatch) -> None:
     """--render requests a screenshot but never claims one when the provider is absent."""
     import json
 
+    from src.design_intelligence.visual import PlaywrightProvider
+
+    monkeypatch.setattr(PlaywrightProvider, "available", lambda _self: False)
     res = runner.invoke(
         app, ["ui", "audit", str(FIXTURES_DIR / "good-dashboard.html"), "--render", "--json"]
     )
