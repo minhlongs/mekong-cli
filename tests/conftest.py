@@ -24,6 +24,12 @@ if "MEKONG_RAAS_DB" not in os.environ:
     _temp_raas_dir = Path(tempfile.gettempdir()) / "mekong_test_raas"
     _temp_raas_dir.mkdir(parents=True, exist_ok=True)
     os.environ["MEKONG_RAAS_DB"] = str(_temp_raas_dir / "tenants.db")
+
+# The NOWPayments IPN handler is fail-closed: an unsigned callback is rejected
+# unless an operator explicitly opts out. The test suite is such a local
+# harness (unit tests exercise handle_ipn directly without a real HMAC), so it
+# opts out here. Tests that assert fail-closed behavior delete this var.
+os.environ.setdefault("MEKONG_ALLOW_UNSIGNED_IPN", "1")
 import sqlite3  # noqa: E402
 from typing import Any, Generator  # noqa: E402
 

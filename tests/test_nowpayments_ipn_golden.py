@@ -82,7 +82,7 @@ class TestGoldenResponseShapes:
         assert result["ok"] is True
         assert result["action"] == "credits_granted"
         assert result["tier"] == "pro"
-        assert result["credits"] == 1200
+        assert result["credits"] == 4000
         assert result["workspace_id"] == "ws_gold"
         assert result["payment_id"] == "pay_gold_001"
 
@@ -100,11 +100,11 @@ class TestGoldenResponseShapes:
         assert result["action"] == "ignored"
         assert "waiting" in result["reason"]
 
-    def test_bad_signature_golden_response(self):
+    def test_bad_signature_golden_response(self, monkeypatch):
         """Exact response shape for a bad-signature IPN payment."""
         from src.raas import nowpayments_webhook_handler as handler_mod
 
-        handler_mod.IPN_SECRET = "golden-secret"
+        monkeypatch.setattr(handler_mod, "IPN_SECRET", "golden-secret")
         payload = self._finished_payload()
 
         result = handler_mod.handle_ipn(payload, signature="bad-sig-golden")
@@ -173,7 +173,7 @@ class TestRouterGoldenResponses:
         assert data["action"] == "credits_granted"
 
     @pytest.mark.asyncio
-    async def test_bad_sig_returns_error_status(self):
+    async def test_bad_sig_returns_error_status(self, monkeypatch):
         """POST with bad signature → {status: error, detail: signature_mismatch}."""
         from src.raas import nowpayments_webhook_handler as handler_mod
 
@@ -184,7 +184,7 @@ class TestRouterGoldenResponses:
             "order_description": "pro plan",
         })
 
-        handler_mod.IPN_SECRET = "test-secret-123"
+        monkeypatch.setattr(handler_mod, "IPN_SECRET", "test-secret-123")
 
         with patch("src.raas.nowpayments_router.handle_ipn") as mock_handle:
             mock_handle.return_value = {

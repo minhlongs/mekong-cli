@@ -9,6 +9,7 @@ import {
   QrCode,
   FileSpreadsheet,
   ShieldCheck,
+  Download,
 } from 'lucide-react'
 import {
   MIN_EXTRACTION_CONFIDENCE,
@@ -37,6 +38,11 @@ interface ProposalDraftPreviewProps {
   extractionConfidence: number
   citationCount: number
   missingFields: string[]
+  serverDraftStatus?: string
+  onDownloadServerDraft?: (
+    format: TvanExportFormat,
+    provider: AccountingTargetProvider
+  ) => Promise<void>
 }
 
 const EXPORT_FORMATS: TvanExportFormat[] = ['CSV', 'XML', 'JSON']
@@ -59,6 +65,8 @@ export default function ProposalDraftPreview({
   extractionConfidence,
   citationCount,
   missingFields,
+  serverDraftStatus,
+  onDownloadServerDraft,
 }: ProposalDraftPreviewProps) {
   const [exportFormat, setExportFormat] = useState<TvanExportFormat>('JSON')
   const [targetProvider, setTargetProvider] = useState<AccountingTargetProvider>('misa_meinvoice')
@@ -315,6 +323,24 @@ export default function ProposalDraftPreview({
         <pre className="max-h-36 overflow-auto rounded-lg border border-white/10 bg-[#06080d] p-2.5 text-[10px] font-mono text-neutral-300 leading-relaxed">
           {draftPreviewText}
         </pre>
+
+        {onDownloadServerDraft && (
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => void onDownloadServerDraft(exportFormat, targetProvider)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-blue-400/40 bg-blue-500/15 px-3 py-1.5 text-[11px] font-mono font-bold text-blue-200 hover:bg-blue-500/25 transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              {isVi
+                ? `Tải nháp xác thực BFF (${exportFormat})`
+                : `Export Verified BFF Draft (${exportFormat})`}
+            </button>
+            {serverDraftStatus && (
+              <span className="text-[10px] font-mono text-neutral-400">{serverDraftStatus}</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Missing / Unpriced Honesty Notice */}

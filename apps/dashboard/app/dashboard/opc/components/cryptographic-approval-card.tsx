@@ -92,7 +92,9 @@ export default function CryptographicApprovalCard({
   const isRevoked = approvalState === 'revoked'
   const isRejected = approvalState === 'rejected'
   const isLowConfidence = extractionConfidence < MIN_EXTRACTION_CONFIDENCE
-  const canApproveAuto = !isConsumed && !isLowConfidence && isZaloWindowValid && !isSyncing
+  const hasValidDigest = actionDigest.length === 64
+  const canApproveAuto =
+    !isConsumed && !isLowConfidence && isZaloWindowValid && !isSyncing && hasValidDigest
 
   const formattedExpiry = formatDeterministicTimestamp(payload.expires_at, timezone, language)
 
@@ -120,23 +122,29 @@ export default function CryptographicApprovalCard({
         <div className="flex flex-wrap items-center gap-2">
           <span
             className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-mono border ${
-              gatewaySync.mode === 'live_gateway'
+              gatewaySync.mode === 'live_gateway' && gatewaySync.synced
                 ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
-                : 'border-blue-500/30 bg-blue-500/10 text-blue-300'
+                : gatewaySync.mode === 'failed_closed'
+                ? 'border-red-500/40 bg-red-500/15 text-red-300'
+                : 'border-amber-500/30 bg-amber-500/10 text-amber-300'
             }`}
           >
-            {gatewaySync.mode === 'live_gateway' ? (
+            {gatewaySync.mode === 'live_gateway' && gatewaySync.synced ? (
               <Wifi className="w-3 h-3" />
             ) : (
               <WifiOff className="w-3 h-3" />
             )}
-            {gatewaySync.mode === 'live_gateway'
+            {gatewaySync.mode === 'live_gateway' && gatewaySync.synced
               ? isVi
-                ? 'FastAPI Gateway Live'
-                : 'FastAPI Gateway Synced'
+                ? 'BFF · FastAPI Đã Xác Thực'
+                : 'BFF · Gateway Verified'
+              : gatewaySync.mode === 'failed_closed'
+              ? isVi
+                ? 'BFF Khóa An Toàn (Fail-Closed)'
+                : 'BFF Fail-Closed'
               : isVi
-              ? 'Web Crypto Nội bộ (Offline)'
-              : 'Offline Web Crypto Mode'}
+              ? 'Chưa Đồng Bộ BFF'
+              : 'BFF Unsynced'}
           </span>
 
           <span

@@ -113,7 +113,7 @@ class TestExtractTier:
 
     def test_fallback_to_starter(self):
         # Note: avoid strings containing tier names as substrings (e.g. "product" contains "pro")
-        data = {"order_id": "xyz999", "order_description": "unknown basic plan"}
+        data = {"order_id": "xyz999", "order_description": "unknown miscellaneous plan"}
         assert self.mod._extract_tier(data) == "starter"
 
     def test_case_insensitive_matching(self):
@@ -163,9 +163,9 @@ class TestHandleIpn:
         assert result["ok"] is True
         assert result["action"] == "credits_granted"
         assert result["tier"] == "pro"
-        assert result["credits"] == 1200  # Pro tier = 1200 credits
+        assert result["credits"] == 4000  # Pro tier = 4000 credits
         assert result["workspace_id"] == "ws_test"
-        assert repo.get_balance("ws_test") == 1200
+        assert repo.get_balance("ws_test") == 4000
 
     def test_confirmed_payment_grants_credits(self, tmp_path):
         """'confirmed' status is also accepted."""
@@ -182,7 +182,7 @@ class TestHandleIpn:
             result = self.mod.handle_ipn(payload, signature="")
 
         assert result["ok"] is True
-        assert result["credits"] == 300  # Starter = 300 credits
+        assert result["credits"] == 1500  # Starter = 1500 credits
 
     def test_waiting_status_ignored(self, tmp_path):
         """Non-terminal statuses must NOT grant credits."""
@@ -235,7 +235,7 @@ class TestHandleIpn:
     def test_tier_credits_mapping(self, tmp_path):
         """Each tier maps to the correct credit amount."""
         from src.raas.credit_account_repository import CreditAccountRepository
-        expected = {"starter": 300, "pro": 1200, "growth": 3500, "enterprise": 7000}
+        expected = {"starter": 1500, "pro": 4000, "growth": 4000, "enterprise": 10000}
 
         for tier, expected_credits in expected.items():
             db_file = tmp_path / f"ws_{tier}.db"
@@ -351,14 +351,14 @@ class TestCheckoutValidation:
         assert "iid=" in link
 
     def test_tier_prices_match_spec(self):
-        """Verify tier pricing matches the $49/$149/$299/$499 spec."""
-        expected_prices = {"starter": 49, "pro": 149, "growth": 299, "enterprise": 499}
+        """Verify tier pricing matches the canonical Dual-Rail spec."""
+        expected_prices = {"starter": 199, "pro": 399, "growth": 399, "enterprise": 799}
         for tier, price in expected_prices.items():
             assert self.mod.TIERS[tier]["price_usd"] == price
 
     def test_tier_credits_match_spec(self):
         """Verify credit allocations match spec."""
-        expected_credits = {"starter": 300, "pro": 1200, "growth": 3500, "enterprise": 7000}
+        expected_credits = {"starter": 1500, "pro": 4000, "growth": 4000, "enterprise": 10000}
         for tier, credits in expected_credits.items():
             assert self.mod.TIERS[tier]["credits"] == credits
 

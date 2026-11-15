@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { ShieldCheck, Terminal, Languages, RefreshCw } from 'lucide-react'
+import { ShieldCheck, Terminal, Languages, RefreshCw, Lock, LogOut, Activity } from 'lucide-react'
 import ClientIntakeCard, { type ClientIntake } from './components/client-intake-card'
 import ProposalDraftPreview from './components/proposal-draft-preview'
 import CryptographicApprovalCard, {
@@ -16,16 +16,24 @@ import {
   computeQuoteFinancials,
   computeSha256Hex,
   extractSourceSpansFromMessage,
+  fetchPilotADraftExport,
+  fetchPilotARunSummary,
   formatActionAmountString,
   formatCurrencyAmount,
+  inspectPilotABffSession,
+  loginPilotABffSession,
+  logoutPilotABffSession,
   syncPilotADecision,
   syncPilotAZaloWebhook,
+  type AccountingTargetProvider,
   type GatewaySyncResult,
   type OpcActionPayload,
+  type OpcClientSessionStatus,
   type OpcLineItem,
   type OpcUsageEvent,
   type SmeQuotaTierKey,
   type SupportedLanguage,
+  type TvanExportFormat,
 } from '@/lib/opc-cockpit-data'
 
 // Baseline UTC epoch for SSR hydration stability; refreshed to live +24h TTL on client mount.
@@ -54,18 +62,24 @@ export default function OpcCockpitPage() {
   const [intake, setIntake] = useState<ClientIntake>(INITIAL_INTAKE)
   const [expiresAt, setExpiresAt] = useState<number>(SSR_INITIAL_EXPIRES_AT)
   const [runId, setRunId] = useState<string>('run_pilot_a_8f3a91c2b4e0')
+  const [tenantId, setTenantId] = useState<string>('default')
+  const [workspaceId, setWorkspaceId] = useState<string>('ws_default')
+  const [loginCredential, setLoginCredential] = useState<string>('')
+  const [bffSession, setBffSession] = useState<OpcClientSessionStatus>({ authenticated: false })
+  const [serverDraftStatus, setServerDraftStatus] = useState<string>('')
   const [selectedTier, setSelectedTier] = useState<SmeQuotaTierKey>('pilot_a')
   const [actionDigest, setActionDigest] = useState<string>('')
   const [boundDigest, setBoundDigest] = useState<string>('')
   const [serverActionDigest, setServerActionDigest] = useState<string>('')
-  const [serverCardSig, setServerCardSig] = useState<string>('')
   const [approvalState, setApprovalState] = useState<ApprovalState>('idle')
   const [isSyncing, setIsSyncing] = useState<boolean>(false)
   const [gatewaySync, setGatewaySync] = useState<GatewaySyncResult>({
     synced: false,
-    endpoint: '/v1/opc/pilot-a/webhook/zalo',
-    mode: 'offline_webcrypto',
-    detail: 'offline_ready',
+    endpoint: '/api/opc/pilot-a/webhook/zalo',
+    mode: 'unverified_idle',
+    serverRejected: false,
+    failedClosed: false,
+    detail: 'awaiting_bff_session',
   })
   const [dispatchResult, setDispatchResult] = useState<DispatchOutcome>({
     status: 'idle',
@@ -77,6 +91,22 @@ export default function OpcCockpitPage() {
 
   useEffect(() => {
     setExpiresAt(Math.floor(Date.now() / 1000) + 86400)
+    let mounted = true
+    void inspectPilotABffSession().then((status) => {
+      if (!mounted) return
+      setBffSession(status)
+      if (status.authenticated) {
+        if (status.workspaceId) {
+          setWorkspaceId(status.workspaceId)
+        }
+        if (status.allowedTenants && status.allowedTenants.length > 0) {
+          setTenantId(status.allowedTenants[0])
+        }
+      }
+    })
+    return () => {
+      mounted = false
+    }
   }, [])
 
   const setLanguage = (lang: SupportedLanguage) => {
@@ -160,15 +190,28 @@ export default function OpcCockpitPage() {
   useEffect(() => {
     let active = true
     const canonical = canonicalizePayload(actionPayload)
-    void computeSha256Hex(canonical).then((hex) => {
-      if (active) {
-        setActionDigest(hex)
-      }
-    })
+    void computeSha256Hex(canonical)
+      .then((hex) => {
+        if (active) {
+          setActionDigest(hex)
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setActionDigest('')
+          setApprovalState('idle')
+          setDispatchResult({
+            status: 'tamper_detected',
+            message: isVi
+              ? 'CRYPTO_UNAVAILABLE: Trình duyệt không hỗ trợ Web Crypto SubtleCrypto SHA-256 (yêu cầu HTTPS/localhost). Đã khóa toàn bộ lệnh phê duyệt!'
+              : 'CRYPTO_UNAVAILABLE: Web Crypto SubtleCrypto SHA-256 is unavailable. Approval is fail-closed!',
+          })
+        }
+      })
     return () => {
       active = false
     }
-  }, [actionPayload])
+  }, [actionPayload, isVi])
 
   const hasUnknownCosts = missingFields.length > 0
   const isZaloWindowValid =
@@ -237,9 +280,116 @@ export default function OpcCockpitPage() {
     return base
   }, [intake.currency, runId, selectedTier, hasUnknownCosts])
 
+  const handleBffLogin = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!loginCredential.trim()) return
+    setIsSyncing(true)
+    const submittedCredential = loginCredential
+    setLoginCredential('')
+    const res = await loginPilotABffSession({
+      credential: submittedCredential,
+      workspaceId,
+      tenantId,
+      role: 'owner',
+    })
+    setBffSession(res)
+    setIsSyncing(false)
+    if (!res.authenticated) {
+      setDispatchResult({
+        status: 'tamper_detected',
+        message: isVi
+          ? `Đăng nhập BFF bị từ chối (${res.error || 'unauthenticated'}): Vui lòng kiểm tra mã xác thực chủ shop và phân quyền tenant.`
+          : `BFF session login rejected (${res.error || 'unauthenticated'}): Verify owner bootstrap token and tenant authorization.`,
+      })
+      return
+    }
+    if (res.allowedTenants && res.allowedTenants.length > 0) {
+      setTenantId(res.allowedTenants[0])
+    }
+    setDispatchResult({ status: 'idle', message: '' })
+  }
+
+  const handleBffLogout = async () => {
+    setIsSyncing(true)
+    await logoutPilotABffSession()
+    setBffSession({ authenticated: false })
+    setServerActionDigest('')
+    setApprovalState('idle')
+    setGatewaySync({
+      synced: false,
+      endpoint: '/api/opc/pilot-a/session',
+      mode: 'unverified_idle',
+      serverRejected: false,
+      failedClosed: false,
+      detail: 'logged_out',
+    })
+    setIsSyncing(false)
+  }
+
+  const handleInspectServerRun = async () => {
+    setIsSyncing(true)
+    const info = await fetchPilotARunSummary(runId, tenantId)
+    setIsSyncing(false)
+    if (!info.ok) {
+      setDispatchResult({
+        status: 'tamper_detected',
+        message: isVi
+          ? `Không thể truy vấn phiên chạy qua BFF (${info.error || info.httpStatus}): Kiểm tra phiên đăng nhập và quyền tenant '${tenantId}'.`
+          : `Failed to inspect run via BFF (${info.error || info.httpStatus}): Verify BFF session and tenant '${tenantId}' membership.`,
+      })
+      return
+    }
+    if (info.actionDigest) {
+      setServerActionDigest(info.actionDigest)
+    }
+    setServerDraftStatus(
+      isVi
+        ? `BFF Run ${info.runId}: ${info.status || 'OK'}`
+        : `BFF Run ${info.runId}: ${info.status || 'OK'}`
+    )
+  }
+
+  const handleDownloadServerDraft = async (
+    format: TvanExportFormat,
+    provider: AccountingTargetProvider
+  ) => {
+    setServerDraftStatus(isVi ? 'Đang tải từ BFF...' : 'Exporting via BFF...')
+    const exported = await fetchPilotADraftExport({
+      runId,
+      tenantId,
+      format,
+      vatRatePct: intake.vatRatePct,
+      provider,
+    })
+    if (!exported.ok || !exported.content) {
+      setServerDraftStatus(
+        isVi
+          ? `Từ chối xuất nháp (${exported.error || exported.httpStatus})`
+          : `Draft export rejected (${exported.error || exported.httpStatus})`
+      )
+      return
+    }
+    if (typeof window !== 'undefined' && typeof Blob !== 'undefined') {
+      const ext = format.toLowerCase()
+      const blob = new Blob([exported.content], { type: 'text/plain;charset=utf-8' })
+      const blobUrl = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = blobUrl
+      anchor.download = `draft_${runId}_${provider}.${ext}`
+      anchor.click()
+      URL.revokeObjectURL(blobUrl)
+    }
+    setServerDraftStatus(
+      isVi
+        ? `Đã tải nháp ${format} qua BFF (no-store)`
+        : `Exported ${format} draft via BFF (no-store)`
+    )
+  }
+
   const handleGatewayWebhookSync = async () => {
     setIsSyncing(true)
     const syncRes = await syncPilotAZaloWebhook({
+      tenantId,
       eventId: intake.requestId,
       senderName: intake.clientName,
       senderContact: intake.clientContact,
@@ -252,16 +402,26 @@ export default function OpcCockpitPage() {
       extractionConfidence: intake.extractionConfidence,
     })
     setGatewaySync(syncRes)
+    setIsSyncing(false)
+
+    if (!syncRes.synced || syncRes.failedClosed || syncRes.serverRejected) {
+      setApprovalState('idle')
+      setDispatchResult({
+        status: 'tamper_detected',
+        message: isVi
+          ? `Đồng bộ BFF bị khóa an toàn (${syncRes.detail}): Yêu cầu phiên đăng nhập chủ shop hợp lệ cho tenant '${tenantId}' và kết nối Gateway sẵn sàng.`
+          : `BFF intake sync fail-closed (${syncRes.detail}): Valid shop-owner BFF session for tenant '${tenantId}' and live Gateway are required.`,
+      })
+      return
+    }
+
     if (syncRes.serverRunId) {
       setRunId(syncRes.serverRunId)
     }
     if (syncRes.serverActionDigest) {
       setServerActionDigest(syncRes.serverActionDigest)
     }
-    if (syncRes.serverCardSig) {
-      setServerCardSig(syncRes.serverCardSig)
-    }
-    setIsSyncing(false)
+    setDispatchResult({ status: 'idle', message: '' })
   }
 
   const handleApproveAndSend = async (revisionNotes: string) => {
@@ -275,94 +435,117 @@ export default function OpcCockpitPage() {
       return
     }
 
-    if (boundDigest && boundDigest !== actionDigest) {
+    let liveDigest: string
+    try {
+      liveDigest = await computeSha256Hex(canonicalizePayload(actionPayload))
+      setActionDigest(liveDigest)
+    } catch {
+      setApprovalState('idle')
+      setDispatchResult({
+        status: 'tamper_detected',
+        message: isVi
+          ? 'CRYPTO_UNAVAILABLE: Web Crypto SubtleCrypto SHA-256 không khả dụng — hệ thống tự động khóa gửi báo giá (Fail-Closed)!'
+          : 'CRYPTO_UNAVAILABLE: Web Crypto SubtleCrypto SHA-256 is required — approval aborted fail-closed!',
+      })
+      return
+    }
+
+    if (boundDigest && boundDigest !== liveDigest) {
+      setApprovalState('idle')
       setDispatchResult({
         status: 'tamper_detected',
         message: isVi
           ? `Phát hiện dữ liệu báo giá bị thay đổi sau khi ký! Mã gốc ${boundDigest.slice(
               0,
               16
-            )}… khác mã hiện tại ${actionDigest.slice(0, 16)}…. Đã khóa lệnh gửi!`
+            )}… khác mã hiện tại ${liveDigest.slice(0, 16)}…. Đã khóa lệnh gửi!`
           : `Payload mutated after signing! Bound ${boundDigest.slice(
               0,
               16
-            )}… != current ${actionDigest.slice(0, 16)}…. Dispatch aborted!`,
+            )}… != current ${liveDigest.slice(0, 16)}…. Dispatch aborted!`,
       })
       return
     }
 
-    const lockedDigest = actionDigest
-    const gatewayDigest = serverActionDigest || lockedDigest
-    setBoundDigest(lockedDigest)
-    setApprovalState('approved')
+    const gatewayDigest = serverActionDigest || liveDigest
+    setBoundDigest(liveDigest)
     setIsSyncing(true)
 
     const syncRes = await syncPilotADecision({
+      tenantId,
       runId,
       decision: 'approve',
       actionDigest: gatewayDigest,
-      cardSig: serverCardSig,
       revisionNotes,
     })
     setGatewaySync(syncRes)
     setIsSyncing(false)
 
-    if (syncRes.serverRejected) {
+    if (!syncRes.synced || syncRes.failedClosed || syncRes.serverRejected) {
+      setBoundDigest('')
       setApprovalState('idle')
       setDispatchResult({
         status: 'tamper_detected',
         message: isVi
-          ? `FastAPI Gateway từ chối an toàn (${syncRes.detail}): Mã băm payload hoặc trạng thái phiên không khớp. Vui lòng bấm "Đồng bộ Gateway" lại trước khi duyệt.`
-          : `FastAPI Gateway fail-closed rejection (${syncRes.detail}): Payload digest or run state mismatch. Please re-sync Gateway before approving.`,
+          ? `BFF / FastAPI Gateway từ chối an toàn (${syncRes.detail}): Không thể phê duyệt khi thiếu phiên chủ shop hợp lệ, lệch mã băm SHA-256 hoặc mất kết nối Gateway.`
+          : `BFF / FastAPI Gateway fail-closed rejection (${syncRes.detail}): Approval blocked due to missing owner session, digest mismatch, or unreachable Gateway.`,
       })
       return
     }
 
     setApprovalState('consumed')
-
-    const syncTag =
-      syncRes.synced && syncRes.mode === 'live_gateway'
-        ? isVi
-          ? 'Đã đồng bộ FastAPI Gateway trực tiếp'
-          : 'Synced via live FastAPI Gateway'
-        : isVi
-        ? 'Xác thực Web Crypto nội bộ (Offline-safe)'
-        : 'Verified via local Web Crypto (Offline-safe)'
-
     setDispatchResult({
       status: 'success',
       message: isVi
-        ? `Đã gửi báo giá & mã VietQR (${financials.vietQrMemo}) tới ${actionPayload.recipient}. Khóa chống gửi trùng: idem_${gatewayDigest.slice(
+        ? `Đã xác thực qua BFF & gửi báo giá + mã VietQR (${financials.vietQrMemo}) tới ${actionPayload.recipient}. Khóa chống gửi trùng: idem_${gatewayDigest.slice(
             0,
             12
-          )} · ${syncTag}.`
-        : `Dispatched quote & VietQR (${financials.vietQrMemo}) to ${actionPayload.recipient} (key: idem_${gatewayDigest.slice(
+          )}.`
+        : `Verified via server BFF & dispatched quote + VietQR (${financials.vietQrMemo}) to ${actionPayload.recipient} (key: idem_${gatewayDigest.slice(
             0,
             12
-          )}) · ${syncTag}.`,
+          )}).`,
     })
   }
 
   const handleHandoffZalo = async (revisionNotes: string) => {
+    let liveDigest: string
+    try {
+      liveDigest = await computeSha256Hex(canonicalizePayload(actionPayload))
+      setActionDigest(liveDigest)
+    } catch {
+      setApprovalState('idle')
+      setDispatchResult({
+        status: 'tamper_detected',
+        message: isVi
+          ? 'CRYPTO_UNAVAILABLE: Không có Web Crypto SHA-256 — đã khóa thao tác chuyển tiếp tự động!'
+          : 'CRYPTO_UNAVAILABLE: Web Crypto SHA-256 is required — handoff aborted fail-closed!',
+      })
+      return
+    }
+
     setIsSyncing(true)
     const syncRes = await syncPilotADecision({
+      tenantId,
       runId,
       decision: 'handoff',
-      actionDigest: serverActionDigest || actionDigest,
-      cardSig: serverCardSig,
+      actionDigest: serverActionDigest || liveDigest,
       revisionNotes,
     })
     setGatewaySync(syncRes)
     setIsSyncing(false)
-    if (syncRes.serverRejected) {
+
+    if (!syncRes.synced || syncRes.failedClosed || syncRes.serverRejected) {
+      setApprovalState('idle')
       setDispatchResult({
         status: 'tamper_detected',
         message: isVi
-          ? `FastAPI Gateway từ chối lệnh chuyển tiếp (${syncRes.detail}): Vui lòng bấm "Đồng bộ Gateway" bằng khóa chủ shop hợp lệ trước khi chuyển tiếp.`
-          : `FastAPI Gateway rejected handoff (${syncRes.detail}): Please sync Gateway with a valid owner API key before handing off.`,
+          ? `BFF / FastAPI Gateway từ chối lệnh chuyển tiếp (${syncRes.detail}): Vui lòng đăng nhập phiên BFF và đồng bộ Gateway trước khi chuyển tiếp.`
+          : `BFF / FastAPI Gateway fail-closed handoff rejection (${syncRes.detail}): Authenticate BFF session and sync Gateway before handing off.`,
       })
       return
     }
+
     setApprovalState('revoked')
     setDispatchResult({
       status: 'revoked',
@@ -389,38 +572,51 @@ export default function OpcCockpitPage() {
   }
 
   const handleSimulateTamper = async () => {
-    const referenceDigest = boundDigest || actionDigest
-    if (!boundDigest) {
-      setBoundDigest(referenceDigest)
-      setApprovalState('approved')
+    let referenceDigest = boundDigest || actionDigest
+    try {
+      if (!referenceDigest) {
+        referenceDigest = await computeSha256Hex(canonicalizePayload(actionPayload))
+      }
+      if (!boundDigest) {
+        setBoundDigest(referenceDigest)
+        setApprovalState('approved')
+      }
+      const delta = intake.currency === 'VND' ? 9990000 : 9999
+      const mutatedPayload: OpcActionPayload = {
+        ...actionPayload,
+        parameters: {
+          ...actionPayload.parameters,
+          amount: formatActionAmountString(financials.grandTotal + delta, intake.currency),
+        },
+      }
+      const tamperedDigest = await computeSha256Hex(canonicalizePayload(mutatedPayload))
+      setDispatchResult({
+        status: 'tamper_detected',
+        message: isVi
+          ? `Chặn đứng giả mạo TOCTOU! Phiếu duyệt khóa vào mã ${referenceDigest.slice(
+              0,
+              16
+            )}…, nhưng số tiền bị sửa trộm tạo ra mã ${tamperedDigest.slice(
+              0,
+              16
+            )}…. Hệ thống hủy gửi ngay lập tức!`
+          : `TOCTOU tamper blocked! Token bound to ${referenceDigest.slice(
+              0,
+              16
+            )}…, but mutated amount produced ${tamperedDigest.slice(
+              0,
+              16
+            )}…. Execution aborted!`,
+      })
+    } catch {
+      setApprovalState('idle')
+      setDispatchResult({
+        status: 'tamper_detected',
+        message: isVi
+          ? 'CRYPTO_UNAVAILABLE: Không thể chạy kiểm định TOCTOU khi thiếu Web Crypto SubtleCrypto SHA-256.'
+          : 'CRYPTO_UNAVAILABLE: SubtleCrypto SHA-256 is required for TOCTOU verification.',
+      })
     }
-    const delta = intake.currency === 'VND' ? 9990000 : 9999
-    const mutatedPayload: OpcActionPayload = {
-      ...actionPayload,
-      parameters: {
-        ...actionPayload.parameters,
-        amount: formatActionAmountString(financials.grandTotal + delta, intake.currency),
-      },
-    }
-    const tamperedDigest = await computeSha256Hex(canonicalizePayload(mutatedPayload))
-    setDispatchResult({
-      status: 'tamper_detected',
-      message: isVi
-        ? `Chặn đứng giả mạo TOCTOU! Phiếu duyệt khóa vào mã ${referenceDigest.slice(
-            0,
-            16
-          )}…, nhưng số tiền bị sửa trộm tạo ra mã ${tamperedDigest.slice(
-            0,
-            16
-          )}…. Hệ thống hủy gửi ngay lập tức!`
-        : `TOCTOU tamper blocked! Token bound to ${referenceDigest.slice(
-            0,
-            16
-          )}…, but mutated amount produced ${tamperedDigest.slice(
-            0,
-            16
-          )}…. Execution aborted!`,
-    })
   }
 
   const handleSimulateReplay = () => {
@@ -439,8 +635,8 @@ export default function OpcCockpitPage() {
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-mono text-emerald-400">
             <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
             {isVi
-              ? 'BUỒNG LÁI PILOT A · ZALO OA → BÁO GIÁ & VIETQR 1 CHẠM'
-              : 'PILOT A COCKPIT · ZALO OA LEAD-TO-QUOTE & 1-TAP VIETQR'}
+              ? 'BUỒNG LÁI PILOT A · BFF ĐA TENANT & PHÊ DUYỆT SHA-256'
+              : 'PILOT A COCKPIT · MULTI-TENANT BFF & SHA-256 APPROVAL'}
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
             {isVi
@@ -449,13 +645,12 @@ export default function OpcCockpitPage() {
           </h2>
           <p className="text-xs text-neutral-400 max-w-3xl">
             {isVi
-              ? 'Quy trình 4 bước an toàn cho Chủ doanh nghiệp SME: Bóc tách tin nhắn Zalo có trích dẫn câu gốc → Tính tiền + VAT + mã VietQR → Duyệt 1 chạm chống sửa giá → Sổ cái chi phí minh bạch.'
-              : '4-Step Verified SME Loop: Zalo OA Intake with source_span citations → Decimal Quote + VAT + VietQR → Payload-Bound SHA-256 1-Tap Approval → Honest Usage Ledger.'}
+              ? 'Quy trình 4 bước bảo mật qua Server BFF (HttpOnly Cookie, không lộ khóa API ra trình duyệt): Bóc tách tin nhắn Zalo → Tính tiền + VAT + VietQR → Duyệt 1 chạm chống sửa giá → Sổ cái minh bạch.'
+              : '4-Step Fail-Closed SME Loop via Server-Only BFF (HttpOnly Session, Zero Browser Secrets): Zalo Intake → Decimal Quote + VietQR → SHA-256 1-Tap Approval → Honest Usage Ledger.'}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* 1-Click Bilingual Toggle: Tiếng Việt | English */}
           <div
             role="group"
             aria-label="Language switcher"
@@ -489,7 +684,6 @@ export default function OpcCockpitPage() {
             </button>
           </div>
 
-          {/* Optional Live FastAPI Gateway Sync Button */}
           <button
             type="button"
             onClick={() => void handleGatewayWebhookSync()}
@@ -497,7 +691,17 @@ export default function OpcCockpitPage() {
             className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b0f17] px-3.5 py-2 text-xs font-medium text-neutral-200 hover:border-emerald-500/40 hover:text-white disabled:opacity-50 transition-all"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-emerald-400 ${isSyncing ? 'animate-spin' : ''}`} />
-            {isVi ? 'Đồng bộ Gateway' : 'Sync Gateway'}
+            {isVi ? 'Đồng bộ BFF' : 'Sync BFF'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => void handleInspectServerRun()}
+            disabled={isSyncing}
+            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b0f17] px-3.5 py-2 text-xs font-medium text-neutral-200 hover:border-blue-500/40 hover:text-white disabled:opacity-50 transition-all"
+          >
+            <Activity className="w-3.5 h-3.5 text-blue-400" />
+            {isVi ? 'Kiểm tra Phiên' : 'Inspect Run'}
           </button>
 
           <div className="hidden sm:flex rounded-xl border border-white/10 bg-[#0b0f17] px-3.5 py-2 font-mono text-xs items-center gap-2">
@@ -507,6 +711,107 @@ export default function OpcCockpitPage() {
         </div>
       </div>
 
+      {/* Server-Side Multi-Tenant BFF Session Bar (HttpOnly Cookie · Zero Client API Keys) */}
+      <div className="rounded-xl border border-white/10 bg-[#0b0f17] p-4">
+        {bffSession.authenticated ? (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-2.5 font-mono">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-1 text-[11px] font-bold text-emerald-300">
+                <Lock className="w-3 h-3" />
+                {isVi ? 'PHIÊN BFF HỢP LỆ' : 'BFF SESSION ACTIVE'} ({bffSession.role})
+              </span>
+              <span className="text-neutral-400">
+                Workspace: <strong className="text-white">{bffSession.workspaceId}</strong>
+              </span>
+              <label htmlFor="opc-active-tenant" className="text-neutral-400 flex items-center gap-1.5">
+                Tenant:
+                <select
+                  id="opc-active-tenant"
+                  value={tenantId}
+                  onChange={(e) => {
+                    setTenantId(e.target.value)
+                    setServerActionDigest('')
+                    setApprovalState('idle')
+                  }}
+                  className="rounded-lg border border-white/15 bg-black/60 px-2.5 py-1 text-xs text-emerald-300 focus:border-emerald-500 focus:outline-none"
+                >
+                  {(bffSession.allowedTenants && bffSession.allowedTenants.length > 0
+                    ? bffSession.allowedTenants
+                    : [tenantId]
+                  ).map((slug) => (
+                    <option key={slug} value={slug}>
+                      {slug}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleBffLogout()}
+              disabled={isSyncing}
+              className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-neutral-300 hover:text-white transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              {isVi ? 'Đăng xuất BFF' : 'Sign out BFF'}
+            </button>
+          </div>
+        ) : (
+          <form
+            onSubmit={(e) => void handleBffLogin(e)}
+            className="flex flex-col lg:flex-row lg:items-end gap-3"
+          >
+            <div className="flex-1 space-y-1">
+              <div className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 shrink-0" />
+                {isVi
+                  ? 'Xác thực Chủ Doanh Nghiệp qua Server BFF (HttpOnly Cookie · Không lưu khóa trên trình duyệt)'
+                  : 'Shop Owner Server-Side BFF Sign-In (HttpOnly Session Cookie · Zero Browser Keys)'}
+              </div>
+              <p className="text-[11px] text-neutral-400">
+                {isVi
+                  ? 'Mọi lệnh đồng bộ Zalo, duyệt báo giá và tải nháp MISA/Sapo đều yêu cầu phiên BFF hợp lệ khớp đúng Workspace & Tenant.'
+                  : 'All Zalo sync, 1-tap quote approvals, and MISA/Sapo exports require an authenticated BFF cookie bound to your Workspace & Tenant.'}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <input
+                type="text"
+                aria-label="Workspace ID"
+                value={workspaceId}
+                onChange={(e) => setWorkspaceId(e.target.value)}
+                placeholder="ws_default"
+                className="rounded-lg border border-white/10 bg-[#06080d] px-3 py-2 text-xs font-mono text-white focus:border-emerald-500/50 focus:outline-none"
+              />
+              <input
+                type="text"
+                aria-label="Tenant ID"
+                value={tenantId}
+                onChange={(e) => setTenantId(e.target.value)}
+                placeholder="default"
+                className="rounded-lg border border-white/10 bg-[#06080d] px-3 py-2 text-xs font-mono text-white focus:border-emerald-500/50 focus:outline-none"
+              />
+              <input
+                type="password"
+                aria-label={isVi ? 'Mã xác thực chủ shop' : 'Owner login token'}
+                value={loginCredential}
+                onChange={(e) => setLoginCredential(e.target.value)}
+                autoComplete="off"
+                placeholder={isVi ? 'Mã đăng nhập chủ shop...' : 'Owner bootstrap token...'}
+                className="rounded-lg border border-white/10 bg-[#06080d] px-3 py-2 text-xs font-mono text-white focus:border-emerald-500/50 focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isSyncing || !loginCredential.trim()}
+              className="rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-emerald-400 disabled:opacity-40 transition-colors shrink-0"
+            >
+              {isVi ? 'Mở Phiên BFF' : 'Authenticate BFF'}
+            </button>
+          </form>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ClientIntakeCard
           value={intake}
@@ -514,7 +819,6 @@ export default function OpcCockpitPage() {
           onChange={(next) => {
             setIntake(next)
             setServerActionDigest('')
-            setServerCardSig('')
           }}
         />
         <ProposalDraftPreview
@@ -531,6 +835,8 @@ export default function OpcCockpitPage() {
           extractionConfidence={intake.extractionConfidence}
           citationCount={citations.length}
           missingFields={missingFields}
+          serverDraftStatus={serverDraftStatus}
+          onDownloadServerDraft={handleDownloadServerDraft}
         />
         <CryptographicApprovalCard
           runId={runId}

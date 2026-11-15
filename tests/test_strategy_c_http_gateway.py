@@ -61,6 +61,8 @@ def test_pilot_a_gateway_full_lifecycle_card_toctou_dedup_and_misa_export(
 
     r_card = gateway_client.get(f"/v1/opc/pilot-a/card/{run_id}?tenant_id=sadec_01&sig={card_sig}")
     assert r_card.status_code == 200 and len(r_card.text.encode("utf-8")) < 15_000
+    assert "no-store" in r_card.headers.get("cache-control", "") and r_card.headers.get("referrer-policy") == "no-referrer"
+    assert "default-src 'none'" in r_card.headers.get("content-security-policy", "") and "replaceState" in r_card.text
     assert "DUYỆT &amp; GỬI BÁO GIÁ + VIETQR" in r_card.text and "tư vấn AI" in r_card.text
 
     # Tampered digest fails closed (409)
@@ -97,8 +99,9 @@ def test_pilot_a_gateway_full_lifecycle_card_toctou_dedup_and_misa_export(
     )
     assert ok_vqr.status_code == 200 and ok_vqr.json()["accounting_draft"]["total_amount_vnd"] == 5_400_000
     for fmt, needle in (("csv", "NAPAS-GW-001"), ("xml", "<TrangThaiHoaDon>DRAFT_PENDING_TVAN</TrangThaiHoaDon>"), ("json", '"invoice_status": "DRAFT_PENDING_TVAN"')):
-        exp = gateway_client.get(f"/v1/opc/pilot-a/draft-export/{run_id}?fmt={fmt}&tenant_id=sadec_01&sig={card_sig}")
+        exp = gateway_client.get(f"/v1/opc/pilot-a/draft-export/{run_id}?fmt={fmt}&tenant_id=sadec_01", headers={"X-Card-Sig": card_sig})
         assert exp.status_code == 200 and needle in exp.text
+    assert gateway_client.get(f"/v1/opc/pilot-a/draft-export/{run_id}?fmt=csv&tenant_id=sadec_01&sig={card_sig}").status_code == 200
 
 
 def test_pilot_a_gateway_live_zalo_connector_handoff_mac_and_quarantine(

@@ -102,8 +102,11 @@ def test_vietqr_reconciliation_blocks_cross_order_replay_and_exports_tvan_draft(
     assert prop_unauth.returncode == 1
 
 
-def test_parallel_vn_sme_workflow_tiers_status_mapping_and_atomic_quota(tmp_path: Path) -> None:
+def test_parallel_vn_sme_workflow_tiers_status_mapping_and_atomic_quota(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """VN_SME_WORKFLOW_TIERS settles on vietqr only, resolves SME tier on status, and guards quota atomically."""
+    monkeypatch.setenv("MEKONG_VIETQR_DB", str(tmp_path / "vietqr_se.db"))
     assert tuple(COMMERCIAL_TIERS.keys()) == ("basic", "premium", "enterprise", "master")
     assert VN_SME_WORKFLOW_TIERS == {
         "starter": {"vnd": 790_000, "usd": 31, "workflows": 300},
@@ -124,11 +127,15 @@ def test_parallel_vn_sme_workflow_tiers_status_mapping_and_atomic_quota(tmp_path
 
     co_ok = client.post("/v1/checkout", json={"tier": "pilot_a", "rail": "vietqr", "email": "chu_shop@mekong.vn"}).json()
     assert co_ok["tier"] == "pilot_a" and co_ok["amount_vnd"] == 990_000 and co_ok["workflow_quota"] == 500
+    assert client.get(f"/v1/checkout/status?order_id={co_ok['order_id']}").status_code == 401
 
     # Record paid 990k VietQR transaction and verify /v1/checkout/status resolves pilot_a (500 workflows, NOT PREMIUM)
     from src.core.vietqr_engine import VietQrEngine
-    VietQrEngine().record_transaction(f"TX-{co_ok['order_id']}", 990_000, f"MEKONG {co_ok['order_id'][-6:]}", matched_order_id=co_ok["order_id"])
-    st_paid = client.get(f"/v1/checkout/status?order_id={co_ok['order_id']}").json()
+    VietQrEngine().record_transaction(f"TX-{co_ok['order_id']}", 990_000, f"MEKONG {co_ok['order_id']}", matched_order_id=co_ok["order_id"])
+    st_paid = client.get(
+        f"/v1/checkout/status?order_id={co_ok['order_id']}",
+        headers={"X-Checkout-Secret": co_ok["checkout_secret"]},
+    ).json()
     assert st_paid["status"] == "paid" and st_paid["tier"] == "pilot_a" and st_paid["workflow_quota"] == 500
 
     co_crypto = client.post("/v1/checkout", json={"tier": "pilot_a", "rail": "nowpayments", "email": "chu_shop@mekong.vn", "jurisdiction": "SG"})
