@@ -334,6 +334,17 @@
         ],
         "verdict": "reviewed",
         "note": "Issue #157 Strategy C Governed StateGraph, Profile 4 SelectiveRouter, Pilot A FastAPI Gateway/Card, VN-first Dashboard OPC Cockpit & Legal Fourth-Door Closure; top-level command surface unchanged (opc group grandfathered in dna/command-surface.json, 189 CLI groups preserved)."
+      },
+      {
+        "pr": 164,
+        "branch": "fix/open-issues-158-161-162",
+        "feature_surface_changes": [
+          "src/cli/ui_commands.py — report VisualQATier.STATIC when --render is False instead of calling detect_tier(), so machines with playwright installed do not report SCREENSHOT when no screenshot was captured",
+          ".github/workflows/gates.yml — add tests/test_billing.py, tests/test_nowpayments_ipn_golden.py, and tests/design_intelligence/ to G1 pytest invocation",
+          "apps/dashboard/ — upgrade transitive dependencies to clear high/critical npm audit advisories, migrate Zod 3 -> 4 APIs in lib/security/, and declare @mekong/ui via file:../../packages/ui"
+        ],
+        "verdict": "reviewed",
+        "note": "Issues #158, #161, #162 backlog hardening; top-level command surface unchanged (dna/command-surface.json not modified, 189 CLI groups preserved)."
       }
     ]
   }

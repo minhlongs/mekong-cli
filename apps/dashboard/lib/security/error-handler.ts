@@ -336,8 +336,8 @@ class ErrorHandler {
 
   // Error factory methods for common scenarios
   static fromValidationError(zodError: z.ZodError): ValidationError {
-    const fieldErrors = zodError.errors.map(err => ({
-      field: err.path.join('.'),
+    const fieldErrors = zodError.issues.map(err => ({
+      field: err.path.map(String).join('.'),
       message: err.message,
       code: err.code,
     }))

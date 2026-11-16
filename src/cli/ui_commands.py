@@ -31,9 +31,9 @@ from rich.console import Console
 from rich.table import Table
 
 from src.design_intelligence.gates import evaluate_all
-from src.design_intelligence.schemas import DesignDNA
+from src.design_intelligence.schemas import DesignDNA, VisualQATier
 from src.design_intelligence.scoring import score_and_report
-from src.design_intelligence.visual import detect_tier, run_visual_qa
+from src.design_intelligence.visual import run_visual_qa
 
 console = Console()
 
@@ -108,7 +108,7 @@ def audit_cmd(
     visual_scores = visual.visual_scores if visual else None
     results = evaluate_all(html, heuristic_scores=heuristic_scores, visual_scores=visual_scores)
     report = score_and_report(source, results)
-    tier = visual.tier if visual else detect_tier()
+    tier = visual.tier if visual else VisualQATier.STATIC
     tier_note = visual.note if visual else "static analysis only — rerun with --render"
 
     objective = [r for r in results if r.evidence == "objective"]

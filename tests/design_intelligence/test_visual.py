@@ -21,12 +21,23 @@ from src.design_intelligence.visual import (
 )
 
 
-def test_default_provider_reports_unavailable_without_playwright() -> None:
-    """Playwright is absent here — the default provider must say so."""
+def test_default_provider_reports_unavailable_without_playwright(monkeypatch) -> None:
+    """When Playwright cannot be imported, the default provider must report unavailable."""
+    import builtins
+
+    real_import = builtins.__import__
+
+    def _block_playwright(name, *args, **kwargs):
+        if name == "playwright" or name.startswith("playwright."):
+            raise ImportError("playwright blocked for test")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _block_playwright)
     assert PlaywrightProvider().available() is False
 
 
-def test_detect_tier_is_static_when_no_provider() -> None:
+def test_detect_tier_is_static_when_no_provider(monkeypatch) -> None:
+    monkeypatch.setattr(PlaywrightProvider, "available", lambda _self: False)
     assert detect_tier() == __import__(
         "src.design_intelligence.schemas", fromlist=["VisualQATier"]
     ).VisualQATier.STATIC

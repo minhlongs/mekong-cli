@@ -50,8 +50,8 @@ export const LogEntrySchema = z.object({
   requestId: z.string().optional(),
   resource: z.string().optional(),
   action: z.string().optional(),
-  context: z.record(z.unknown()).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  context: z.record(z.string(), z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   severity: z.number().min(1).max(10).default(5),
   tags: z.array(z.string()).default([]),
 })

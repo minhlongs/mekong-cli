@@ -110,7 +110,9 @@ jobs:
 
       - name: Python unit tests
         run: |
-          pytest tests/core/ tests/cli/ tests/seed/ tests/commands/ tests/auth/ tests/unit/ tests/daemon/ tests/vn/ \
+          pytest tests/core/ tests/cli/ tests/seed/ tests/commands/ tests/auth/ tests/unit/ tests/daemon/ tests/vn/ tests/design_intelligence/ \
+            tests/test_billing.py \
+            tests/test_nowpayments_ipn_golden.py \
             tests/test_promise_spine_wave1.py \
             tests/test_promise_finance_ops.py \
             tests/test_promise_opc_zalo_ops.py \
