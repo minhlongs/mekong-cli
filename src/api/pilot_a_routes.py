@@ -31,6 +31,7 @@ from src.opc.connectors.zalo_http import (
     ZaloWebhookMacError,
     verify_zalo_webhook_mac,
 )
+from src.opc.dr_backup import PilotAKillSwitchError, enforce_pilot_a_kill_switch
 from src.opc.misa_export import DraftExportComplianceError, export_draft_bundle
 from src.opc.models import ActionPayload, ApprovalDecision, BusinessProfile, WorkflowStatus
 from src.opc.pilot_a import (
@@ -378,6 +379,13 @@ async def receive_pilot_a_zalo_webhook(
 ) -> dict[str, Any]:
     """Ingest Zalo OA inbound message, run GovernedStateGraph stages 1-4, and emit 1-tap ApprovalCard or Handoff."""
     _apply_no_leak_headers(response)
+    try:
+        enforce_pilot_a_kill_switch("intake")
+    except PilotAKillSwitchError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "PILOT_A_KILL_SWITCH_ACTIVE", "stage": exc.stage, "message": str(exc)},
+        ) from exc
     raw_body = await request.body()
     now_ts = int(req.timestamp) if req.timestamp is not None else int(time.time())
     last_ts = int(req.last_user_interaction_ts) if req.last_user_interaction_ts is not None else (now_ts - 300)
@@ -686,6 +694,14 @@ async def decide_pilot_a_run(
     norm_dec = req.decision.strip().lower()
     if norm_dec not in ("approve", "reject", "revise", "handoff"):
         raise HTTPException(status_code=400, detail={"error": "invalid_decision", "decision": req.decision})
+    if norm_dec == "approve":
+        try:
+            enforce_pilot_a_kill_switch("dispatch")
+        except PilotAKillSwitchError as exc:
+            raise HTTPException(
+                status_code=503,
+                detail={"error": "PILOT_A_KILL_SWITCH_ACTIVE", "stage": exc.stage, "message": str(exc)},
+            ) from exc
     try:
         base_dir, _ = _prepare_existing_tenant_for_owner_route(
             tenant_id=req.tenant_id,

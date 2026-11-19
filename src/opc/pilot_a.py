@@ -1,9 +1,7 @@
 """Pilot A End-to-End Vertical Slice: Zalo OA → Consent/Quarantine/Quota → Quote + VietQR → Approval → Draft."""
 from __future__ import annotations
 
-import dataclasses
-import os
-import time
+import dataclasses, os, time
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,6 +12,7 @@ from src.opc.accounting_draft import AccountingDraftExport, build_accounting_dra
 from src.opc.connectors.base import ConnectorProtocol, ConnectorResult
 from src.opc.connectors.mock import MockConnector
 from src.opc.connectors.zalo_http import ZaloOAConnector, ZaloWebhookMacError, verify_zalo_webhook_mac
+from src.opc.dr_backup import PilotAKillSwitchError, enforce_pilot_a_kill_switch
 from src.opc.engine import OPCEngine
 from src.opc.manifest import load_pack_manifest
 from src.opc.models import ActionPayload, ApprovalDecision, ApprovalToken, BusinessProfile, ProposalInput, WorkflowStatus
@@ -113,6 +112,7 @@ class PilotAWorkflow:
         self.privacy_guard = privacy_guard or PilotPrivacyGuard(db_p.parent / f"{db_p.stem}_privacy.db", opc_db_path=db_p)
 
     def handle_webhook(self, event: ZaloWebhookEvent, *, webhook_mac: str | None = None, oa_secret_key: str | None = None, app_id: str = "", raw_webhook_data: str | bytes = "") -> ApprovalCard:
+        enforce_pilot_a_kill_switch("intake")
         eff_secret = oa_secret_key if oa_secret_key is not None else os.getenv("ZALO_OA_SECRET_KEY", "")
         if (self.require_webhook_mac or oa_secret_key is not None or webhook_mac is not None) and not verify_zalo_webhook_mac(app_id, raw_webhook_data, event.timestamp, eff_secret, webhook_mac or ""):
             raise ZaloWebhookMacError("Zalo OA webhook MAC verification failed (fail-closed).")
@@ -164,6 +164,7 @@ class PilotAWorkflow:
             return build_handoff_outcome(self.checkpointer, event.event_id, event.sender_id, exc.code, str(exc), cits, self.runtime_engine)
 
     def approve_and_send(self, card: ApprovalCard, token: ApprovalToken | None = None, idempotency_key: str | None = None, *, now: int | None = None) -> dict[str, Any]:
+        enforce_pilot_a_kill_switch("dispatch")
         if card.handoff_status:
             raise HaltForHumanError("HALT_LOW_CONFIDENCE", f"Cannot dispatch run '{card.run_id}' while handoff_status='{card.handoff_status}'.")
         last_ts, intake_age = int(card.action_payload.parameters.get("last_user_interaction_ts", 0)), int(card.action_payload.parameters.get("interaction_age_seconds", 0))

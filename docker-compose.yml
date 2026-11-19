@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile.dashboard
     ports:
-      - "3000:3000"
+      - "${MEKONG_BIND_HOST:-127.0.0.1}:3000:3000"
     environment:
       - NODE_ENV=production
       - RAAS_URL=http://raas:8000
@@ -16,11 +16,12 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "${MEKONG_BIND_HOST:-127.0.0.1}:8000:8000"
     volumes:
       - raas-data:/data
     environment:
-      - NODE_ENV=production
+      - MEKONG_ENV=production
+      - MEKONG_PILOT_A_DB_DIR=/data/pilot_a_tenants
 
   redis:
     image: redis:7-alpine
