@@ -71,5 +71,3 @@ def _redact_memo_tokens(memo: str, ordered_tokens: list[str]) -> str:
         pat = rf"(?<![A-Za-z0-9_]){re.escape(tok)}(?![A-Za-z0-9_])" if tok.isascii() and tok.replace("_", "").isalnum() else re.escape(tok)
         sanitized = re.sub(pat, "[REDACTED_DSAR]", sanitized, flags=re.IGNORECASE)
     return sanitized
-
-
