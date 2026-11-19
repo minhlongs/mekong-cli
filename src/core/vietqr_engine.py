@@ -438,6 +438,113 @@ class VietQrEngine:
         expected = hmac.new(secret.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
         return hmac.compare_digest(expected.lower(), received_signature.strip().lower())
 
+    def _record_transaction_atomic(
+        self,
+        bank_tx_id: str,
+        amount_vnd: int,
+        memo: str,
+        bin_code: str,
+        matched_order_id: str | None,
+        save: bool,
+    ) -> dict[str, typing.Any]:
+        """Atomically record a transaction under explicit BEGIN IMMEDIATE with 1:1 order conflict checks."""
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        tx_id = f"VTX-{str(uuid.uuid4())[:8].upper()}"
+
+        conn = self._get_connection(isolation_level=None)
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            existing = conn.execute(
+                "SELECT * FROM transactions WHERE bank_tx_id = ?", (bank_tx_id,)
+            ).fetchone()
+            if existing:
+                conn.execute("ROLLBACK")
+                d = dict(existing)
+                d["ok"] = True
+                d["is_duplicate"] = True
+                return d
+
+            if matched_order_id is not None:
+                prior = conn.execute(
+                    "SELECT bank_tx_id FROM transactions WHERE matched_order_id = ? ORDER BY received_at ASC, rowid ASC LIMIT 1",
+                    (matched_order_id,),
+                ).fetchone()
+                if prior is not None and str(prior["bank_tx_id"] or "").strip() != bank_tx_id:
+                    conn.execute("ROLLBACK")
+                    return {
+                        "ok": False,
+                        "conflict": True,
+                        "existing_bank_tx_id": str(prior["bank_tx_id"]),
+                        "matched_order_id": matched_order_id,
+                    }
+
+            if save:
+                try:
+                    conn.execute(
+                        """
+                        INSERT INTO transactions (
+                            transaction_id, bank_tx_id, bin_code, amount_vnd,
+                            memo, matched_order_id, status, received_at
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            tx_id,
+                            bank_tx_id,
+                            bin_code,
+                            amount_vnd,
+                            memo,
+                            matched_order_id,
+                            "success",
+                            now_iso,
+                        ),
+                    )
+                    conn.execute("COMMIT")
+                except sqlite3.IntegrityError:
+                    conn.execute("ROLLBACK")
+                    dup = conn.execute(
+                        "SELECT * FROM transactions WHERE bank_tx_id = ?", (bank_tx_id,)
+                    ).fetchone()
+                    if dup:
+                        d = dict(dup)
+                        d["ok"] = True
+                        d["is_duplicate"] = True
+                        return d
+                    if matched_order_id is not None:
+                        prior = conn.execute(
+                            "SELECT bank_tx_id FROM transactions WHERE matched_order_id = ? ORDER BY received_at ASC, rowid ASC LIMIT 1",
+                            (matched_order_id,),
+                        ).fetchone()
+                        if prior is not None:
+                            return {
+                                "ok": False,
+                                "conflict": True,
+                                "existing_bank_tx_id": str(prior["bank_tx_id"]),
+                                "matched_order_id": matched_order_id,
+                            }
+                    raise
+            else:
+                conn.execute("ROLLBACK")
+        except Exception:
+            if conn.in_transaction:
+                conn.execute("ROLLBACK")
+            raise
+        finally:
+            conn.close()
+
+        return {
+            "ok": True,
+            "transaction_id": tx_id,
+            "bank_tx_id": bank_tx_id,
+            "bin_code": bin_code,
+            "amount_vnd": amount_vnd,
+            "memo": memo,
+            "matched_order_id": matched_order_id,
+            "status": "success",
+            "is_duplicate": False,
+            "received_at": now_iso,
+        }
+
     def record_transaction(
         self,
         bank_tx_id: str,
@@ -448,61 +555,14 @@ class VietQrEngine:
         save: bool = True,
     ) -> dict[str, typing.Any]:
         """Record an incoming bank payment transaction idempotently."""
-        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        tx_id = f"VTX-{str(uuid.uuid4())[:8].upper()}"
-
-        with self._get_connection(isolation_level="IMMEDIATE") as conn:
-            existing = conn.execute(
-                "SELECT * FROM transactions WHERE bank_tx_id = ?", (bank_tx_id,)
-            ).fetchone()
-            if existing:
-                d = dict(existing)
-                d["ok"] = True
-                d["is_duplicate"] = True
-                return d
-
-            if save:
-                conn.execute(
-                    """
-                    INSERT OR IGNORE INTO transactions (
-                        transaction_id, bank_tx_id, bin_code, amount_vnd,
-                        memo, matched_order_id, status, received_at
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        tx_id,
-                        bank_tx_id,
-                        bin_code,
-                        amount_vnd,
-                        memo,
-                        matched_order_id,
-                        "success",
-                        now_iso,
-                    ),
-                )
-                conn.commit()
-                inserted = conn.execute(
-                    "SELECT * FROM transactions WHERE bank_tx_id = ?", (bank_tx_id,)
-                ).fetchone()
-                if inserted and inserted["transaction_id"] != tx_id:
-                    d = dict(inserted)
-                    d["ok"] = True
-                    d["is_duplicate"] = True
-                    return d
-
-        return {
-            "ok": True,
-            "transaction_id": tx_id,
-            "bank_tx_id": bank_tx_id,
-            "bin_code": bin_code,
-            "amount_vnd": amount_vnd,
-            "memo": memo,
-            "matched_order_id": matched_order_id,
-            "status": "success",
-            "is_duplicate": False,
-            "received_at": now_iso,
-        }
+        return self._record_transaction_atomic(
+            bank_tx_id=bank_tx_id,
+            amount_vnd=amount_vnd,
+            memo=memo,
+            bin_code=bin_code,
+            matched_order_id=matched_order_id,
+            save=save,
+        )
 
     def record_unique_order_transaction(
         self,
@@ -512,65 +572,15 @@ class VietQrEngine:
         matched_order_id: str,
         bin_code: str = "970422",
     ) -> dict[str, typing.Any]:
-        """Atomically enforce 1:1 order-to-transaction settlement under BEGIN IMMEDIATE."""
-        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        tx_id = f"VTX-{str(uuid.uuid4())[:8].upper()}"
-
-        with self._get_connection(isolation_level="IMMEDIATE") as conn:
-            existing = conn.execute(
-                "SELECT * FROM transactions WHERE bank_tx_id = ?", (bank_tx_id,)
-            ).fetchone()
-            if existing:
-                d = dict(existing)
-                d["ok"] = True
-                d["is_duplicate"] = True
-                return d
-
-            prior = conn.execute(
-                "SELECT bank_tx_id FROM transactions WHERE matched_order_id = ? ORDER BY received_at ASC, rowid ASC LIMIT 1",
-                (matched_order_id,),
-            ).fetchone()
-            if prior is not None and str(prior["bank_tx_id"] or "").strip() != bank_tx_id:
-                return {
-                    "ok": False,
-                    "conflict": True,
-                    "existing_bank_tx_id": str(prior["bank_tx_id"]),
-                    "matched_order_id": matched_order_id,
-                }
-
-            conn.execute(
-                """
-                INSERT INTO transactions (
-                    transaction_id, bank_tx_id, bin_code, amount_vnd,
-                    memo, matched_order_id, status, received_at
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    tx_id,
-                    bank_tx_id,
-                    bin_code,
-                    amount_vnd,
-                    memo,
-                    matched_order_id,
-                    "success",
-                    now_iso,
-                ),
-            )
-            conn.commit()
-
-        return {
-            "ok": True,
-            "transaction_id": tx_id,
-            "bank_tx_id": bank_tx_id,
-            "bin_code": bin_code,
-            "amount_vnd": amount_vnd,
-            "memo": memo,
-            "matched_order_id": matched_order_id,
-            "status": "success",
-            "is_duplicate": False,
-            "received_at": now_iso,
-        }
+        """Atomically enforce 1:1 order-to-transaction settlement under explicit BEGIN IMMEDIATE."""
+        return self._record_transaction_atomic(
+            bank_tx_id=bank_tx_id,
+            amount_vnd=amount_vnd,
+            memo=memo,
+            bin_code=bin_code,
+            matched_order_id=matched_order_id,
+            save=True,
+        )
 
     def create_checkout_order(
         self,

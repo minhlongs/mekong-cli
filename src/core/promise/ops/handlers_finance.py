@@ -116,6 +116,11 @@ def vietqr_record_reconciled_payment(
         bank_tx_id=bank_tx_id, amount_vnd=amount_vnd, memo=memo,
         bin_code=bin_code, matched_order_id=matched_order_id,
     )
+    if transaction.get("conflict") or not transaction.get("ok", True):
+        raise ValueError(
+            f"Order '{matched_order_id}' already settled by bank transaction "
+            f"'{transaction.get('existing_bank_tx_id')}' — rejecting conflicting '{bank_tx_id}'"
+        )
     if transaction.get("is_duplicate"):
         return {
             "status": "DUPLICATE",
