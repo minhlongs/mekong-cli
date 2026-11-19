@@ -575,11 +575,16 @@ async def get_pilot_a_run(
     eff_sig = _compute_card_sig(tenant_id, run_id, digest) if digest else ""
     cp = wf.checkpointer.get(run_id) if wf.checkpointer is not None else None
     costs = wf.usage.aggregate_run_costs(run_id)
+    cost_acct = dataclasses.asdict(wf.usage.summarize_cost_accounting(run_id))
     draft_info = run_data.get("proposal_draft") or {}
     return {
         "run_id": run_id,
         "tenant_id": tenant_id,
         "status": run_data["status"].value,
+        "payment_state": run_data.get("payment_state", "unpaid"),
+        "paid_amount_vnd": run_data.get("paid_amount_vnd", 0),
+        "bank_tx_id": run_data.get("bank_tx_id", ""),
+        "paid_at": run_data.get("paid_at"),
         "checkpoint_stage": cp.current_stage.value if cp else None,
         "checkpoint_interrupted": cp.interrupted if cp else False,
         "action_digest": digest,
@@ -590,6 +595,7 @@ async def get_pilot_a_run(
         "vietqr_emvco": action_dict.get("parameters", {}).get("vietqr_emvco", ""),
         "accounting_draft_status": DRAFT_STATUS_PENDING_TVAN,
         "economics": costs,
+        "cost_accounting": cost_acct,
     }
 
 
@@ -923,6 +929,7 @@ async def reconcile_pilot_a_vietqr_webhook(
     intake_info = run_data.get("proposal_input") or {}
     try:
         recon = reconcile_signed_vietqr_webhook(wf.vietqr, raw_body, x_vietqr_signature, secret, run_id, expected_vnd)
+        wf.state.record_run_payment(run_id, recon["bank_tx_id"], int(recon["amount_vnd"]))
         acc_draft = build_accounting_draft_export(
             run_id,
             str(intake_info.get("client_name", "Khách hàng SME")),
