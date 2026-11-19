@@ -103,20 +103,14 @@ def reconcile_signed_vietqr_webhook(
     if not _memo_binds_exclusively_to_run(memo, body.get("matched_order_id"), expected_run_id):
         raise VietQrWebhookError(f"VietQR webhook memo '{memo}' does not bind exclusively to '{expected_run_id}'.")
 
-    with vietqr._get_connection() as vconn:  # noqa: SLF001
-        prior = vconn.execute(
-            "SELECT bank_tx_id FROM transactions WHERE matched_order_id = ? ORDER BY received_at ASC, rowid ASC LIMIT 1",
-            (expected_run_id,),
-        ).fetchone()
-    if prior is not None and str(prior[0] or "").strip() and str(prior[0]).strip() != bank_tx_id:
-        raise VietQrSettlementConflictError(
-            f"Run '{expected_run_id}' is already settled by bank_tx_id '{prior[0]}'; rejecting conflicting '{bank_tx_id}'."
-        )
-
-    tx_record = vietqr.record_transaction(
+    tx_record = vietqr.record_unique_order_transaction(
         bank_tx_id=bank_tx_id, amount_vnd=amount_vnd, memo=memo,
-        bin_code=bin_code, matched_order_id=expected_run_id, save=True,
+        matched_order_id=expected_run_id, bin_code=bin_code,
     )
+    if tx_record.get("conflict"):
+        raise VietQrSettlementConflictError(
+            f"Run '{expected_run_id}' is already settled by bank_tx_id '{tx_record.get('existing_bank_tx_id')}'; rejecting conflicting '{bank_tx_id}'."
+        )
     if tx_record.get("matched_order_id") != expected_run_id or int(tx_record.get("amount_vnd", -1)) != int(expected_amount_vnd):
         raise VietQrWebhookError(
             f"Cross-order bank_tx_id replay blocked: '{bank_tx_id}' already bound to '{tx_record.get('matched_order_id')}'."

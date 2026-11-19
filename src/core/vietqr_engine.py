@@ -284,6 +284,10 @@ class VietQrEngine:
                 "CREATE INDEX IF NOT EXISTS idx_transactions_matched_order "
                 "ON transactions(matched_order_id)"
             )
+            conn.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_unique_matched_order "
+                "ON transactions(matched_order_id) WHERE matched_order_id IS NOT NULL"
+            )
             conn.commit()
 
             # Pre-seed default corporate recipient account if none exists
@@ -486,6 +490,74 @@ class VietQrEngine:
                     d["ok"] = True
                     d["is_duplicate"] = True
                     return d
+
+        return {
+            "ok": True,
+            "transaction_id": tx_id,
+            "bank_tx_id": bank_tx_id,
+            "bin_code": bin_code,
+            "amount_vnd": amount_vnd,
+            "memo": memo,
+            "matched_order_id": matched_order_id,
+            "status": "success",
+            "is_duplicate": False,
+            "received_at": now_iso,
+        }
+
+    def record_unique_order_transaction(
+        self,
+        bank_tx_id: str,
+        amount_vnd: int,
+        memo: str,
+        matched_order_id: str,
+        bin_code: str = "970422",
+    ) -> dict[str, typing.Any]:
+        """Atomically enforce 1:1 order-to-transaction settlement under BEGIN IMMEDIATE."""
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        tx_id = f"VTX-{str(uuid.uuid4())[:8].upper()}"
+
+        with self._get_connection(isolation_level="IMMEDIATE") as conn:
+            existing = conn.execute(
+                "SELECT * FROM transactions WHERE bank_tx_id = ?", (bank_tx_id,)
+            ).fetchone()
+            if existing:
+                d = dict(existing)
+                d["ok"] = True
+                d["is_duplicate"] = True
+                return d
+
+            prior = conn.execute(
+                "SELECT bank_tx_id FROM transactions WHERE matched_order_id = ? ORDER BY received_at ASC, rowid ASC LIMIT 1",
+                (matched_order_id,),
+            ).fetchone()
+            if prior is not None and str(prior["bank_tx_id"] or "").strip() != bank_tx_id:
+                return {
+                    "ok": False,
+                    "conflict": True,
+                    "existing_bank_tx_id": str(prior["bank_tx_id"]),
+                    "matched_order_id": matched_order_id,
+                }
+
+            conn.execute(
+                """
+                INSERT INTO transactions (
+                    transaction_id, bank_tx_id, bin_code, amount_vnd,
+                    memo, matched_order_id, status, received_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    tx_id,
+                    bank_tx_id,
+                    bin_code,
+                    amount_vnd,
+                    memo,
+                    matched_order_id,
+                    "success",
+                    now_iso,
+                ),
+            )
+            conn.commit()
 
         return {
             "ok": True,

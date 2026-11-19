@@ -30,7 +30,7 @@ def find_run_by_request_id(
             action_payload = json.loads(row["action_payload_json"]) if row["action_payload_json"] else None
             if clean_tenant is not None:
                 row_tenant = str(((action_payload or {}).get("parameters") or {}).get("tenant_id", "")).strip()
-                if row_tenant and row_tenant != clean_tenant:
+                if row_tenant != clean_tenant:
                     continue
             return {
                 "run_id": row["run_id"],
@@ -87,15 +87,18 @@ def rebuild_existing_approval_card(
     if not existing:
         return None
     persisted_input = existing.get("proposal_input") or {}
-    persisted_sender = str(persisted_input.get("sender_id", "")).strip()
-    persisted_contact = str(persisted_input.get("client_contact", "")).strip()
-    incoming_contact = f"zalo:{event.sender_id}"
-    if persisted_sender and persisted_sender != str(event.sender_id).strip():
-        return None
-    if persisted_contact and persisted_contact != incoming_contact:
-        return None
     action_dict = existing.get("action_payload") or {}
     if not action_dict:
+        return None
+    incoming_sender = str(event.sender_id).strip()
+    incoming_contact = f"zalo:{incoming_sender}"
+    persisted_sender = str(persisted_input.get("sender_id", "")).strip()
+    persisted_contact = str(persisted_input.get("client_contact") or action_dict.get("recipient") or "").strip()
+    if not persisted_sender and not persisted_contact:
+        return None
+    if persisted_sender and persisted_sender != incoming_sender:
+        return None
+    if persisted_contact and persisted_contact != incoming_contact:
         return None
     token = get_latest_approval_for_run(state, existing["run_id"])
     if token is None:
@@ -122,11 +125,11 @@ def rebuild_existing_approval_card(
     quicklink = str(params.get("vietqr_quicklink", ""))
     line_items = tuple(draft_info.get("line_items") or ())
     run_id = str(existing["run_id"])
-    client_name = str(persisted_input.get("client_name") or event.sender_name)
-    client_contact = persisted_contact or incoming_contact
-    project_title = str(persisted_input.get("project_title") or event.project_title)
-    currency = str(persisted_input.get("currency") or event.currency)
-    persisted_notes = str(persisted_input.get("notes") or redacted_notes)
+    client_name = str(persisted_input.get("client_name") or "Khách hàng SME")
+    client_contact = persisted_contact or f"zalo:{persisted_sender}"
+    project_title = str(persisted_input.get("project_title") or draft_info.get("project_title") or params.get("project_title") or "")
+    currency = str(persisted_input.get("currency") or action_dict.get("budget_currency") or "VND")
+    persisted_notes = str(persisted_input.get("notes") or "")
     rendered = (
         f"[PHIẾU PHÊ DUYỆT BÁO GIÁ - PILOT A]\nMã phiên: {run_id} | Khách: {client_name}\n"
         f"Dự án: {project_title} | Tổng: {amount_vnd:,} {currency}\n"
