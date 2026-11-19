@@ -125,7 +125,7 @@ class OPCEngine:
         self.usage.record_usage(
             UsageRecord(
                 event_id=f"use_{uuid.uuid4().hex[:12]}", run_id=active_run_id, attempt=1, stage=UsageStage.ACTUAL,
-                provider="deterministic_engine", model="offline_rules", tokens=len(rendered.split()),
+                provider="deterministic_engine", model="offline_rules", tokens=0,
                 tool_fee="0.00", amount="0.00", currency=profile.currency, payer="owner",
                 pricing_source="local_offline", created_at=now,
             )

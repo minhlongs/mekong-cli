@@ -72,6 +72,12 @@ class UsageLedger:
             except sqlite3.IntegrityError:
                 return False
 
+    def rebind_run_id(self, source_run_id: str, target_run_id: str) -> int:
+        """Re-associate pre-run usage events (e.g., rt_<event_id>) with the minted workflow run_id."""
+        with self._get_connection() as conn:
+            cur = conn.execute("UPDATE opc_usage_events SET run_id = ? WHERE run_id = ?", (target_run_id, source_run_id))
+            return max(0, cur.rowcount)
+
     def reserve_budget(
         self, event_id: str, run_id: str, max_budget_amount: str, currency: str,
         payer: str, now: int, hard_limit: str | None = None,

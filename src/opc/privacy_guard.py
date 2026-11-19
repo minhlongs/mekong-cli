@@ -1,4 +1,4 @@
-"""Vietnamese PDPD (Decree 13/2023/NĐ-CP) consent, DSAR <72h erasure, PII redaction, and tenant DB guard."""
+"""VN Personal Data Protection (Law 91/2025/QH15, superseding Decree 13/2023/NĐ-CP) consent, DSAR erasure with accounting retention, PII redaction, and tenant DB guard."""
 from __future__ import annotations
 
 import re
@@ -27,7 +27,7 @@ _PII_PATTERNS: Final[tuple[tuple[str, re.Pattern[str]], ...]] = (
 
 
 class ConsentRequiredError(PermissionError):
-    """Raised when Decree 13/2023/NĐ-CP data subject consent is missing or withdrawn."""
+    """Raised when VN Personal Data Protection (Law 91/2025/QH15) consent is missing or withdrawn."""
 
 
 class TenantIsolationError(PermissionError):
@@ -79,14 +79,14 @@ def resolve_tenant_db_path(base_dir: str | Path, tenant_id: str, active_tenant_i
 
 
 class PilotPrivacyGuard:
-    """Decree 13/2023/NĐ-CP consent verification and <72h DSAR erasure across OPC + Privacy + VietQR DBs."""
+    """VN PDPL (Law 91/2025/QH15, superseding Decree 13/2023/NĐ-CP) consent & DSAR erasure with accounting retention."""
 
     def __init__(self, privacy_db_path: str | Path, opc_db_path: str | Path | None = None) -> None:
         self.engine = PrivacyEngine(db_path=Path(privacy_db_path))
         self.opc_db_path = Path(opc_db_path) if opc_db_path is not None else None
 
     def record_subject_consent(self, subject_id: str, purpose: str = "zalo_lead_to_quote", consent_given: bool = True) -> dict[str, Any]:
-        return self.engine.record_consent(subject_id.strip(), purpose, "Điều 11 Nghị định 13/2023/NĐ-CP", consent_given=consent_given)
+        return self.engine.record_consent(subject_id.strip(), purpose, "Luật BVDLCN 91/2025/QH15 (thay thế NĐ 13/2023/NĐ-CP)", consent_given=consent_given)
 
     def has_active_consent(self, subject_id: str, purpose: str = "zalo_lead_to_quote") -> bool:
         with sqlite3.connect(str(self.engine.db_path), timeout=10.0) as conn:
@@ -98,13 +98,13 @@ class PilotPrivacyGuard:
 
     def require_consent(self, subject_id: str, purpose: str = "zalo_lead_to_quote") -> None:
         if not self.has_active_consent(subject_id, purpose=purpose):
-            raise ConsentRequiredError(f"Active Decree 13/2023/NĐ-CP consent required for '{subject_id}' ({purpose}).")
+            raise ConsentRequiredError(f"Active VN PDPL (Law 91/2025/QH15) consent required for '{subject_id}' ({purpose}).")
 
     def withdraw_subject_consent(self, subject_id: str, purpose: str = "zalo_lead_to_quote") -> dict[str, Any]:
         return self.engine.withdraw_consent(subject_id.strip(), purpose=purpose)
 
     def erase_subject_under_72h(self, subject_id: str) -> dict[str, Any]:
-        """Execute Article 9.5 RIGHT_TO_DELETE (<72h, deadline_days=3) safely with FK integrity."""
+        """Execute DSAR RIGHT_TO_DELETE (internal 72h operational target; statutory review required) preserving accounting records."""
         clean_sub = (subject_id or "").strip()
         if len(clean_sub) < 3 or not any(ch.isalnum() for ch in clean_sub):
             raise ValueError(f"Invalid subject_id '{subject_id}' for DSAR erasure.")
@@ -136,13 +136,17 @@ class PilotPrivacyGuard:
                     opc_erased += max(0, conn.execute("DELETE FROM opc_graph_checkpoints WHERE state_json LIKE ? ESCAPE '\\'", (like_pat,)).rowcount)
                 conn.commit()
             vqr_db = self.opc_db_path.parent / f"{self.opc_db_path.stem}_vietqr.db"
+            financial_retained = 0
             if vqr_db.exists():
                 with sqlite3.connect(str(vqr_db), timeout=10.0) as vconn:
+                    vconn.execute("UPDATE qr_codes SET memo = REPLACE(memo, ?, '[REDACTED_DSAR]') WHERE memo LIKE ? ESCAPE '\\'", (clean_sub, like_pat))
+                    vconn.execute("UPDATE transactions SET memo = REPLACE(memo, ?, '[REDACTED_DSAR]') WHERE memo LIKE ? ESCAPE '\\'", (clean_sub, like_pat))
                     for rid in run_ids:
-                        vconn.execute("DELETE FROM qr_codes WHERE memo LIKE ? ESCAPE '\\'", (f"%{rid}%",))
-                        vconn.execute("DELETE FROM transactions WHERE matched_order_id = ? OR memo LIKE ? ESCAPE '\\'", (rid, f"%{rid}%"))
-                    vconn.execute("DELETE FROM transactions WHERE memo LIKE ? ESCAPE '\\'", (like_pat,))
+                        row_cnt = vconn.execute("SELECT COUNT(*) FROM transactions WHERE matched_order_id = ? OR memo LIKE ? ESCAPE '\\'", (rid, f"%{rid}%")).fetchone()
+                        financial_retained += int(row_cnt[0]) if row_cnt else 0
                     vconn.commit()
+        else:
+            financial_retained = 0
         total_erased = int((dsar.get("erasure") or {}).get("total_erased", 0)) + opc_erased
         if total_erased > 0 and dsar.get("status") != "COMPLETED":
             dsar["status"] = "COMPLETED"
@@ -151,6 +155,10 @@ class PilotPrivacyGuard:
                 pconn.commit()
         dsar["opc_rows_erased"] = opc_erased
         dsar["total_erased_combined"] = total_erased
+        dsar["vietqr_financial_records_retained"] = financial_retained
+        dsar["financial_retention_basis"] = "Law on Accounting 88/2015/QH13 Art. 41 & Tax Administration Law 38/2019/QH14 (PII redacted, ledger preserved)"
+        dsar["legal_framework"] = "VN PDPL 91/2025/QH15 (superseding Decree 13/2023/NĐ-CP)"
+        dsar["legal_review_required"] = True
         return dsar
 
 

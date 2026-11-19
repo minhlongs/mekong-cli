@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import time
 from pathlib import Path
 from typing import Any
 
@@ -29,14 +30,15 @@ class StateStore:
         with self._get_connection() as conn:
             conn.executescript(
                 """
-                CREATE TABLE IF NOT EXISTS opc_runs (run_id TEXT PRIMARY KEY, pack_id TEXT NOT NULL, status TEXT NOT NULL, business_profile_json TEXT NOT NULL, proposal_input_json TEXT NOT NULL, proposal_draft_json TEXT, action_payload_json TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+                CREATE TABLE IF NOT EXISTS opc_runs (run_id TEXT PRIMARY KEY, pack_id TEXT NOT NULL, status TEXT NOT NULL, business_profile_json TEXT NOT NULL, proposal_input_json TEXT NOT NULL, proposal_draft_json TEXT, action_payload_json TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, payment_state TEXT NOT NULL DEFAULT 'unpaid', paid_amount_vnd INTEGER NOT NULL DEFAULT 0, bank_tx_id TEXT NOT NULL DEFAULT '', paid_at INTEGER);
                 CREATE TABLE IF NOT EXISTS opc_approvals (token_id TEXT PRIMARY KEY, run_id TEXT NOT NULL REFERENCES opc_runs(run_id), action_digest TEXT NOT NULL, principal TEXT NOT NULL, decision TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, consumed INTEGER NOT NULL DEFAULT 0, revoked INTEGER NOT NULL DEFAULT 0, revision_notes TEXT DEFAULT '', signature TEXT DEFAULT '');
                 CREATE TABLE IF NOT EXISTS opc_actions (idempotency_key TEXT PRIMARY KEY, run_id TEXT NOT NULL REFERENCES opc_runs(run_id), capability TEXT NOT NULL, connector TEXT NOT NULL, status TEXT NOT NULL, payload_json TEXT NOT NULL, response_json TEXT, error_message TEXT, created_at INTEGER NOT NULL, completed_at INTEGER);
                 """
             )
             cols = {r["name"] for r in conn.execute("PRAGMA table_info(opc_runs)").fetchall()}
-            if "action_payload_json" not in cols:
-                conn.execute("ALTER TABLE opc_runs ADD COLUMN action_payload_json TEXT")
+            for col_name, col_ddl in (("action_payload_json", "TEXT"), ("payment_state", "TEXT NOT NULL DEFAULT 'unpaid'"), ("paid_amount_vnd", "INTEGER NOT NULL DEFAULT 0"), ("bank_tx_id", "TEXT NOT NULL DEFAULT ''"), ("paid_at", "INTEGER")):
+                if col_name not in cols:
+                    conn.execute(f"ALTER TABLE opc_runs ADD COLUMN {col_name} {col_ddl}")
             appr_cols = {r["name"] for r in conn.execute("PRAGMA table_info(opc_approvals)").fetchall()}
             if "signature" not in appr_cols:
                 conn.execute("ALTER TABLE opc_approvals ADD COLUMN signature TEXT DEFAULT ''")
@@ -84,7 +86,18 @@ class StateStore:
                 "action_payload": json.loads(row["action_payload_json"]) if row["action_payload_json"] else None,
                 "created_at": row["created_at"],
                 "updated_at": row["updated_at"],
+                "payment_state": row["payment_state"] or "unpaid",
+                "paid_amount_vnd": int(row["paid_amount_vnd"] or 0),
+                "bank_tx_id": row["bank_tx_id"] or "",
+                "paid_at": row["paid_at"],
             }
+
+    def record_run_payment(self, run_id: str, bank_tx_id: str, paid_amount_vnd: int, paid_at: int | None = None) -> bool:
+        """Persist settled VietQR payment telemetry on opc_runs."""
+        ts = int(time.time()) if paid_at is None else int(paid_at)
+        with self._get_connection() as conn:
+            cur = conn.execute("UPDATE opc_runs SET payment_state = 'settled', bank_tx_id = ?, paid_amount_vnd = ?, paid_at = ?, updated_at = ? WHERE run_id = ?", (bank_tx_id.strip(), int(paid_amount_vnd), ts, ts, run_id))
+            return cur.rowcount > 0
 
     def save_approval(self, token: ApprovalToken) -> None:
         """Persist or update an approval token."""
