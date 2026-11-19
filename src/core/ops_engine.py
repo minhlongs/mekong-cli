@@ -893,6 +893,20 @@ class OpsEngine:
             notes=notes,
         )
 
+    def dr_rehearse_backup_restore(self, source_dir: Path, work_dir: Path) -> Dict[str, Any]:
+        """Execute an isolated online SQLite backup and restore rehearsal (RT-06) with SHA-256 & integrity_check proof."""
+        from src.opc.dr_backup import backup_tenant_directory, restore_tenant_directory
+
+        backup_dir = Path(work_dir) / "backup"
+        restore_dir = Path(work_dir) / "restore"
+        manifest = backup_tenant_directory(Path(source_dir), backup_dir)
+        restore_res = restore_tenant_directory(backup_dir, restore_dir)
+        return {
+            "ok": bool(restore_res.get("ok")),
+            "manifest": manifest,
+            "restore": restore_res,
+        }
+
     def get_status(self) -> Dict[str, Any]:
         """High-level operational overview for executive dashboard."""
         sweep = self.health_sweep(save_report=False)

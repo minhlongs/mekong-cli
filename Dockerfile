@@ -11,12 +11,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
+# Copy source code and runtime engine package
 COPY src/ ./src/
+COPY engine/ ./engine/
 COPY pyproject.toml ./
 
-# Create data directory for SQLite
-RUN mkdir -p /data
+# Create persistent data directory for SQLite and Pilot A tenants
+RUN mkdir -p /data/pilot_a_tenants
+ENV MEKONG_PILOT_A_DB_DIR=/data/pilot_a_tenants
 
 # Health check (Python gateway is now a local-dev / fallback target;
 # production runs on Cloudflare Workers via packages/mekong-engine).
