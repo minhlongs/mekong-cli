@@ -180,5 +180,6 @@ class PilotAWorkflow:
     def reconcile_payment_and_export_draft(self, card: ApprovalCard, raw_webhook: bytes, signature: str, secret: str, vat_rate_pct: int | None = None, target_provider: str = "misa_meinvoice") -> tuple[dict[str, Any], AccountingDraftExport]:
         eff_vat, subtotal_vnd = (card.vat_rate_pct if vat_rate_pct is None else vat_rate_pct), (card.subtotal_vnd if card.subtotal_vnd > 0 else card.total_amount_vnd)
         recon = reconcile_signed_vietqr_webhook(self.vietqr, raw_webhook, signature, secret, card.run_id, card.total_amount_vnd)
-        self.state.record_run_payment(card.run_id, recon["bank_tx_id"], int(recon["amount_vnd"]))
+        if not recon.get("is_duplicate"):
+            self.state.record_run_payment(card.run_id, recon["bank_tx_id"], int(recon["amount_vnd"]))
         return recon, build_accounting_draft_export(card.run_id, card.client_name, card.line_items, subtotal_vnd, eff_vat, target_provider, bank_tx_id=recon["bank_tx_id"], settled_amount_vnd=recon["amount_vnd"])

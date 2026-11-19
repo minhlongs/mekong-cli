@@ -93,10 +93,10 @@ class StateStore:
             }
 
     def record_run_payment(self, run_id: str, bank_tx_id: str, paid_amount_vnd: int, paid_at: int | None = None) -> bool:
-        """Persist settled VietQR payment telemetry on opc_runs."""
+        """Persist settled VietQR payment telemetry on opc_runs (write-once; does not overwrite settled runs)."""
         ts = int(time.time()) if paid_at is None else int(paid_at)
         with self._get_connection() as conn:
-            cur = conn.execute("UPDATE opc_runs SET payment_state = 'settled', bank_tx_id = ?, paid_amount_vnd = ?, paid_at = ?, updated_at = ? WHERE run_id = ?", (bank_tx_id.strip(), int(paid_amount_vnd), ts, ts, run_id))
+            cur = conn.execute("UPDATE opc_runs SET payment_state = 'settled', bank_tx_id = ?, paid_amount_vnd = ?, paid_at = ?, updated_at = ? WHERE run_id = ? AND payment_state != 'settled'", (bank_tx_id.strip(), int(paid_amount_vnd), ts, ts, run_id))
             return cur.rowcount > 0
 
     def save_approval(self, token: ApprovalToken) -> None:

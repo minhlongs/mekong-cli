@@ -180,6 +180,15 @@ def test_s11_08_workflow_payment_telemetry_on_runs_and_api(tmp_path: Path, monke
     assert post_data["bank_tx_id"] == "FT261119S1108"
     assert isinstance(post_data["paid_at"], int) and post_data["paid_at"] > 0
 
+    # Write-once settlement guard: duplicate/tampered second webhook cannot overwrite bank_tx_id
+    from src.opc.state import StateStore
+    st = StateStore(tenants_dir / "tenant_s11_08.db")
+    assert st.record_run_payment(run_id, "FT_TAMPER_OVERWRITE", amount_vnd + 1000) is False
+    persisted = st.get_run(run_id)
+    assert persisted is not None
+    assert persisted["bank_tx_id"] == "FT261119S1108"
+    assert persisted["paid_amount_vnd"] == amount_vnd
+
 
 def test_s11_09_and_s11_10_dsar_retains_accounting_ledger_and_pdpl_2025_text(tmp_path: Path) -> None:
     """S11-09 & S11-10: DSAR erasure removes OPC PII, preserves VietQR financial ledger (redacting PII in memo), and cites VN PDPL 91/2025/QH15."""
@@ -194,13 +203,13 @@ def test_s11_09_and_s11_10_dsar_retains_accounting_ledger_and_pdpl_2025_text(tmp
     consent_rec = wf.privacy_guard.record_subject_consent(sub)
     assert "91/2025/QH15" in str(consent_rec.get("legal_basis", ""))
 
-    # Create run and settle VietQR payment (with subject phone embedded in bank memo)
+    # Create run and settle VietQR payment (with subject phone, client name, and email embedded in bank memo)
     ev = _event("evt_s11_09_dsar", sender_id=sub)
     card = wf.handle_webhook(ev)
     raw_wh = json.dumps({
         "bank_tx_id": "FT261119DSAR01",
         "amount_vnd": card.total_amount_vnd,
-        "memo": f"OPC {card.run_id} {sub}",
+        "memo": f"OPC {card.run_id} MINH KHOA {sub} khoa@example.vn",
         "bank_id": "MB",
     }).encode("utf-8")
     sig = hmac.new(_VIETQR_SECRET.encode("utf-8"), raw_wh, hashlib.sha256).hexdigest()
@@ -215,15 +224,23 @@ def test_s11_09_and_s11_10_dsar_retains_accounting_ledger_and_pdpl_2025_text(tmp
     assert "91/2025/QH15" in dsar["legal_framework"]
     assert dsar["legal_review_required"] is True
 
-    # Financial transaction row MUST still exist in vietqr DB, with PII redacted from memo
+    # Financial transaction row MUST still exist in vietqr DB with all PII redacted; qr_codes row MUST be deleted
     vqr_db = tmp_path / "tenant_privacy_vietqr.db"
     with sqlite3.connect(str(vqr_db)) as vconn:
         row = vconn.execute(
             "SELECT bank_tx_id, amount_vnd, memo FROM transactions WHERE bank_tx_id = ?",
             ("FT261119DSAR01",),
         ).fetchone()
+        qr_count = vconn.execute(
+            "SELECT COUNT(*) FROM qr_codes WHERE memo LIKE ?",
+            (f"%{card.run_id}%",),
+        ).fetchone()[0]
     assert row is not None
     assert row[0] == "FT261119DSAR01"
     assert int(row[1]) == card.total_amount_vnd
-    assert sub not in str(row[2])
-    assert "[REDACTED_DSAR]" in str(row[2])
+    memo_after = str(row[2])
+    assert sub not in memo_after
+    assert "MINH KHOA" not in memo_after.upper()
+    assert "khoa@example.vn" not in memo_after
+    assert "[REDACTED_DSAR]" in memo_after or "[PII_" in memo_after
+    assert qr_count == 0

@@ -929,7 +929,8 @@ async def reconcile_pilot_a_vietqr_webhook(
     intake_info = run_data.get("proposal_input") or {}
     try:
         recon = reconcile_signed_vietqr_webhook(wf.vietqr, raw_body, x_vietqr_signature, secret, run_id, expected_vnd)
-        wf.state.record_run_payment(run_id, recon["bank_tx_id"], int(recon["amount_vnd"]))
+        if not recon.get("is_duplicate"):
+            wf.state.record_run_payment(run_id, recon["bank_tx_id"], int(recon["amount_vnd"]))
         acc_draft = build_accounting_draft_export(
             run_id,
             str(intake_info.get("client_name", "Khách hàng SME")),

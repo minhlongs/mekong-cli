@@ -1,6 +1,7 @@
 """VN Personal Data Protection (Law 91/2025/QH15, superseding Decree 13/2023/NĐ-CP) consent, DSAR erasure with accounting retention, PII redaction, and tenant DB guard."""
 from __future__ import annotations
 
+import json
 import re
 import sqlite3
 from dataclasses import dataclass
@@ -8,12 +9,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from src.core.privacy_engine import PrivacyEngine
-from src.opc.verifier import (
-    MIN_EXTRACTION_CONFIDENCE,
-    HaltForHumanError,
-    compact_conversation_preserving_moim,
-    verify_confidence_and_math,
-)
+from src.opc.verifier import MIN_EXTRACTION_CONFIDENCE, HaltForHumanError, compact_conversation_preserving_moim, verify_confidence_and_math
 
 _TENANT_SLUG_RE: Final[re.Pattern[str]] = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{1,62}$")
 
@@ -113,10 +109,15 @@ class PilotPrivacyGuard:
         escaped = clean_sub.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         like_pat = f"%{escaped}%"
         run_ids: list[str] = []
+        subject_tokens: set[str] = {clean_sub}
         if self.opc_db_path is not None and self.opc_db_path.exists():
             with sqlite3.connect(str(self.opc_db_path), timeout=10.0) as conn:
                 conn.execute("PRAGMA foreign_keys = ON")
-                run_ids = [r[0] for r in conn.execute("SELECT run_id FROM opc_runs WHERE proposal_input_json LIKE ? ESCAPE '\\' OR action_payload_json LIKE ? ESCAPE '\\'", (like_pat, like_pat)).fetchall()]
+                matched_runs = conn.execute("SELECT run_id, proposal_input_json FROM opc_runs WHERE proposal_input_json LIKE ? ESCAPE '\\' OR action_payload_json LIKE ? ESCAPE '\\'", (like_pat, like_pat)).fetchall()
+                run_ids = [r[0] for r in matched_runs]
+                for _, raw_inp in matched_runs:
+                    inp = json.loads(raw_inp) if isinstance(raw_inp, str) and raw_inp.startswith("{") else {}
+                    subject_tokens.update(v for k in ("client_name", "sender_name", "sender_id", "client_contact") if len(v := str(inp.get(k, "")).strip()) >= 3)
                 if run_ids:
                     rows_param = [(rid,) for rid in run_ids]
                     c0 = conn.executemany("DELETE FROM opc_approvals WHERE run_id = ?", rows_param)
@@ -138,12 +139,22 @@ class PilotPrivacyGuard:
             vqr_db = self.opc_db_path.parent / f"{self.opc_db_path.stem}_vietqr.db"
             financial_retained = 0
             if vqr_db.exists():
+                ordered_tokens = sorted(subject_tokens, key=len, reverse=True)
                 with sqlite3.connect(str(vqr_db), timeout=10.0) as vconn:
-                    vconn.execute("UPDATE qr_codes SET memo = REPLACE(memo, ?, '[REDACTED_DSAR]') WHERE memo LIKE ? ESCAPE '\\'", (clean_sub, like_pat))
-                    vconn.execute("UPDATE transactions SET memo = REPLACE(memo, ?, '[REDACTED_DSAR]') WHERE memo LIKE ? ESCAPE '\\'", (clean_sub, like_pat))
                     for rid in run_ids:
-                        row_cnt = vconn.execute("SELECT COUNT(*) FROM transactions WHERE matched_order_id = ? OR memo LIKE ? ESCAPE '\\'", (rid, f"%{rid}%")).fetchone()
-                        financial_retained += int(row_cnt[0]) if row_cnt else 0
+                        opc_erased += max(0, vconn.execute("DELETE FROM qr_codes WHERE memo LIKE ? ESCAPE '\\'", (f"%{rid}%",)).rowcount)
+                    opc_erased += max(0, vconn.execute("DELETE FROM qr_codes WHERE memo LIKE ? ESCAPE '\\' OR emvco_payload LIKE ? ESCAPE '\\' OR quicklink_url LIKE ? ESCAPE '\\'", (like_pat, like_pat, like_pat)).rowcount)
+                    tx_rows: dict[str, str] = {r[0]: str(r[1] or "") for r in vconn.execute("SELECT transaction_id, memo FROM transactions WHERE memo LIKE ? ESCAPE '\\'", (like_pat,)).fetchall()}
+                    for rid in run_ids:
+                        for tid, memo in vconn.execute("SELECT transaction_id, memo FROM transactions WHERE matched_order_id = ? OR memo LIKE ? ESCAPE '\\'", (rid, f"%{rid}%")).fetchall():
+                            tx_rows[tid] = str(memo or "")
+                    for tid, memo in tx_rows.items():
+                        sanitized = redact_vietnamese_pii(memo).redacted_text
+                        for tok in ordered_tokens:
+                            sanitized = re.sub(re.escape(tok), "[REDACTED_DSAR]", sanitized, flags=re.IGNORECASE)
+                        if sanitized != memo:
+                            vconn.execute("UPDATE transactions SET memo = ? WHERE transaction_id = ?", (sanitized, tid))
+                    financial_retained = len(tx_rows)
                     vconn.commit()
         else:
             financial_retained = 0
@@ -153,24 +164,16 @@ class PilotPrivacyGuard:
             with sqlite3.connect(str(self.engine.db_path), timeout=10.0) as pconn:
                 pconn.execute("UPDATE dsar_requests SET status = 'COMPLETED' WHERE request_id = ?", (dsar["request_id"],))
                 pconn.commit()
-        dsar["opc_rows_erased"] = opc_erased
-        dsar["total_erased_combined"] = total_erased
-        dsar["vietqr_financial_records_retained"] = financial_retained
-        dsar["financial_retention_basis"] = "Law on Accounting 88/2015/QH13 Art. 41 & Tax Administration Law 38/2019/QH14 (PII redacted, ledger preserved)"
-        dsar["legal_framework"] = "VN PDPL 91/2025/QH15 (superseding Decree 13/2023/NĐ-CP)"
-        dsar["legal_review_required"] = True
+        dsar.update({
+            "opc_rows_erased": opc_erased, "total_erased_combined": total_erased,
+            "vietqr_financial_records_retained": financial_retained, "legal_review_required": True,
+            "financial_retention_basis": "Law on Accounting 88/2015/QH13 Art. 41 & Tax Administration Law 38/2019/QH14 (PII redacted, ledger preserved)",
+            "legal_framework": "VN PDPL 91/2025/QH15 (superseding Decree 13/2023/NĐ-CP)",
+        })
         return dsar
 
 
 __all__ = [
-    "MIN_EXTRACTION_CONFIDENCE",
-    "ConsentRequiredError",
-    "HaltForHumanError",
-    "PilotPrivacyGuard",
-    "RedactionResult",
-    "TenantIsolationError",
-    "compact_conversation_preserving_moim",
-    "redact_vietnamese_pii",
-    "resolve_tenant_db_path",
-    "verify_confidence_and_math",
+    "MIN_EXTRACTION_CONFIDENCE", "ConsentRequiredError", "HaltForHumanError", "PilotPrivacyGuard", "RedactionResult",
+    "TenantIsolationError", "compact_conversation_preserving_moim", "redact_vietnamese_pii", "resolve_tenant_db_path", "verify_confidence_and_math",
 ]
