@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
@@ -74,6 +75,35 @@ def resolve_tenant_db_path(base_dir: str | Path, tenant_id: str, active_tenant_i
     return target
 
 
+def _escape_like(val: str) -> str:
+    return val.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+def _fold_vietnamese_ascii(text: str) -> str:
+    replaced = text.replace("đ", "d").replace("Đ", "D")
+    return "".join(ch for ch in unicodedata.normalize("NFKD", replaced) if not unicodedata.combining(ch))
+
+
+def _expand_subject_tokens(tokens: set[str]) -> list[str]:
+    expanded: set[str] = set()
+    for tok in tokens:
+        clean = tok.strip()
+        if len(clean) >= 3:
+            expanded.add(clean)
+            folded = _fold_vietnamese_ascii(clean).strip()
+            if len(folded) >= 3:
+                expanded.add(folded)
+    return sorted(expanded, key=len, reverse=True)
+
+
+def _redact_memo_tokens(memo: str, ordered_tokens: list[str]) -> str:
+    sanitized = redact_vietnamese_pii(memo).redacted_text
+    for tok in ordered_tokens:
+        pat = rf"(?<![A-Za-z0-9_]){re.escape(tok)}(?![A-Za-z0-9_])" if tok.isascii() and tok.replace("_", "").isalnum() else re.escape(tok)
+        sanitized = re.sub(pat, "[REDACTED_DSAR]", sanitized, flags=re.IGNORECASE)
+    return sanitized
+
+
 class PilotPrivacyGuard:
     """VN PDPL (Law 91/2025/QH15, superseding Decree 13/2023/NĐ-CP) consent & DSAR erasure with accounting retention."""
 
@@ -117,7 +147,10 @@ class PilotPrivacyGuard:
                 run_ids = [r[0] for r in matched_runs]
                 for _, raw_inp in matched_runs:
                     inp = json.loads(raw_inp) if isinstance(raw_inp, str) and raw_inp.startswith("{") else {}
-                    subject_tokens.update(v for k in ("client_name", "sender_name", "sender_id", "client_contact") if len(v := str(inp.get(k, "")).strip()) >= 3)
+                    subject_tokens.update(
+                        v for k in ("client_name", "sender_name", "sender_id", "client_contact")
+                        if (raw := inp.get(k)) is not None and len(v := str(raw).strip()) >= 3
+                    )
                 if run_ids:
                     rows_param = [(rid,) for rid in run_ids]
                     c0 = conn.executemany("DELETE FROM opc_approvals WHERE run_id = ?", rows_param)
@@ -139,19 +172,19 @@ class PilotPrivacyGuard:
             vqr_db = self.opc_db_path.parent / f"{self.opc_db_path.stem}_vietqr.db"
             financial_retained = 0
             if vqr_db.exists():
-                ordered_tokens = sorted(subject_tokens, key=len, reverse=True)
+                ordered_tokens = _expand_subject_tokens(subject_tokens)
                 with sqlite3.connect(str(vqr_db), timeout=10.0) as vconn:
                     for rid in run_ids:
-                        opc_erased += max(0, vconn.execute("DELETE FROM qr_codes WHERE memo LIKE ? ESCAPE '\\'", (f"%{rid}%",)).rowcount)
-                    opc_erased += max(0, vconn.execute("DELETE FROM qr_codes WHERE memo LIKE ? ESCAPE '\\' OR emvco_payload LIKE ? ESCAPE '\\' OR quicklink_url LIKE ? ESCAPE '\\'", (like_pat, like_pat, like_pat)).rowcount)
+                        rid_pat = f"%{_escape_like(rid)}%"
+                        opc_erased += max(0, vconn.execute("DELETE FROM qr_codes WHERE memo = ? OR memo LIKE ? ESCAPE '\\'", (f"OPC {rid}", rid_pat)).rowcount)
+                    opc_erased += max(0, vconn.execute("DELETE FROM qr_codes WHERE memo LIKE ? ESCAPE '\\'", (like_pat,)).rowcount)
                     tx_rows: dict[str, str] = {r[0]: str(r[1] or "") for r in vconn.execute("SELECT transaction_id, memo FROM transactions WHERE memo LIKE ? ESCAPE '\\'", (like_pat,)).fetchall()}
                     for rid in run_ids:
-                        for tid, memo in vconn.execute("SELECT transaction_id, memo FROM transactions WHERE matched_order_id = ? OR memo LIKE ? ESCAPE '\\'", (rid, f"%{rid}%")).fetchall():
+                        rid_pat = f"%{_escape_like(rid)}%"
+                        for tid, memo in vconn.execute("SELECT transaction_id, memo FROM transactions WHERE matched_order_id = ? OR memo LIKE ? ESCAPE '\\'", (rid, rid_pat)).fetchall():
                             tx_rows[tid] = str(memo or "")
                     for tid, memo in tx_rows.items():
-                        sanitized = redact_vietnamese_pii(memo).redacted_text
-                        for tok in ordered_tokens:
-                            sanitized = re.sub(re.escape(tok), "[REDACTED_DSAR]", sanitized, flags=re.IGNORECASE)
+                        sanitized = _redact_memo_tokens(memo, ordered_tokens)
                         if sanitized != memo:
                             vconn.execute("UPDATE transactions SET memo = ? WHERE transaction_id = ?", (sanitized, tid))
                     financial_retained = len(tx_rows)
