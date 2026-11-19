@@ -25,6 +25,10 @@ class VietQrWebhookError(PermissionError):
     """Raised when a VietQR banking webhook fails HMAC verification, type safety, or order binding."""
 
 
+class VietQrSettlementConflictError(VietQrWebhookError):
+    """Raised when a second distinct bank_tx_id attempts to settle an already-settled run."""
+
+
 @dataclass(frozen=True)
 class AccountingDraftExport:
     """Verified pre-accounting e-invoice draft ready for MISA/Sapo TVAN digital signature."""
@@ -88,12 +92,26 @@ def reconcile_signed_vietqr_webhook(
     except (TypeError, ValueError) as exc:
         raise VietQrWebhookError("Non-integer amount_vnd in VietQR webhook payload.") from exc
 
+    if "currency" in body and body["currency"] is not None:
+        if str(body["currency"]).strip().upper() != "VND":
+            raise VietQrWebhookError(f"Unsupported currency '{body['currency']}' in VietQR webhook payload (VND required).")
+
     if not bank_tx_id:
         raise VietQrWebhookError("Missing bank_tx_id in VietQR webhook payload.")
     if amount_vnd <= 0 or amount_vnd != int(expected_amount_vnd):
         raise VietQrWebhookError(f"VietQR webhook amount mismatch: {amount_vnd} != {expected_amount_vnd} VND.")
     if not _memo_binds_exclusively_to_run(memo, body.get("matched_order_id"), expected_run_id):
         raise VietQrWebhookError(f"VietQR webhook memo '{memo}' does not bind exclusively to '{expected_run_id}'.")
+
+    with vietqr._get_connection() as vconn:  # noqa: SLF001
+        prior = vconn.execute(
+            "SELECT bank_tx_id FROM transactions WHERE matched_order_id = ? ORDER BY received_at ASC, rowid ASC LIMIT 1",
+            (expected_run_id,),
+        ).fetchone()
+    if prior is not None and str(prior[0] or "").strip() and str(prior[0]).strip() != bank_tx_id:
+        raise VietQrSettlementConflictError(
+            f"Run '{expected_run_id}' is already settled by bank_tx_id '{prior[0]}'; rejecting conflicting '{bank_tx_id}'."
+        )
 
     tx_record = vietqr.record_transaction(
         bank_tx_id=bank_tx_id, amount_vnd=amount_vnd, memo=memo,

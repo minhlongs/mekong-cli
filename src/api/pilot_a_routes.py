@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 from src.api.pilot_a_card_view import build_owner_notification_cards, render_mobile_approval_card_html
 from src.opc.accounting_draft import (
     DRAFT_STATUS_PENDING_TVAN,
+    VietQrSettlementConflictError,
     VietQrWebhookError,
     build_accounting_draft_export,
     reconcile_signed_vietqr_webhook,
@@ -889,6 +890,12 @@ async def reconcile_pilot_a_vietqr_webhook(
     if not secret:
         raise HTTPException(status_code=503, detail={"error": "missing_vietqr_webhook_secret"})
     raw_body = await request.body()
+    expected_sig = hmac.new(secret.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
+    if not x_vietqr_signature or not hmac.compare_digest(expected_sig.lower(), x_vietqr_signature.strip().lower()):
+        raise HTTPException(
+            status_code=403,
+            detail={"error": "vietqr_webhook_rejected", "message": "Invalid VietQR webhook HMAC-SHA256 signature (fail-closed)."},
+        )
     try:
         base_dir = _pilot_base_dir()
         db_path = resolve_tenant_db_path(base_dir, tenant_id, active_tenant_id=tenant_id)
@@ -921,11 +928,13 @@ async def reconcile_pilot_a_vietqr_webhook(
             str(intake_info.get("client_name", "Khách hàng SME")),
             list(draft_info.get("line_items", [])),
             subtotal_vnd,
-            vat_rate_pct=vat_rate_pct if vat_rate_pct != 8 or eff_vat_pct == 8 else eff_vat_pct,
+            vat_rate_pct=eff_vat_pct,
             target_provider=target_provider,
             bank_tx_id=recon["bank_tx_id"],
             settled_amount_vnd=recon["amount_vnd"],
         )
+    except VietQrSettlementConflictError as exc:
+        raise HTTPException(status_code=409, detail={"error": "vietqr_settlement_conflict", "message": str(exc)}) from exc
     except VietQrWebhookError as exc:
         raise HTTPException(status_code=403, detail={"error": "vietqr_webhook_rejected", "message": str(exc)}) from exc
     except ValueError as exc:
@@ -993,9 +1002,10 @@ async def export_pilot_a_misa_sapo_draft(
             str(intake_info.get("client_name", "Khách hàng SME")),
             list(draft_info.get("line_items", [])),
             subtotal_vnd,
-            vat_rate_pct=vat_rate_pct if vat_rate_pct != 8 or eff_vat_pct == 8 else eff_vat_pct,
+            vat_rate_pct=eff_vat_pct,
             target_provider=target_provider,
             bank_tx_id=bank_tx_id,
+            settled_amount_vnd=expected_vnd if expected_vnd > 0 else None,
         )
         serialized = export_draft_bundle(acc_draft, fmt=fmt)
     except (DraftExportComplianceError, ValueError) as exc:

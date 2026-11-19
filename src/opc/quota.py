@@ -71,7 +71,7 @@ class WorkflowQuotaGuard:
             }
             if "status" not in cols:
                 conn.execute(
-                    "ALTER TABLE opc_workflow_quota_reservations ADD COLUMN status TEXT NOT NULL DEFAULT 'reserved'"
+                    "ALTER TABLE opc_workflow_quota_reservations ADD COLUMN status TEXT NOT NULL DEFAULT 'committed'"
                 )
 
     def reserve_workflow_slot(

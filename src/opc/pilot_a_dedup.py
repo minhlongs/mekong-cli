@@ -9,28 +9,40 @@ from src.opc.quarantine import QuarantinedInput
 from src.opc.state import StateStore
 
 
-def find_run_by_request_id(state: StateStore, request_id: str) -> dict[str, Any] | None:
-    """Retrieve the first persisted run matching proposal_input.request_id."""
+def find_run_by_request_id(
+    state: StateStore,
+    request_id: str,
+    *,
+    tenant_id: str | None = None,
+) -> dict[str, Any] | None:
+    """Retrieve the first persisted run matching proposal_input.request_id (scoped to tenant_id when provided)."""
     if not (clean_id := request_id.strip()):
         return None
+    clean_tenant = tenant_id.strip() if tenant_id else None
     with state._get_connection() as conn:  # noqa: SLF001
         for row in conn.execute("SELECT * FROM opc_runs ORDER BY created_at ASC, rowid ASC").fetchall():
             try:
                 inp = json.loads(row["proposal_input_json"])
             except (TypeError, ValueError):
                 continue
-            if isinstance(inp, dict) and str(inp.get("request_id", "")).strip() == clean_id:
-                return {
-                    "run_id": row["run_id"],
-                    "pack_id": row["pack_id"],
-                    "status": WorkflowStatus(row["status"]),
-                    "business_profile": json.loads(row["business_profile_json"]),
-                    "proposal_input": inp,
-                    "proposal_draft": json.loads(row["proposal_draft_json"]) if row["proposal_draft_json"] else None,
-                    "action_payload": json.loads(row["action_payload_json"]) if row["action_payload_json"] else None,
-                    "created_at": row["created_at"],
-                    "updated_at": row["updated_at"],
-                }
+            if not (isinstance(inp, dict) and str(inp.get("request_id", "")).strip() == clean_id):
+                continue
+            action_payload = json.loads(row["action_payload_json"]) if row["action_payload_json"] else None
+            if clean_tenant is not None:
+                row_tenant = str(((action_payload or {}).get("parameters") or {}).get("tenant_id", "")).strip()
+                if row_tenant and row_tenant != clean_tenant:
+                    continue
+            return {
+                "run_id": row["run_id"],
+                "pack_id": row["pack_id"],
+                "status": WorkflowStatus(row["status"]),
+                "business_profile": json.loads(row["business_profile_json"]),
+                "proposal_input": inp,
+                "proposal_draft": json.loads(row["proposal_draft_json"]) if row["proposal_draft_json"] else None,
+                "action_payload": action_payload,
+                "created_at": row["created_at"],
+                "updated_at": row["updated_at"],
+            }
     return None
 
 
@@ -67,10 +79,20 @@ def rebuild_existing_approval_card(
     citations: tuple[dict[str, Any], ...],
     runtime_engine: str,
     default_vat_rate_pct: int,
+    *,
+    tenant_id: str | None = None,
 ) -> Any | None:
     """Reconstruct an existing ApprovalCard for a deduplicated event_id without minting a new run."""
-    existing = find_run_by_request_id(state, event.event_id)
+    existing = find_run_by_request_id(state, event.event_id, tenant_id=tenant_id)
     if not existing:
+        return None
+    persisted_input = existing.get("proposal_input") or {}
+    persisted_sender = str(persisted_input.get("sender_id", "")).strip()
+    persisted_contact = str(persisted_input.get("client_contact", "")).strip()
+    incoming_contact = f"zalo:{event.sender_id}"
+    if persisted_sender and persisted_sender != str(event.sender_id).strip():
+        return None
+    if persisted_contact and persisted_contact != incoming_contact:
         return None
     action_dict = existing.get("action_payload") or {}
     if not action_dict:
@@ -100,14 +122,19 @@ def rebuild_existing_approval_card(
     quicklink = str(params.get("vietqr_quicklink", ""))
     line_items = tuple(draft_info.get("line_items") or ())
     run_id = str(existing["run_id"])
+    client_name = str(persisted_input.get("client_name") or event.sender_name)
+    client_contact = persisted_contact or incoming_contact
+    project_title = str(persisted_input.get("project_title") or event.project_title)
+    currency = str(persisted_input.get("currency") or event.currency)
+    persisted_notes = str(persisted_input.get("notes") or redacted_notes)
     rendered = (
-        f"[PHIẾU PHÊ DUYỆT BÁO GIÁ - PILOT A]\nMã phiên: {run_id} | Khách: {event.sender_name}\n"
-        f"Dự án: {event.project_title} | Tổng: {amount_vnd:,} {event.currency}\n"
+        f"[PHIẾU PHÊ DUYỆT BÁO GIÁ - PILOT A]\nMã phiên: {run_id} | Khách: {client_name}\n"
+        f"Dự án: {project_title} | Tổng: {amount_vnd:,} {currency}\n"
         f"VietQR: {emvco[:32]}... | HMAC: {token.signature[:16]}..."
     )
     return card_cls(
-        run_id, event.event_id, event.sender_name, f"zalo:{event.sender_id}", event.project_title,
-        amount_vnd, event.currency, emvco, quicklink, token, payload, q_msg,
-        rendered, redacted_notes, line_items, citations, "", runtime_engine,
+        run_id, event.event_id, client_name, client_contact, project_title,
+        amount_vnd, currency, emvco, quicklink, token, payload, q_msg,
+        rendered, persisted_notes, line_items, citations, "", runtime_engine,
         subtotal_vnd, vat_rate_pct, vat_amount_vnd,
     )

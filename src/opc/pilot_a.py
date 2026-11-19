@@ -139,7 +139,7 @@ class PilotAWorkflow:
         if not (q_res := self.usage.reserve_workflow_quota(self.tenant_id, event.event_id, period_ym, event.timestamp, self.workflow_quota_limit, self.sme_tier)).allowed:
             raise WorkflowQuotaExceededError(f"Tenant '{self.tenant_id}' exceeded {q_res.limit_count} workflows for {period_ym}.")
         if q_res.deduplicated:
-            if (existing_card := rebuild_existing_approval_card(self.state, ApprovalCard, event, q_msg, redacted.redacted_text, citations, self.runtime_engine, self.vat_rate_pct)) is not None:
+            if (existing_card := rebuild_existing_approval_card(self.state, ApprovalCard, event, q_msg, redacted.redacted_text, citations, self.runtime_engine, self.vat_rate_pct, tenant_id=self.tenant_id)) is not None:
                 return existing_card
             raise WorkflowQuotaExceededError(f"Duplicate workflow event '{event.event_id}' is already reserved for {period_ym}.")
         try:
