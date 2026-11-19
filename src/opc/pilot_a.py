@@ -1,7 +1,8 @@
 """Pilot A End-to-End Vertical Slice: Zalo OA → Consent/Quarantine/Quota → Quote + VietQR → Approval → Draft."""
 from __future__ import annotations
-
-import dataclasses, os, time
+import dataclasses
+import os
+import time
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
@@ -12,7 +13,7 @@ from src.opc.accounting_draft import AccountingDraftExport, build_accounting_dra
 from src.opc.connectors.base import ConnectorProtocol, ConnectorResult
 from src.opc.connectors.mock import MockConnector
 from src.opc.connectors.zalo_http import ZaloOAConnector, ZaloWebhookMacError, verify_zalo_webhook_mac
-from src.opc.dr_backup import PilotAKillSwitchError, enforce_pilot_a_kill_switch
+from src.opc.dr_backup import PilotAKillSwitchError as PilotAKillSwitchError, enforce_pilot_a_kill_switch
 from src.opc.engine import OPCEngine
 from src.opc.manifest import load_pack_manifest
 from src.opc.models import ActionPayload, ApprovalDecision, ApprovalToken, BusinessProfile, ProposalInput, WorkflowStatus
@@ -26,7 +27,6 @@ from src.opc.state import StateStore
 from src.opc.state_graph import GraphStage, SqliteGraphCheckpointer, build_handoff_outcome, record_pilot_checkpoint, resolve_runtime_engine
 from src.opc.usage import UsageLedger
 from src.opc.verifier import MIN_EXTRACTION_CONFIDENCE
-
 ZALO_INTERACTION_WINDOW_SECONDS: Final[int] = 48 * 3600
 _RUN_STATUS_MAP: Final[dict[str, WorkflowStatus]] = {"completed": WorkflowStatus.COMPLETED, "deduplicated": WorkflowStatus.COMPLETED, "reconciliation_required": WorkflowStatus.RECONCILIATION_REQUIRED, "failed": WorkflowStatus.FAILED, "budget_exceeded": WorkflowStatus.FAILED}
 
