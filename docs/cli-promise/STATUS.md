@@ -66,6 +66,15 @@ CLI / HTTP  →  identity + authorization  →  schema validation  →  job row 
   `CliEvidenceStore.unlock_gate_with_reconciliation()` refuses to seal without an all-true
   condition map.
 
+### Phục hồi đối soát VietQR / VietQR reconciliation recovery
+
+- 🇻🇳 Giao dịch ngân hàng lưu cùng thông tin đối soát ban đầu. Gửi lại yêu cầu khớp có thể bổ sung bằng chứng doanh thu còn thiếu mà không ghi trùng; yêu cầu thay đổi thông tin bị từ chối. Giao dịch cũ thiếu thông tin này chỉ được tái dùng bằng chứng đã khớp, nếu không cần kiểm tra thủ công. Đây không phải cam kết ghi đồng thời trên hai cơ sở dữ liệu.
+- 🇬🇧 Bank transactions retain their original reconciliation intent. Matching retries can repair missing revenue evidence without duplicating it; changed payloads are rejected. Legacy transactions can only reuse matching existing evidence; otherwise manual reconciliation is required. This is recovery convergence, not cross-database atomicity.
+- 🇻🇳 Khi mở cơ sở dữ liệu cũ thiếu cột mới, chương trình tạo bản sao SQLite cạnh tệp gốc theo mẫu `<database-path>.pre-reconciliation-intent-<32-hex>.bak` trước khi thêm cột. Lỗi sao lưu hoặc nâng cấp sẽ dừng khởi tạo. Kiểm tra tính toàn vẹn trước khi dùng bản sao; bản sao lỗi có thể chưa hoàn chỉnh.
+- 🇬🇧 Opening an older database missing the new column creates a SQLite backup beside it at `<database-path>.pre-reconciliation-intent-<32-hex>.bak` before adding the column. Backup or upgrade failures abort initialization. Validate backup integrity before use; failed backups may be incomplete.
+- 🇻🇳 Nếu hoàn tác mã, giữ nguyên cột bổ sung và dữ liệu; tạm dừng đối soát vì mã cũ không có bảo đảm gửi lại mới. Không chạy lẫn hai phiên bản, xóa cột hoặc tự động khôi phục bản sao cũ: bản sao không chứa giao dịch phát sinh sau đó hay dữ liệu doanh thu ở tệp riêng.
+- 🇬🇧 For code rollback, retain the additive column and data; pause reconciliation because older code lacks the new retry guarantees. Avoid mixed-version writers, dropping the column, or automatic snapshot restoration: the snapshot excludes later transactions and the separate revenue evidence database.
+
 ## 2. Statutory engine (Vietnam) — period-aware
 
 `src/core/vn_statutory_rules.py` holds versioned rules with citation + effective dates, and the

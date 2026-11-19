@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, Callable, TypeVar
 
 from src.opc.models import ActionPayload, ApprovalDecision, ApprovalToken, WorkflowStatus
 from src.opc.quarantine import QuarantinedInput
 from src.opc.state import StateStore
+
+CardT = TypeVar("CardT")
 
 
 def find_run_by_request_id(
@@ -72,7 +74,7 @@ def get_latest_approval_for_run(state: StateStore, run_id: str) -> ApprovalToken
 
 def rebuild_existing_approval_card(
     state: StateStore,
-    card_cls: type[Any],
+    card_cls: Callable[..., CardT],
     event: Any,
     q_msg: QuarantinedInput,
     redacted_notes: str,
@@ -81,7 +83,7 @@ def rebuild_existing_approval_card(
     default_vat_rate_pct: int,
     *,
     tenant_id: str | None = None,
-) -> Any | None:
+) -> CardT | None:
     """Reconstruct an existing ApprovalCard for a deduplicated event_id without minting a new run."""
     existing = find_run_by_request_id(state, event.event_id, tenant_id=tenant_id)
     if not existing:

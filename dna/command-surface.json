@@ -1,7 +1,7 @@
 {
   "schema": "mekong.command_surface.v1",
-  "version": "2026.09.19",
-  "description": "Grandfathered official root CLI command surface. New commands must update this manifest through PR review.",
+  "version": "2026.11.19",
+  "description": "Grandfathered official root CLI command surface. New commands must update this manifest through PR review. Reviewed existing command correction: opc pilot-a --export-draft uses the quote subtotal and its VAT rate, not the tax-inclusive total as a new subtotal; output remains DRAFT_PENDING_TVAN, not a legally issued invoice. / Sửa lệnh hiện có: opc pilot-a --export-draft dùng tiền trước thuế và thuế suất của báo giá, không tính thuế thêm trên tổng đã gồm thuế; kết quả vẫn là bản nháp DRAFT_PENDING_TVAN, chưa phải hóa đơn được phát hành hợp pháp.",
   "commands": [
     "adminlaw",
     "adminsanction",
@@ -128,6 +128,7 @@
     "judicialassist",
     "judicialrecord",
     "ke-toan",
+    "kit",
     "labor",
     "lawyer",
     "legalaid",
@@ -149,6 +150,7 @@
     "ngoaihopdong",
     "notary",
     "ocop",
+    "opc",
     "ops",
     "package",
     "palette",
@@ -174,6 +176,7 @@
     "quick-start",
     "radiation",
     "railway",
+    "re",
     "realestate",
     "recall",
     "revenue",

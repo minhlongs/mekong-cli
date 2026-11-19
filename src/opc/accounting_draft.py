@@ -10,11 +10,12 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal
 from typing import Any, Final, Sequence
 
 from src.core.vietqr_engine import VietQrEngine
 from src.opc.privacy_guard import verify_confidence_and_math
+from src.opc.vat_calculations import _round_vnd, compute_vnd_vat_breakdown as compute_vnd_vat_breakdown
 
 DRAFT_STATUS_PENDING_TVAN: Final[str] = "DRAFT_PENDING_TVAN"
 ALLOWED_ACCOUNTING_TARGETS: Final[frozenset[str]] = frozenset({"misa_meinvoice", "sapo_invoice"})
@@ -126,22 +127,6 @@ def reconcile_signed_vietqr_webhook(
         "amount_vnd": amount_vnd,
         "matched_order_id": expected_run_id,
     }
-
-
-def _round_vnd(value: Decimal | int | str) -> int:
-    """Round a VND monetary value to the nearest integer using Decimal ROUND_HALF_UP."""
-    return int(Decimal(str(value)).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
-
-
-def compute_vnd_vat_breakdown(subtotal_vnd: Decimal | int | str, vat_rate_pct: int = 8) -> tuple[int, int, int]:
-    """Compute (subtotal_vnd, vat_amount_vnd, total_amount_vnd) with Decimal ROUND_HALF_UP."""
-    if vat_rate_pct not in (0, 5, 8, 10):
-        raise ValueError(f"Unsupported Vietnamese VAT rate '{vat_rate_pct}%' (expected 0, 5, 8, or 10).")
-    sub_dec = Decimal(str(subtotal_vnd))
-    subtotal_int = _round_vnd(sub_dec)
-    vat_int = _round_vnd((Decimal(subtotal_int) * Decimal(vat_rate_pct)) / Decimal(100))
-    total_int = subtotal_int + vat_int
-    return subtotal_int, vat_int, total_int
 
 
 def build_accounting_draft_export(

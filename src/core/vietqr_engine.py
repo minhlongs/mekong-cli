@@ -15,13 +15,16 @@ Pure Python standard-library-only implementation adhering strictly to ``tests/te
 
 from __future__ import annotations
 
+import contextlib
 import datetime
 import hashlib
 import hmac
+import json
 import os
 import pathlib
 import re
 import sqlite3
+import time
 import typing
 import urllib.parse
 import uuid
@@ -209,12 +212,29 @@ class VietQrEngine:
         )
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA busy_timeout = 30000")
-        if isolation_level is not None:
-            conn.execute("PRAGMA journal_mode = WAL")
-        return conn
+        try:
+            if isolation_level is not None:
+                # Concurrent first-open WAL transitions can return SQLITE_BUSY
+                # without invoking SQLite's busy handler. Retry that transition
+                # only, bounded by the same timeout as ordinary writes.
+                deadline = time.monotonic() + 30.0
+                while True:
+                    try:
+                        conn.execute("PRAGMA journal_mode = WAL")
+                        break
+                    except sqlite3.OperationalError as exc:
+                        if exc.sqlite_errorcode != sqlite3.SQLITE_BUSY or time.monotonic() >= deadline:
+                            raise
+                        time.sleep(0.01)
+            return conn
+        except Exception:
+            conn.close()
+            raise
 
     def _init_db(self) -> None:
-        with self._get_connection() as conn:
+        with contextlib.closing(self._get_connection()) as conn, conn:
+            # Serialize schema inspection, additive upgrade and account seeding.
+            conn.execute("BEGIN IMMEDIATE")
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS bank_accounts (
@@ -254,7 +274,8 @@ class VietQrEngine:
                     memo TEXT NOT NULL,
                     matched_order_id TEXT,
                     status TEXT NOT NULL,
-                    received_at TEXT NOT NULL
+                    received_at TEXT NOT NULL,
+                    reconciliation_intent_json TEXT
                 )
                 """
             )
@@ -280,6 +301,22 @@ class VietQrEngine:
                 )
                 """
             )
+            transaction_columns = {
+                str(row["name"])
+                for row in conn.execute("PRAGMA table_info(transactions)").fetchall()
+            }
+            if "reconciliation_intent_json" not in transaction_columns:
+                # A separate reader snapshots committed data (including WAL) while
+                # our writer reservation prevents concurrent schema/data changes.
+                backup_path = self.db_path.with_name(
+                    f"{self.db_path.name}.pre-reconciliation-intent-{uuid.uuid4().hex}.bak"
+                )
+                with contextlib.closing(sqlite3.connect(str(self.db_path))) as source:
+                    with contextlib.closing(sqlite3.connect(str(backup_path))) as backup:
+                        source.backup(backup)
+                conn.execute(
+                    "ALTER TABLE transactions ADD COLUMN reconciliation_intent_json TEXT"
+                )
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_transactions_matched_order "
                 "ON transactions(matched_order_id)"
@@ -288,7 +325,6 @@ class VietQrEngine:
                 "CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_unique_matched_order "
                 "ON transactions(matched_order_id) WHERE matched_order_id IS NOT NULL"
             )
-            conn.commit()
 
             # Pre-seed default corporate recipient account if none exists
             cursor = conn.execute("SELECT COUNT(*) AS cnt FROM bank_accounts")
@@ -311,7 +347,7 @@ class VietQrEngine:
                         now,
                     ),
                 )
-                conn.commit()
+            conn.commit()
 
     def resolve_bank(self, bank_query: str) -> dict[str, str]:
         """Resolve bank query by BIN code or short name (e.g. 'MB', 'VCB', '970422')."""
@@ -446,10 +482,16 @@ class VietQrEngine:
         bin_code: str,
         matched_order_id: str | None,
         save: bool,
+        reconciliation_intent: dict[str, typing.Any] | None = None,
     ) -> dict[str, typing.Any]:
         """Atomically record a transaction under explicit BEGIN IMMEDIATE with 1:1 order conflict checks."""
         now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
         tx_id = f"VTX-{str(uuid.uuid4())[:8].upper()}"
+        intent_json = (
+            json.dumps(reconciliation_intent, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+            if reconciliation_intent is not None
+            else None
+        )
 
         conn = self._get_connection(isolation_level=None)
         try:
@@ -484,9 +526,9 @@ class VietQrEngine:
                         """
                         INSERT INTO transactions (
                             transaction_id, bank_tx_id, bin_code, amount_vnd,
-                            memo, matched_order_id, status, received_at
+                            memo, matched_order_id, status, received_at, reconciliation_intent_json
                         )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
                             tx_id,
@@ -497,6 +539,7 @@ class VietQrEngine:
                             matched_order_id,
                             "success",
                             now_iso,
+                            intent_json,
                         ),
                     )
                     conn.execute("COMMIT")
@@ -543,6 +586,7 @@ class VietQrEngine:
             "status": "success",
             "is_duplicate": False,
             "received_at": now_iso,
+            "reconciliation_intent_json": intent_json,
         }
 
     def record_transaction(
@@ -553,6 +597,7 @@ class VietQrEngine:
         bin_code: str = "970422",
         matched_order_id: str | None = None,
         save: bool = True,
+        reconciliation_intent: dict[str, typing.Any] | None = None,
     ) -> dict[str, typing.Any]:
         """Record an incoming bank payment transaction idempotently."""
         return self._record_transaction_atomic(
@@ -562,6 +607,7 @@ class VietQrEngine:
             bin_code=bin_code,
             matched_order_id=matched_order_id,
             save=save,
+            reconciliation_intent=reconciliation_intent,
         )
 
     def record_unique_order_transaction(

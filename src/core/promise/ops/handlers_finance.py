@@ -74,6 +74,39 @@ def ke_toan_journal(
     }
 
 
+def _validate_duplicate_bank_transaction(
+    transaction: dict[str, typing.Any],
+    *,
+    bank_tx_id: str,
+    amount_vnd: int,
+    memo: str,
+    bin_code: str,
+    matched_order_id: str | None,
+) -> None:
+    """Reject a duplicate bank transaction whose persisted fields disagree with the retry payload."""
+    mismatches: list[str] = []
+    persisted_amount = transaction.get("amount_vnd")
+    if persisted_amount is None or int(persisted_amount) != int(amount_vnd):
+        mismatches.append(f"amount_vnd (persisted={persisted_amount}, incoming={amount_vnd})")
+    persisted_memo = str(transaction.get("memo") or "")
+    if persisted_memo != str(memo):
+        mismatches.append(f"memo (persisted={persisted_memo!r}, incoming={memo!r})")
+    persisted_bin = str(transaction.get("bin_code") or "")
+    if persisted_bin != str(bin_code):
+        mismatches.append(f"bin_code (persisted={persisted_bin!r}, incoming={bin_code!r})")
+    persisted_order = transaction.get("matched_order_id") or None
+    incoming_order = matched_order_id or None
+    if persisted_order != incoming_order:
+        mismatches.append(
+            f"matched_order_id (persisted={persisted_order!r}, incoming={incoming_order!r})"
+        )
+    if mismatches:
+        raise ValueError(
+            f"Duplicate bank transaction '{bank_tx_id}' conflicts with persisted bank record: "
+            + ", ".join(mismatches)
+        )
+
+
 def vietqr_record_reconciled_payment(
     context: HandlerContext,
     bank_tx_id: str,
@@ -86,18 +119,36 @@ def vietqr_record_reconciled_payment(
     matched_order_id: str | None = None,
     bin_code: str = "970422",
 ) -> dict[str, typing.Any]:
-    """Record an incoming VietQR transfer and the reconciled revenue fact.
+    """Record an incoming VietQR transfer and its write-once revenue fact.
 
-    The revenue fact is what the ``first-revenue`` (L3) gate measures: it needs
-    a provider confirmation payload and a named reconciler, not a string typed
-    into a browser form.
+    The complete finance intent is committed atomically with the bank transaction.
+    A retry can repair missing evidence only when its payload matches that intent;
+    old bank rows without the intent require separate reconciliation.
     """
+    import json
+
     from src.core.ke_toan_engine import KeToanEngine
     from src.core.vietqr_engine import VietQrEngine
 
+    currency = str(currency).strip().upper()
+    if currency != "VND":
+        raise ValueError("currency must be VND for VietQR revenue reconciliation")
+
     accounting_db = sibling_db(context, "ke_toan")
     accounting = KeToanEngine(db_path=accounting_db)
-    invoice = accounting.get_invoice(invoice_ref or "")
+    proposed_intent: dict[str, typing.Any] = {
+        "workspace_id": context.workspace_id,
+        "bank_tx_id": bank_tx_id,
+        "amount_vnd": int(amount_vnd),
+        "memo": str(memo),
+        "bin_code": str(bin_code),
+        "matched_order_id": matched_order_id,
+        "provider": str(provider).strip(),
+        "provider_reference": str(provider_reference).strip(),
+        "invoice_ref": str(invoice_ref or "").strip(),
+        "currency": str(currency).strip().upper(),
+    }
+    invoice = accounting.get_invoice(proposed_intent["invoice_ref"])
     if invoice is None:
         raise ValueError(
             f"Không thể đối soát doanh thu: hóa đơn '{invoice_ref}' chưa được phát hành trong "
@@ -113,25 +164,53 @@ def vietqr_record_reconciled_payment(
 
     engine = VietQrEngine(db_path=engine_db(context, "vietqr"))
     transaction = engine.record_transaction(
-        bank_tx_id=bank_tx_id, amount_vnd=amount_vnd, memo=memo,
-        bin_code=bin_code, matched_order_id=matched_order_id,
+        bank_tx_id=bank_tx_id,
+        amount_vnd=amount_vnd,
+        memo=memo,
+        bin_code=bin_code,
+        matched_order_id=matched_order_id,
+        reconciliation_intent=proposed_intent,
     )
     if transaction.get("conflict") or not transaction.get("ok", True):
         raise ValueError(
             f"Order '{matched_order_id}' already settled by bank transaction "
             f"'{transaction.get('existing_bank_tx_id')}' — rejecting conflicting '{bank_tx_id}'"
         )
-    if transaction.get("is_duplicate"):
-        return {
-            "status": "DUPLICATE",
-            "transaction": transaction,
-            "invoice_db": accounting_db,
-            "revenue_record": None,
-            "detail": f"bank transaction '{bank_tx_id}' was already recorded — no second revenue fact written",
-        }
+
+    _validate_duplicate_bank_transaction(
+        transaction, bank_tx_id=bank_tx_id, amount_vnd=amount_vnd,
+        memo=memo, bin_code=bin_code, matched_order_id=matched_order_id,
+    )
+    stored_intent_json = transaction.get("reconciliation_intent_json")
+    if stored_intent_json is not None:
+        try:
+            stored_intent = json.loads(str(stored_intent_json))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Bank transaction '{bank_tx_id}' has an invalid reconciliation intent"
+            ) from exc
+        if not isinstance(stored_intent, dict):
+            raise ValueError(f"Bank transaction '{bank_tx_id}' has an invalid reconciliation intent")
+        mismatches = [
+            field for field, value in proposed_intent.items()
+            if field not in stored_intent or stored_intent[field] != value
+        ]
+        if mismatches:
+            raise ValueError(
+                f"Bank transaction '{bank_tx_id}' conflicts with persisted reconciliation intent: "
+                + ", ".join(mismatches)
+            )
+
+    provider = proposed_intent["provider"]
+    provider_reference = proposed_intent["provider_reference"]
+    invoice_ref = proposed_intent["invoice_ref"]
+    currency = proposed_intent["currency"]
+
     store = context.evidence_store()
-    inserted = store.record_revenue_transaction(
+    ensured = store.record_revenue_transaction_once(
         workspace_id=context.workspace_id,
+        bank_tx_id=bank_tx_id,
+        require_existing=stored_intent_json is None,
         run_id=context.run_id,
         provider=provider,
         method="vietqr_bank_transfer",
@@ -146,23 +225,29 @@ def vietqr_record_reconciled_payment(
             "amount_vnd": amount_vnd,
             "currency": currency,
             "memo": memo,
+            "bin_code": bin_code,
             "matched_order_id": matched_order_id,
         },
         confirmed_at=datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds"),
         reconciled_by=context.principal_id,
     )
-    rows = store.query("revenue_transactions", context.workspace_id,
-                       "tx_id = ?", (inserted["tx_id"],))
-    record = rows[0] if rows else None
-    if record is None:
+    record = ensured.get("record")
+    if not isinstance(record, dict):
+        rows = store.query("revenue_transactions", context.workspace_id,
+                           "tx_id = ?", (ensured["tx_id"],))
+        record = rows[0] if rows else None
+    if not isinstance(record, dict):
         return {
             "status": "FAILED",
             "transaction": transaction,
             "revenue_record": None,
-            "detail": f"revenue fact '{inserted['tx_id']}' was not readable back from the evidence store",
+            "detail": f"revenue fact '{ensured['tx_id']}' was not readable back from the evidence store",
         }
+
     return {
         "status": "RECONCILED",
+        "is_duplicate": not ensured["created"],
+        "recovered": bool(transaction.get("is_duplicate") and ensured["created"]),
         "transaction": transaction,
         "invoice": {
             "invoice_id": invoice.get("invoice_id"),
@@ -173,6 +258,8 @@ def vietqr_record_reconciled_payment(
         "invoice_db": accounting_db,
         "evidence_db": str(store.db_path),
         "revenue_record": record,
+        "existing_revenue_tx_id": ensured["tx_id"] if not ensured["created"] else None,
+        "legacy_revenue_match": bool(ensured.get("legacy_match")),
         "reconciliation": {
             "provider": provider,
             "provider_reference": provider_reference,
@@ -181,6 +268,10 @@ def vietqr_record_reconciled_payment(
             "amount_vnd": amount_vnd,
             "currency": currency,
         },
+        "detail": (
+            f"bank transaction '{bank_tx_id}' already has matching revenue fact '{ensured['tx_id']}'"
+            if not ensured["created"] else "reconciled bank transaction and revenue fact"
+        ),
     }
 
 

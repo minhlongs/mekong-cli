@@ -602,9 +602,8 @@ def test_receipt_separates_handler_artifact_and_business_conditions(service):
     assert receipt["rule_version"]
     assert receipt["code_version"] == "test-code-version"
 
-    # A run whose handler executed but whose business conditions were not met
-    # (the same bank transfer pushed through as a second, separately keyed run)
-    # keeps the separation: handler_ran True, business_conditions_met False.
+    # A separately approved retry reuses the same verifiable fact. Reusing
+    # evidence is not a failed business condition or a second revenue receipt.
     second_paused = run(service, FOUNDER, "vietqr", "reconcile_payment", {
         "bank_tx_id": "MB-SPINE-0001", "amount_vnd": 20_000_000, "memo": "HD SPINE 000001",
         "provider": "MBBANK", "provider_reference": "STMT-20261027-MB-00001",
@@ -612,11 +611,14 @@ def test_receipt_separates_handler_artifact_and_business_conditions(service):
     }, idempotency_key="second-run-same-transfer")
     assert second_paused["status"] == STATUS_AWAITING_APPROVAL
     duplicate = decide(service, FOUNDER, second_paused)
-    assert duplicate["status"] == STATUS_FAILED
-    assert duplicate["error_code"] == "BUSINESS_CONDITION_UNMET"
+    assert_completed(duplicate, "output_fields", "enum_member",
+                     "revenue_fact_is_verifiable", "invoice_ref_is_issued", "record_persisted")
+    assert duplicate["output"]["status"] == "RECONCILED"
+    assert duplicate["output"]["is_duplicate"] is True
+    assert duplicate["output"]["revenue_record"] == approved["output"]["revenue_record"]
     assert duplicate["verification"]["handler_ran"] is True
-    assert duplicate["verification"]["business_conditions_met"] is False
-    assert duplicate["receipt"]["business_conditions_met"] is False
+    assert duplicate["verification"]["business_conditions_met"] is True
+    assert duplicate["receipt"]["business_conditions_met"] is True
     assert duplicate["receipt"]["handler_ran"] is True
     # Still exactly one revenue fact for the whole workspace.
     assert len(revenue_rows(service, WS_A)) == 1
