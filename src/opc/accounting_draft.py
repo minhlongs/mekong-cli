@@ -10,7 +10,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Any, Final, Sequence
 
 from src.core.vietqr_engine import VietQrEngine
@@ -116,10 +116,27 @@ def reconcile_signed_vietqr_webhook(
     }
 
 
+def _round_vnd(value: Decimal | int | str) -> int:
+    """Round a VND monetary value to the nearest integer using Decimal ROUND_HALF_UP."""
+    return int(Decimal(str(value)).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+
+def compute_vnd_vat_breakdown(subtotal_vnd: Decimal | int | str, vat_rate_pct: int = 8) -> tuple[int, int, int]:
+    """Compute (subtotal_vnd, vat_amount_vnd, total_amount_vnd) with Decimal ROUND_HALF_UP."""
+    if vat_rate_pct not in (0, 5, 8, 10):
+        raise ValueError(f"Unsupported Vietnamese VAT rate '{vat_rate_pct}%' (expected 0, 5, 8, or 10).")
+    sub_dec = Decimal(str(subtotal_vnd))
+    subtotal_int = _round_vnd(sub_dec)
+    vat_int = _round_vnd((Decimal(subtotal_int) * Decimal(vat_rate_pct)) / Decimal(100))
+    total_int = subtotal_int + vat_int
+    return subtotal_int, vat_int, total_int
+
+
 def build_accounting_draft_export(
     run_id: str, buyer_name: str, line_items: Sequence[dict[str, Any]],
     declared_subtotal_vnd: int, vat_rate_pct: int = 8,
     target_provider: str = "misa_meinvoice", bank_tx_id: str | None = None,
+    settled_amount_vnd: int | None = None,
 ) -> AccountingDraftExport:
     """Create a mathematically verified pre-accounting draft (never legally self-certified)."""
     provider = target_provider.strip().lower()
@@ -129,15 +146,18 @@ def build_accounting_draft_export(
         raise ValueError(f"Unsupported Vietnamese VAT rate '{vat_rate_pct}%' (expected 0, 5, 8, or 10).")
 
     verified_sub = verify_confidence_and_math(line_items, Decimal(int(declared_subtotal_vnd)), confidence=1.0)
-    subtotal_int = int(verified_sub)
-    vat_int = int((verified_sub * Decimal(vat_rate_pct)) / Decimal(100))
-    total_int = subtotal_int + vat_int
+    subtotal_int, vat_int, total_int = compute_vnd_vat_breakdown(verified_sub, vat_rate_pct)
+    if settled_amount_vnd is not None and int(settled_amount_vnd) != total_int:
+        raise ValueError(
+            f"Settled VietQR amount ({int(settled_amount_vnd)} VND) does not match VAT-inclusive "
+            f"accounting draft total ({total_int} VND = {subtotal_int} subtotal + {vat_int} VAT@{vat_rate_pct}%)."
+        )
     normalized_items = tuple(
         {
             "item_name": str(it.get("service", it.get("item_name", "item"))),
-            "quantity": int(Decimal(str(it.get("hours", it.get("quantity", 1))))),
-            "unit_price_vnd": int(Decimal(str(it.get("rate", it.get("unit_price", 0))))),
-            "line_subtotal_vnd": int(Decimal(str(it.get("subtotal", 0)))),
+            "quantity": _round_vnd(it.get("hours", it.get("quantity", 1))),
+            "unit_price_vnd": _round_vnd(it.get("rate", it.get("unit_price", 0))),
+            "line_subtotal_vnd": _round_vnd(it.get("subtotal", 0)),
         }
         for it in line_items
     )

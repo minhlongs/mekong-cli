@@ -85,7 +85,8 @@ class PilotAZaloWebhookRequest(BaseModel):
     project_title: str = Field("Báo giá dịch vụ Zalo OA & VietQR", min_length=1, max_length=240)
     currency: str = Field("VND", min_length=3, max_length=8)
     language: str = Field("vi", min_length=2, max_length=8)
-    extraction_confidence: float = Field(0.95, ge=0.0, le=1.0, allow_inf_nan=False)
+    extraction_confidence: float | None = Field(None, ge=0.0, le=1.0, allow_inf_nan=False)
+    vat_rate_pct: int = Field(8)
     tenant_id: str = Field("default", min_length=2, max_length=63)
     sme_tier: str = Field("pilot_a")
     connector: str = Field("zalo_oa_sandbox")
@@ -907,8 +908,11 @@ async def reconcile_pilot_a_vietqr_webhook(
     if not run_data:
         raise HTTPException(status_code=404, detail={"error": "run_not_found", "run_id": run_id})
     action_dict = run_data.get("action_payload") or {}
-    expected_vnd = int(action_dict.get("parameters", {}).get("amount_vnd", 0))
+    params = action_dict.get("parameters", {})
+    expected_vnd = int(params.get("amount_vnd", 0))
     draft_info = run_data.get("proposal_draft") or {}
+    subtotal_vnd = int(params.get("subtotal_vnd", draft_info.get("subtotal_vnd", expected_vnd)))
+    eff_vat_pct = int(params.get("vat_rate_pct", draft_info.get("vat_rate_pct", vat_rate_pct)))
     intake_info = run_data.get("proposal_input") or {}
     try:
         recon = reconcile_signed_vietqr_webhook(wf.vietqr, raw_body, x_vietqr_signature, secret, run_id, expected_vnd)
@@ -916,10 +920,11 @@ async def reconcile_pilot_a_vietqr_webhook(
             run_id,
             str(intake_info.get("client_name", "Khách hàng SME")),
             list(draft_info.get("line_items", [])),
-            expected_vnd,
-            vat_rate_pct=vat_rate_pct,
+            subtotal_vnd,
+            vat_rate_pct=vat_rate_pct if vat_rate_pct != 8 or eff_vat_pct == 8 else eff_vat_pct,
             target_provider=target_provider,
             bank_tx_id=recon["bank_tx_id"],
+            settled_amount_vnd=recon["amount_vnd"],
         )
     except VietQrWebhookError as exc:
         raise HTTPException(status_code=403, detail={"error": "vietqr_webhook_rejected", "message": str(exc)}) from exc
@@ -975,8 +980,11 @@ async def export_pilot_a_misa_sapo_draft(
         x_card_sig=x_card_sig,
         card_sig=sig,
     )
-    expected_vnd = int(action_dict.get("parameters", {}).get("amount_vnd", 0))
+    params = action_dict.get("parameters", {})
+    expected_vnd = int(params.get("amount_vnd", 0))
     draft_info = run_data.get("proposal_draft") or {}
+    subtotal_vnd = int(params.get("subtotal_vnd", draft_info.get("subtotal_vnd", expected_vnd)))
+    eff_vat_pct = int(params.get("vat_rate_pct", draft_info.get("vat_rate_pct", vat_rate_pct)))
     intake_info = run_data.get("proposal_input") or {}
     bank_tx_id = _lookup_vietqr_bank_tx_id(wf.vietqr.db_path, run_id)
     try:
@@ -984,8 +992,8 @@ async def export_pilot_a_misa_sapo_draft(
             run_id,
             str(intake_info.get("client_name", "Khách hàng SME")),
             list(draft_info.get("line_items", [])),
-            expected_vnd,
-            vat_rate_pct=vat_rate_pct,
+            subtotal_vnd,
+            vat_rate_pct=vat_rate_pct if vat_rate_pct != 8 or eff_vat_pct == 8 else eff_vat_pct,
             target_provider=target_provider,
             bank_tx_id=bank_tx_id,
         )

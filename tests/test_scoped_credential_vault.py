@@ -52,10 +52,10 @@ def _isolate_vault_storage(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> N
 # T01: Feature flag OFF → vault not instantiated, global env used
 # ===========================================================================
 class TestFeatureFlag:
-    def test_vault_disabled_returns_global_env(self) -> None:
-        _clear_env(pytest.MonkeyPatch())  # type: ignore[call-arg]
-        os.environ["OPENROUTER_API_KEY"] = "env-global-key"
-        os.environ.pop("MEKONG_CREDENTIAL_VAULT", None)
+    def test_vault_disabled_returns_global_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _clear_env(monkeypatch)
+        monkeypatch.setenv("OPENROUTER_API_KEY", "env-global-key")
+        monkeypatch.delenv("MEKONG_CREDENTIAL_VAULT", raising=False)
 
         key, source = resolve_provider_key(PLUGIN_ID, PROVIDER)
 

@@ -42,7 +42,7 @@ def _event(event_id: str) -> ZaloWebhookEvent:
     now_ts = 1_760_000_000
     return ZaloWebhookEvent(
         event_id=event_id, oa_id="oa_growth_01", sender_id="84909123456",
-        sender_name="Công ty TNHH Hùng Phát", message_text="Báo giá gói 10 giờ.",
+        sender_name="Công ty TNHH Hùng Phát", message_text="Báo giá gói tư vấn AI và tích hợp VietQR 10 giờ.",
         timestamp=now_ts, last_user_interaction_ts=now_ts - 900,
         requested_services=("tu_van_ai", "tich_hop_vietqr"), estimated_hours=10,
         project_title="Tự Động Hóa Zalo OA & VietQR", currency="VND", language="vi",

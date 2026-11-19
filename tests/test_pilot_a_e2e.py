@@ -65,8 +65,11 @@ def test_pilot_a_happy_path_quote_vietqr_crc_and_approved_dispatch(tmp_path: Pat
     event = _make_event()
 
     card = workflow.handle_webhook(event)
-    # 20 hours across 2 services => 10h * 500,000 + 10h * 400,000 = 9,000,000 VND
-    assert card.total_amount_vnd == 9_000_000
+    # 20 hours across 2 services => subtotal 9,000,000 + 8% VAT (720,000) = 9,720,000 VND
+    assert card.subtotal_vnd == 9_000_000
+    assert card.vat_rate_pct == 8
+    assert card.vat_amount_vnd == 720_000
+    assert card.total_amount_vnd == 9_720_000
     assert card.currency == "VND"
     assert card.quarantine_report.is_safe is True
     assert len(card.approval_token.signature) == 64
@@ -77,7 +80,7 @@ def test_pilot_a_happy_path_quote_vietqr_crc_and_approved_dispatch(tmp_path: Pat
     assert "A000000727" in emv
     assert "970422" in emv  # MBBank BIN
     assert "5303704" in emv  # VND currency code 704
-    assert "54079000000" in emv  # Amount 9000000 (length 07)
+    assert "54079720000" in emv  # VAT-inclusive amount 9720000 (length 07)
     assert emv[-8:-4] == "6304"
     expected_crc = _crc16_ccitt(emv[:-4])
     assert emv[-4:] == expected_crc
@@ -88,7 +91,7 @@ def test_pilot_a_happy_path_quote_vietqr_crc_and_approved_dispatch(tmp_path: Pat
     assert outcome["status"] == "completed"
     assert len(workflow.zalo_connector.dispatched) == 1
     sent = next(iter(workflow.zalo_connector.dispatched.values()))
-    assert sent["amount_vnd"] == 9_000_000
+    assert sent["amount_vnd"] == 9_720_000
     assert sent["vietqr_emvco"] == emv
 
 
