@@ -59,7 +59,7 @@ def _create_run(client: TestClient, tenant_id: str, api_key: str, event_id: str,
             "oa_id": f"oa_{tenant_id}",
             "sender_id": "84909111222",
             "sender_name": f"Khách Hàng {tenant_id}",
-            "message_text": "Nhờ shop báo giá tư vấn AI và tích hợp VietQR.",
+            "message_text": f"Nhờ shop báo giá tư vấn AI và tích hợp VietQR {hours} giờ.",
             "requested_services": ["tu_van_ai", "tich_hop_vietqr"],
             "estimated_hours": hours,
             "project_title": f"Dự án riêng {tenant_id}",
@@ -159,7 +159,7 @@ def test_quota_exhaustion_isolation_and_sme_tier_escalation_blocked(
             "event_id": "evt_q_alpha_2",
             "sender_id": "84909111222",
             "sender_name": "Alpha Over Quota",
-            "message_text": "Báo giá thêm gói tư vấn AI.",
+            "message_text": "Báo giá thêm gói tư vấn AI 5 giờ.",
             "tenant_id": "tenant_alpha",
             "sme_tier": "agency",
         },
@@ -204,7 +204,7 @@ def test_vietqr_cross_tenant_and_cross_order_bank_tx_replay_blocked(
         sig = hmac.new(secret, raw, hashlib.sha256).hexdigest()
         return raw, {"Content-Type": "application/json", "X-VietQR-Signature": sig}
 
-    raw_a1, hdr_a1 = _sign_vqr({"bank_tx_id": "NAPAS-SC08-001", "amount_vnd": 5_000_000, "memo": f"Thanh toan OPC {a_id1}"})
+    raw_a1, hdr_a1 = _sign_vqr({"bank_tx_id": "NAPAS-SC08-001", "amount_vnd": 5_400_000, "memo": f"Thanh toan OPC {a_id1}"})
 
     # Replaying Alpha's run_id against Tenant Bravo fails 404; replaying Alpha's memo against Bravo's run_id fails 403
     assert sc08_client.post(f"/v1/opc/pilot-a/webhook/vietqr?run_id={a_id1}&tenant_id=tenant_bravo", content=raw_a1, headers=hdr_a1).status_code == 404
@@ -219,7 +219,7 @@ def test_vietqr_cross_tenant_and_cross_order_bank_tx_replay_blocked(
     assert ok1.status_code == 200 and ok1.json()["reconciliation"]["bank_tx_id"] == "NAPAS-SC08-001"
 
     # Reusing the same bank_tx_id to settle Alpha run 2 fails closed (403)
-    raw_a2, hdr_a2 = _sign_vqr({"bank_tx_id": "NAPAS-SC08-001", "amount_vnd": 5_000_000, "memo": f"Thanh toan OPC {a_id2}"})
+    raw_a2, hdr_a2 = _sign_vqr({"bank_tx_id": "NAPAS-SC08-001", "amount_vnd": 5_400_000, "memo": f"Thanh toan OPC {a_id2}"})
     replay_a2 = sc08_client.post(f"/v1/opc/pilot-a/webhook/vietqr?run_id={a_id2}&tenant_id=tenant_alpha", content=raw_a2, headers=hdr_a2)
     assert replay_a2.status_code == 403 and "replay blocked" in replay_a2.json()["detail"]["message"]
 

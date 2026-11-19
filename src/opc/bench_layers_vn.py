@@ -181,5 +181,5 @@ def _l15_stale_price_revalidation(work_dir: Path, mk: Callable[..., Any], pf: Ca
     stale_card = wf.handle_webhook(ef("l15_stale"))
     wf.profile = dataclasses.replace(pf(), services={"tu_van_ai": Decimal("700000"), "tich_hop_vietqr": Decimal("500000")})
     fresh_card = wf.handle_webhook(ef("l15_fresh"))
-    ok = stale_card.total_amount_vnd == 5_000_000 and fresh_card.total_amount_vnd == 6_000_000 and "54076000000" in fresh_card.vietqr_emvco
+    ok = stale_card.subtotal_vnd == 5_000_000 and stale_card.total_amount_vnd == 5_400_000 and fresh_card.subtotal_vnd == 6_000_000 and fresh_card.total_amount_vnd == 6_480_000 and "54076480000" in fresh_card.vietqr_emvco
     return mk("L15", "Stale Price Revalidation Before VietQR Commit", ok, 3, f"stale={stale_card.total_amount_vnd}, fresh={fresh_card.total_amount_vnd}")

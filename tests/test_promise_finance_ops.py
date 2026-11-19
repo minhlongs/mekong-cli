@@ -246,9 +246,14 @@ def test_bhxh_add_employee_returns_stored_id(service):
     # Layer 1 — replay protection: an identical resubmission (double click,
     # retried client) is answered from the persisted job and never re-executed.
     replayed = run(service, "bhxh", "add_employee",
-                   {"full_name": "Tran Thi B", "bhxh_code": "7912345678", "salary_insurance": 22_000_000})
+                   {"full_name": "Tran Thi B", "bhxh_code": "7912345678", "salary_insurance": 20_000_000})
     assert replayed["idempotent_replay"] is True
     assert replayed["run_id"] == first["run_id"]
+    conflicting = run(service, "bhxh", "add_employee",
+                      {"full_name": "Tran Thi B", "bhxh_code": "7912345678",
+                       "salary_insurance": 22_000_000})
+    assert conflicting["status"] == "FAILED"
+    assert conflicting["error_code"] == "IDEMPOTENCY_CONFLICT"
 
     # Layer 2 — engine identity: a genuinely new run for the same BHXH code
     # updates the stored row instead of inserting a second employee.
@@ -430,6 +435,58 @@ def test_reconciled_payment_feeds_first_revenue_gate(service):
 
     replay = run(service, "vietqr", "reconcile_payment", params)
     assert replay["status"] == "AWAITING_APPROVAL" or replay["idempotent_replay"]
+
+
+@pytest.mark.parametrize("failure_point", [None, "before", "after"])
+def test_reconciliation_retries_satisfy_real_runtime_postconditions(
+    service, monkeypatch, failure_point
+):
+    from src.core.promise.evidence import EvidenceStore
+
+    invoice = run(service, "ke-toan", "create_invoice",
+                  {"amount": 20_000_000, "buyer": "Retry Buyer",
+                   "seller_tax_code": SELLER_MST})
+    assert_passed(invoice, "invoice_tt78_structure")
+    params = {
+        "bank_tx_id": "runtime-retry-bank", "amount_vnd": 20_000_000,
+        "memo": "invoice payment", "provider": "SEPAY",
+        "provider_reference": "runtime-statement-reference",
+        "invoice_ref": invoice["output"]["invoice_id"],
+    }
+    original = EvidenceStore.record_revenue_transaction_once
+    injected = False
+
+    def fail_once(self, **fields):
+        nonlocal injected
+        if not injected and failure_point:
+            injected = True
+            if failure_point == "after":
+                original(self, **fields)
+            raise sqlite3.OperationalError(f"synthetic {failure_point} evidence commit")
+        return original(self, **fields)
+
+    monkeypatch.setattr(EvidenceStore, "record_revenue_transaction_once", fail_once)
+    completed = []
+    for attempt in range(3):
+        paused = run(service, "vietqr", "reconcile_payment", params,
+                     idempotency_key=f"payment-attempt-{attempt}")
+        assert paused["status"] == "AWAITING_APPROVAL"
+        outcome = service.decide_approval(
+            FOUNDER, paused["run_id"],
+            paused["approval_request"]["approval_token_id"], "approve",
+        ).to_dict()
+        if failure_point and attempt == 0:
+            assert outcome["status"] == "FAILED"
+            assert f"synthetic {failure_point}" in outcome["error_message"]
+            continue
+        assert_passed(outcome, "output_fields", "enum_member",
+                      "revenue_fact_is_verifiable", "invoice_ref_is_issued", "record_persisted")
+        assert outcome["output"]["status"] == "RECONCILED"
+        completed.append(outcome["output"])
+    assert completed[-1]["is_duplicate"] is True
+    assert len({item["revenue_record"]["tx_id"] for item in completed}) == 1
+    store = EvidenceStore(service.state_dir / "promise_evidence.db")
+    assert len(store.query("revenue_transactions", FOUNDER.workspace_id)) == 1
 
 
 def test_reconciled_payment_without_invoice_is_refused(service):
@@ -619,3 +676,212 @@ def test_taxadmin_late_payment_interest(service):
     assert_passed(settled, "late_payment_interest")
     assert settled["output"]["days_overdue"] == 0
     assert settled["output"]["late_payment_interest_vnd"] == 0
+
+
+def test_non_vnd_reconciliation_is_rejected_before_runtime_writes(service):
+    from src.core.promise.evidence import EvidenceStore
+    from src.core.vietqr_engine import VietQrEngine
+
+    invoice = run(service, "ke-toan", "create_invoice", {
+        "amount": 20_000_000, "buyer": "Currency Buyer", "seller_tax_code": SELLER_MST,
+    })
+    assert_passed(invoice, "invoice_tt78_structure")
+    from pathlib import Path
+
+    bank = VietQrEngine(Path(invoice["verification"]["engine_db_path"]).with_name("vietqr.db"))
+    evidence = EvidenceStore(service.state_dir / "promise_evidence.db")
+    params = {
+        "bank_tx_id": "currency-validation-bank", "amount_vnd": 20_000_000,
+        "memo": "invoice payment", "provider": "SEPAY",
+        "provider_reference": "currency-validation-reference",
+        "invoice_ref": invoice["output"]["invoice_id"], "currency": "USD",
+    }
+    rejected = run(service, "vietqr", "reconcile_payment", params,
+                   idempotency_key="reject-usd")
+    assert rejected["status"] == "FAILED"
+    assert rejected["error_code"] == "INPUT_INVALID"
+    assert "currency" in rejected["error_message"]
+    assert bank.list_transactions() == []
+    assert evidence.query("revenue_transactions", FOUNDER.workspace_id) == []
+    assert not all(c["met"] for c in service.reconcile_gate(FOUNDER, "first-revenue")["conditions"])
+
+    paused = run(service, "vietqr", "reconcile_payment", {**params, "currency": "VND"},
+                 idempotency_key="accept-vnd")
+    assert paused["status"] == "AWAITING_APPROVAL"
+    approved = service.decide_approval(
+        FOUNDER, paused["run_id"], paused["approval_request"]["approval_token_id"], "approve",
+    ).to_dict()
+    assert_passed(approved, "output_fields", "enum_member", "revenue_fact_is_verifiable",
+                  "invoice_ref_is_issued", "record_persisted")
+    assert len(bank.list_transactions()) == 1
+    assert len(evidence.query("revenue_transactions", FOUNDER.workspace_id)) == 1
+
+
+@pytest.mark.parametrize("change,error_code", [
+    ({"currency": "USD"}, "INPUT_INVALID"),
+    ({"provider_reference": "different-valid-reference"}, "IDEMPOTENCY_CONFLICT"),
+    ({"amount_vnd": 19_000_000}, "IDEMPOTENCY_CONFLICT"),
+])
+def test_completed_payment_key_rejects_changed_payload(service, change, error_code):
+    invoice = run(service, "ke-toan", "create_invoice", {
+        "amount": 20_000_000, "buyer": "Replay Buyer", "seller_tax_code": SELLER_MST,
+    })
+    assert_passed(invoice, "invoice_tt78_structure")
+    params = {
+        "bank_tx_id": "same-key-bank", "amount_vnd": 20_000_000,
+        "memo": "invoice payment", "provider": "SEPAY",
+        "provider_reference": "same-key-reference",
+        "invoice_ref": invoice["output"]["invoice_id"],
+    }
+    paused = run(service, "vietqr", "reconcile_payment", params, idempotency_key="same-key")
+    original = service.decide_approval(
+        FOUNDER, paused["run_id"], paused["approval_request"]["approval_token_id"], "approve",
+    ).to_dict()
+    assert_passed(original, "revenue_fact_is_verifiable", "record_persisted")
+    bank_path = original["verification"]["engine_db_path"]
+    with sqlite3.connect(bank_path) as conn:
+        bank_before = conn.execute("SELECT * FROM transactions").fetchall()
+    revenue_before = service.evidence.query("revenue_transactions", FOUNDER.workspace_id)
+    gate_before = service.reconcile_gate(FOUNDER, "first-revenue")
+    stored_before = service.jobs.get_job(original["run_id"], FOUNDER.workspace_id)
+
+    rejected = run(service, "vietqr", "reconcile_payment", {**params, **change},
+                   idempotency_key="same-key")
+    assert rejected["status"] == "FAILED"
+    assert rejected["error_code"] == error_code
+    assert rejected["idempotent_replay"] is False
+    assert rejected["run_id"] != original["run_id"]
+    assert service.jobs.get_job(original["run_id"], FOUNDER.workspace_id) == stored_before
+    replay = run(service, "vietqr", "reconcile_payment", {**params, "currency": "VND"},
+                 idempotency_key="same-key")
+    assert replay["status"] == "COMPLETED"
+    assert replay["idempotent_replay"] is True
+    assert replay["run_id"] == original["run_id"]
+    assert replay["output"] == original["output"]
+    with sqlite3.connect(bank_path) as conn:
+        assert conn.execute("SELECT * FROM transactions").fetchall() == bank_before
+    assert service.evidence.query("revenue_transactions", FOUNDER.workspace_id) == revenue_before
+    assert service.reconcile_gate(FOUNDER, "first-revenue")["conditions"] == gate_before["conditions"]
+
+
+@pytest.mark.parametrize("changed", [False, True])
+def test_payment_key_insert_race_validates_winner_payload(service, monkeypatch, changed):
+    from src.core.promise.jobs import DuplicateSubmissionError
+    from src.core.promise.signing import sha256_of
+
+    params = {
+        "bank_tx_id": "race-key-bank", "amount_vnd": 20_000_000,
+        "memo": "invoice payment", "provider": "SEPAY",
+        "provider_reference": "race-key-reference", "invoice_ref": "INV-RACE",
+    }
+    create = service.jobs.create_job
+    winner = None
+
+    def insert_winner_then_collide(**fields):
+        nonlocal winner
+        if fields.get("idempotency_key") == "race-key" and winner is None:
+            winning_params = dict(fields["params"])
+            if changed:
+                winning_params["amount_vnd"] = 19_000_000
+            winner = create(**{**fields, "params": winning_params,
+                               "params_digest": sha256_of(winning_params)})
+            # Exercise the actual unique key collision, not a fabricated result.
+            with pytest.raises(DuplicateSubmissionError):
+                create(**fields)
+            raise DuplicateSubmissionError(None)
+        return create(**fields)
+
+    monkeypatch.setattr(service.jobs, "create_job", insert_winner_then_collide)
+    result = run(service, "vietqr", "reconcile_payment", params, idempotency_key="race-key")
+    assert winner is not None
+    if changed:
+        assert result["status"] == "FAILED"
+        assert result["error_code"] == "IDEMPOTENCY_CONFLICT"
+        assert result["idempotent_replay"] is False
+    else:
+        assert result["run_id"] == winner["run_id"]
+        assert result["status"] == "QUEUED"
+        assert result["idempotent_replay"] is True
+    assert service.evidence.query("revenue_transactions", FOUNDER.workspace_id) == []
+
+
+@pytest.mark.parametrize("changed", [False, True])
+def test_concurrent_payment_key_submissions_do_not_execute_twice(service, monkeypatch, changed):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier, local
+
+    barrier = Barrier(2)
+    thread_state = local()
+    lookup = service.jobs.find_by_idempotency_key
+
+    def synchronized_first_lookup(workspace_id, key):
+        result = lookup(workspace_id, key)
+        if key == "concurrent-key" and not getattr(thread_state, "looked_up", False):
+            thread_state.looked_up = True
+            barrier.wait(timeout=10)
+        return result
+
+    monkeypatch.setattr(service.jobs, "find_by_idempotency_key", synchronized_first_lookup)
+    params = {
+        "bank_tx_id": "concurrent-key-bank", "amount_vnd": 20_000_000,
+        "memo": "invoice payment", "provider": "SEPAY",
+        "provider_reference": "concurrent-key-reference", "invoice_ref": "INV-CONCURRENT",
+    }
+
+    def submit(amount):
+        return run(service, "vietqr", "reconcile_payment", {**params, "amount_vnd": amount},
+                   idempotency_key="concurrent-key")
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(submit, [20_000_000, 19_000_000 if changed else 20_000_000]))
+    winner = lookup(FOUNDER.workspace_id, "concurrent-key")
+    assert winner["status"] == "AWAITING_APPROVAL"
+    if changed:
+        failures = [result for result in results if result["status"] == "FAILED"]
+        assert len(failures) == 1
+        assert failures[0]["error_code"] == "IDEMPOTENCY_CONFLICT"
+    else:
+        assert {result["run_id"] for result in results} == {winner["run_id"]}
+        assert sum(result["idempotent_replay"] for result in results) == 1
+    assert service.evidence.query("revenue_transactions", FOUNDER.workspace_id) == []
+    assert not list(service.workspace_root.glob(".mekong/workspaces/**/vietqr.db"))
+
+
+def test_payment_key_is_bound_to_operation_and_auth_precedes_replay(service):
+    from src.core.promise.schema import validate_params
+    from src.core.promise.signing import sha256_of
+
+    params = {
+        "bank_tx_id": "operation-key-bank", "amount_vnd": 20_000_000,
+        "memo": "invoice payment", "provider": "SEPAY",
+        "provider_reference": "operation-key-reference", "invoice_ref": "INV-OPERATION",
+    }
+    spec = service.registry.resolve("vietqr", "reconcile_payment")
+    canonical = validate_params(spec.input_schema, params)
+    original = service.jobs.create_job(
+        workspace_id=FOUNDER.workspace_id, principal_id=FOUNDER.principal_id,
+        command_id="other-command", op_id="other-operation", subcommand="other-subcommand",
+        params=canonical, params_digest=sha256_of(canonical), idempotency_key="operation-key",
+    )
+    rejected = run(service, "vietqr", "reconcile_payment", params, idempotency_key="operation-key")
+    assert rejected["error_code"] == "IDEMPOTENCY_CONFLICT"
+    before = service.jobs.list_jobs(FOUNDER.workspace_id)
+    viewer = Principal(principal_id="viewer", workspace_id=FOUNDER.workspace_id,
+                       roles=("viewer",), tier="SCALE")
+    for payload in (params, {**params, "currency": "USD"}):
+        with pytest.raises(PermissionDeniedError):
+            run(service, "vietqr", "reconcile_payment", payload, principal=viewer,
+                idempotency_key="operation-key")
+    assert service.jobs.list_jobs(FOUNDER.workspace_id) == before
+    assert service.jobs.get_job(original["run_id"], FOUNDER.workspace_id) == original
+
+
+def test_job_id_collision_without_matching_key_is_not_replayed(service):
+    from src.core.promise.jobs import DuplicateSubmissionError
+
+    first = run(service, "thue", "tncn", {"monthly_income": 20_000_000},
+                idempotency_key="first-job-key")
+    with pytest.raises(DuplicateSubmissionError):
+        run(service, "thue", "tncn", {"monthly_income": 20_000_000},
+            idempotency_key="different-job-key", run_id=first["run_id"])
+    assert service.jobs.find_by_idempotency_key(FOUNDER.workspace_id, "different-job-key") is None

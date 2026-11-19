@@ -15,6 +15,7 @@ from typing import Any, Final, Sequence
 
 from src.core.vietqr_engine import VietQrEngine
 from src.opc.privacy_guard import verify_confidence_and_math
+from src.opc.vat_calculations import _round_vnd, compute_vnd_vat_breakdown as compute_vnd_vat_breakdown
 
 DRAFT_STATUS_PENDING_TVAN: Final[str] = "DRAFT_PENDING_TVAN"
 ALLOWED_ACCOUNTING_TARGETS: Final[frozenset[str]] = frozenset({"misa_meinvoice", "sapo_invoice"})
@@ -23,6 +24,10 @@ _RUN_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r"\brun_[A-Za-z0-9_-]+\b")
 
 class VietQrWebhookError(PermissionError):
     """Raised when a VietQR banking webhook fails HMAC verification, type safety, or order binding."""
+
+
+class VietQrSettlementConflictError(VietQrWebhookError):
+    """Raised when a second distinct bank_tx_id attempts to settle an already-settled run."""
 
 
 @dataclass(frozen=True)
@@ -88,6 +93,10 @@ def reconcile_signed_vietqr_webhook(
     except (TypeError, ValueError) as exc:
         raise VietQrWebhookError("Non-integer amount_vnd in VietQR webhook payload.") from exc
 
+    if "currency" in body and body["currency"] is not None:
+        if str(body["currency"]).strip().upper() != "VND":
+            raise VietQrWebhookError(f"Unsupported currency '{body['currency']}' in VietQR webhook payload (VND required).")
+
     if not bank_tx_id:
         raise VietQrWebhookError("Missing bank_tx_id in VietQR webhook payload.")
     if amount_vnd <= 0 or amount_vnd != int(expected_amount_vnd):
@@ -95,10 +104,14 @@ def reconcile_signed_vietqr_webhook(
     if not _memo_binds_exclusively_to_run(memo, body.get("matched_order_id"), expected_run_id):
         raise VietQrWebhookError(f"VietQR webhook memo '{memo}' does not bind exclusively to '{expected_run_id}'.")
 
-    tx_record = vietqr.record_transaction(
+    tx_record = vietqr.record_unique_order_transaction(
         bank_tx_id=bank_tx_id, amount_vnd=amount_vnd, memo=memo,
-        bin_code=bin_code, matched_order_id=expected_run_id, save=True,
+        matched_order_id=expected_run_id, bin_code=bin_code,
     )
+    if tx_record.get("conflict"):
+        raise VietQrSettlementConflictError(
+            f"Run '{expected_run_id}' is already settled by bank_tx_id '{tx_record.get('existing_bank_tx_id')}'; rejecting conflicting '{bank_tx_id}'."
+        )
     if tx_record.get("matched_order_id") != expected_run_id or int(tx_record.get("amount_vnd", -1)) != int(expected_amount_vnd):
         raise VietQrWebhookError(
             f"Cross-order bank_tx_id replay blocked: '{bank_tx_id}' already bound to '{tx_record.get('matched_order_id')}'."
@@ -120,6 +133,7 @@ def build_accounting_draft_export(
     run_id: str, buyer_name: str, line_items: Sequence[dict[str, Any]],
     declared_subtotal_vnd: int, vat_rate_pct: int = 8,
     target_provider: str = "misa_meinvoice", bank_tx_id: str | None = None,
+    settled_amount_vnd: int | None = None,
 ) -> AccountingDraftExport:
     """Create a mathematically verified pre-accounting draft (never legally self-certified)."""
     provider = target_provider.strip().lower()
@@ -129,15 +143,18 @@ def build_accounting_draft_export(
         raise ValueError(f"Unsupported Vietnamese VAT rate '{vat_rate_pct}%' (expected 0, 5, 8, or 10).")
 
     verified_sub = verify_confidence_and_math(line_items, Decimal(int(declared_subtotal_vnd)), confidence=1.0)
-    subtotal_int = int(verified_sub)
-    vat_int = int((verified_sub * Decimal(vat_rate_pct)) / Decimal(100))
-    total_int = subtotal_int + vat_int
+    subtotal_int, vat_int, total_int = compute_vnd_vat_breakdown(verified_sub, vat_rate_pct)
+    if settled_amount_vnd is not None and int(settled_amount_vnd) != total_int:
+        raise ValueError(
+            f"Settled VietQR amount ({int(settled_amount_vnd)} VND) does not match VAT-inclusive "
+            f"accounting draft total ({total_int} VND = {subtotal_int} subtotal + {vat_int} VAT@{vat_rate_pct}%)."
+        )
     normalized_items = tuple(
         {
             "item_name": str(it.get("service", it.get("item_name", "item"))),
-            "quantity": int(Decimal(str(it.get("hours", it.get("quantity", 1))))),
-            "unit_price_vnd": int(Decimal(str(it.get("rate", it.get("unit_price", 0))))),
-            "line_subtotal_vnd": int(Decimal(str(it.get("subtotal", 0)))),
+            "quantity": _round_vnd(it.get("hours", it.get("quantity", 1))),
+            "unit_price_vnd": _round_vnd(it.get("rate", it.get("unit_price", 0))),
+            "line_subtotal_vnd": _round_vnd(it.get("subtotal", 0)),
         }
         for it in line_items
     )

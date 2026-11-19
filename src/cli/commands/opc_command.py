@@ -313,7 +313,7 @@ def run_pilot_a(
         card = wf.handle_webhook(event)
         dispatch_res = wf.approve_and_send(card) if bool(_resolve_opt(approve_and_send, False)) else None
         acc_draft = (
-            dataclasses.asdict(build_accounting_draft_export(card.run_id, card.client_name, card.line_items, card.total_amount_vnd))
+            dataclasses.asdict(build_accounting_draft_export(card.run_id, card.client_name, card.line_items, card.subtotal_vnd, vat_rate_pct=card.vat_rate_pct))
             if bool(_resolve_opt(export_draft, False))
             else None
         )
