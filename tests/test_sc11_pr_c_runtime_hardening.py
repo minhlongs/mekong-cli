@@ -218,3 +218,15 @@ def test_rt06_dr_online_backup_and_isolated_restore_rehearsal(tmp_path: Path) ->
     (tampered_backup / "tenant_rt06.db").write_bytes(b"corrupted-bytes")
     with pytest.raises(ValueError, match="SHA-256 checksum mismatch"):
         restore_tenant_directory(tampered_backup, tmp_path / "tampered_restore")
+
+    # Path traversal & restrictive permissions hardening
+    assert (restored_dir.stat().st_mode & 0o777) == 0o700
+    assert ((restored_dir / "tenant_rt06.db").stat().st_mode & 0o777) == 0o600
+    assert ((restored_dir / "tenant_rt06.tenant.json").stat().st_mode & 0o777) == 0o600
+    trav_backup = tmp_path / "trav_backup"
+    backup_tenant_directory(live_dir, trav_backup)
+    manifest = json.loads((trav_backup / "manifest.json").read_text(encoding="utf-8"))
+    manifest["databases"].append({"file": "../escape.db", "sha256": "0" * 64, "bytes": 0, "integrity": "ok"})
+    (trav_backup / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="Unsafe backup manifest filename"):
+        restore_tenant_directory(trav_backup, tmp_path / "trav_restore")

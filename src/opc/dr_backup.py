@@ -46,9 +46,31 @@ def _sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+def _chmod_safe(path: Path, mode: int) -> None:
+    try:
+        os.chmod(path, mode)
+    except OSError:
+        pass
+
+
+def _validate_manifest_filename(fname: str, expected_suffix: str, bdir: Path, rdir: Path) -> tuple[Path, Path]:
+    if not fname or "/" in fname or "\\" in fname or ".." in fname or Path(fname).is_absolute():
+        raise ValueError(f"Unsafe backup manifest filename: {fname!r}")
+    if not fname.endswith(expected_suffix):
+        raise ValueError(f"Unexpected backup manifest file suffix for {fname!r}; expected {expected_suffix!r}")
+    b_file = bdir / fname
+    r_file = rdir / fname
+    if b_file.is_symlink() or r_file.is_symlink():
+        raise ValueError(f"Symlinks are not allowed in backup/restore: {fname!r}")
+    if b_file.resolve().parent != bdir or r_file.resolve().parent != rdir:
+        raise ValueError(f"Path traversal detected for manifest filename: {fname!r}")
+    return b_file, r_file
+
+
 def _sqlite_online_backup(src_db: Path, dst_db: Path) -> str:
     """Create a WAL-consistent snapshot using sqlite3.Connection.backup and run PRAGMA integrity_check."""
     dst_db.parent.mkdir(parents=True, exist_ok=True)
+    _chmod_safe(dst_db.parent, 0o700)
     if dst_db.exists():
         dst_db.unlink()
     src_conn = sqlite3.connect(str(src_db), timeout=10.0)
@@ -61,6 +83,8 @@ def _sqlite_online_backup(src_db: Path, dst_db: Path) -> str:
     finally:
         dst_conn.close()
         src_conn.close()
+        if dst_db.exists():
+            _chmod_safe(dst_db, 0o600)
 
 
 def backup_tenant_directory(source_dir: Path, backup_dir: Path) -> dict[str, Any]:
@@ -68,6 +92,7 @@ def backup_tenant_directory(source_dir: Path, backup_dir: Path) -> dict[str, Any
     src = Path(source_dir).resolve()
     dst = Path(backup_dir).resolve()
     dst.mkdir(parents=True, exist_ok=True)
+    _chmod_safe(dst, 0o700)
     db_entries: list[dict[str, Any]] = []
     cfg_entries: list[dict[str, Any]] = []
 
@@ -81,6 +106,7 @@ def backup_tenant_directory(source_dir: Path, backup_dir: Path) -> dict[str, Any
     for cfg_file in sorted(src.glob("*.tenant.json")):
         out_cfg = dst / cfg_file.name
         shutil.copy2(cfg_file, out_cfg)
+        _chmod_safe(out_cfg, 0o600)
         cfg_entries.append({"file": cfg_file.name, "sha256": _sha256_file(out_cfg), "bytes": out_cfg.stat().st_size})
 
     manifest = {
@@ -90,7 +116,9 @@ def backup_tenant_directory(source_dir: Path, backup_dir: Path) -> dict[str, Any
         "databases": db_entries,
         "configs": cfg_entries,
     }
-    (dst / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
+    manifest_file = dst / "manifest.json"
+    manifest_file.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
+    _chmod_safe(manifest_file, 0o600)
     return manifest
 
 
@@ -99,21 +127,22 @@ def restore_tenant_directory(backup_dir: Path, restore_dir: Path) -> dict[str, A
     bdir = Path(backup_dir).resolve()
     rdir = Path(restore_dir).resolve()
     manifest_path = bdir / "manifest.json"
-    if not manifest_path.is_file():
+    if not manifest_path.is_file() or manifest_path.is_symlink():
         raise FileNotFoundError(f"Backup manifest missing: {manifest_path}")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     rdir.mkdir(parents=True, exist_ok=True)
+    _chmod_safe(rdir, 0o700)
 
     restored_dbs: list[str] = []
     integrity_results: dict[str, str] = {}
     for entry in manifest.get("databases", []):
         fname = str(entry["file"])
-        b_file = bdir / fname
+        b_file, r_file = _validate_manifest_filename(fname, ".db", bdir, rdir)
         if not b_file.is_file():
             raise FileNotFoundError(f"Missing backup DB file: {fname}")
         if _sha256_file(b_file) != entry["sha256"]:
             raise ValueError(f"SHA-256 checksum mismatch for backup DB: {fname}")
-        integrity = _sqlite_online_backup(b_file, rdir / fname)
+        integrity = _sqlite_online_backup(b_file, r_file)
         if integrity.lower() != "ok":
             raise RuntimeError(f"Restored DB failed integrity check: {fname} ({integrity})")
         restored_dbs.append(fname)
@@ -122,10 +151,11 @@ def restore_tenant_directory(backup_dir: Path, restore_dir: Path) -> dict[str, A
     restored_cfgs: list[str] = []
     for entry in manifest.get("configs", []):
         fname = str(entry["file"])
-        b_file = bdir / fname
+        b_file, r_file = _validate_manifest_filename(fname, ".tenant.json", bdir, rdir)
         if not b_file.is_file() or _sha256_file(b_file) != entry["sha256"]:
             raise ValueError(f"Backup config missing or checksum mismatch: {fname}")
-        shutil.copy2(b_file, rdir / fname)
+        shutil.copy2(b_file, r_file)
+        _chmod_safe(r_file, 0o600)
         restored_cfgs.append(fname)
 
     return {
