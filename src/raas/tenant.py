@@ -210,42 +210,124 @@ class TenantStore:
 
         return _row_to_tenant(row) if row else None
 
-    def jurisdiction_for(self, org_id: str) -> str:
-        """Return the ISO 3166-1 alpha-2 jurisdiction governing *org_id*.
-
-        Resolution order: the tenant record's stored jurisdiction, then a
-        ``VN``/``VN-`` prefix on *org_id*, then ``VN`` as the default. The
-        callers use this to decide which payment rails an organisation may
-        settle on, so the default is deliberately restrictive rather than
-        permissive — an unidentifiable organisation is not granted the crypto
-        rail. A non-``VN`` prefix is only treated as a jurisdiction when it is
-        explicitly declared on the request; an org label is not proof of
-        nationality, so prefixes other than ``VN`` are not trusted here.
-
-        Args:
-            org_id: Organisation identifier or tenant name.
-
-        Returns:
-            A two-letter jurisdiction code (uppercased).
-        """
+    def get_persisted_jurisdiction(self, org_id: str) -> Optional[str]:
+        """Return the persisted ISO alpha-2 jurisdiction for an active tenant, or None if unverified/ambiguous."""
+        clean = (org_id or "").strip()
+        if not clean:
+            return None
         try:
             with self._connect() as conn:
                 row = conn.execute(
-                    "SELECT jurisdiction FROM tenants WHERE id = ? OR name = ?",
-                    (org_id, org_id),
+                    "SELECT jurisdiction FROM tenants WHERE id = ? AND is_active = 1",
+                    (clean,),
                 ).fetchone()
+                if row is None:
+                    rows = conn.execute(
+                        "SELECT jurisdiction FROM tenants WHERE name = ? AND is_active = 1 LIMIT 2",
+                        (clean,),
+                    ).fetchall()
+                    row = rows[0] if len(rows) == 1 else None
         except sqlite3.Error:
-            row = None
+            return None
+        if row is None:
+            return None
+        stored = str(row["jurisdiction"] or "").strip().upper()
+        return stored if (len(stored) == 2 and stored.isalpha()) else "VN"
 
-        if row is not None:
-            stored = str(row["jurisdiction"] or "").strip().upper()
-            if stored:
-                return stored
+    def ensure_jurisdiction_audit_schema(self) -> None:
+        """Idempotently migrate tenant DB to add tenant_jurisdiction_audit table."""
+        with self._connect() as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS tenant_jurisdiction_audit (
+                    audit_id TEXT PRIMARY KEY,
+                    tenant_id TEXT NOT NULL,
+                    old_jurisdiction TEXT NOT NULL,
+                    new_jurisdiction TEXT NOT NULL,
+                    actor_id TEXT NOT NULL,
+                    evidence_ref TEXT NOT NULL,
+                    changed_at TEXT NOT NULL
+                )
+                """
+            )
+            conn.commit()
 
-        normalised = (org_id or "").strip().upper()
-        if normalised.startswith("VN"):
-            return "VN"
-        return "VN"
+    def rollback_jurisdiction_audit_schema(self) -> None:
+        """Rollback helper dropping tenant_jurisdiction_audit without touching tenants."""
+        with self._connect() as conn:
+            conn.execute("DROP TABLE IF EXISTS tenant_jurisdiction_audit")
+            conn.commit()
+
+    def update_jurisdiction_admin(
+        self,
+        tenant_id: str,
+        new_jurisdiction: str,
+        *,
+        actor_id: str,
+        evidence_ref: str,
+    ) -> dict[str, str]:
+        """Administratively update a persisted tenant's jurisdiction with mandatory evidence and audit log."""
+        clean_jur = (new_jurisdiction or "").strip().upper()
+        if len(clean_jur) != 2 or not clean_jur.isalpha():
+            raise ValueError("Jurisdiction must be a 2-letter ISO 3166-1 alpha-2 code.")
+        clean_actor = (actor_id or "").strip()
+        clean_evidence = (evidence_ref or "").strip()
+        if not clean_actor or not clean_evidence:
+            raise ValueError("Administrative jurisdiction change requires non-empty actor_id and evidence_ref.")
+        clean_tid = (tenant_id or "").strip()
+        self.ensure_jurisdiction_audit_schema()
+        changed_at = datetime.now(timezone.utc).isoformat()
+        audit_id = f"jur_{uuid.uuid4().hex[:16]}"
+        conn = sqlite3.connect(str(self.db_path), isolation_level=None)
+        conn.row_factory = sqlite3.Row
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            row = conn.execute(
+                "SELECT id, jurisdiction FROM tenants WHERE id = ? AND is_active = 1",
+                (clean_tid,),
+            ).fetchone()
+            if row is None:
+                rows = conn.execute(
+                    "SELECT id, jurisdiction FROM tenants WHERE name = ? AND is_active = 1 LIMIT 2",
+                    (clean_tid,),
+                ).fetchall()
+                if len(rows) > 1:
+                    raise ValueError(f"Ambiguous tenant name '{clean_tid}'; specify primary tenant_id.")
+                row = rows[0] if len(rows) == 1 else None
+            if row is None:
+                raise LookupError(f"Active tenant '{clean_tid}' not found.")
+            resolved_id = str(row["id"])
+            old_jur = str(row["jurisdiction"] or "VN").strip().upper()
+            conn.execute(
+                "UPDATE tenants SET jurisdiction = ? WHERE id = ?",
+                (clean_jur, resolved_id),
+            )
+            conn.execute(
+                "INSERT INTO tenant_jurisdiction_audit "
+                "(audit_id, tenant_id, old_jurisdiction, new_jurisdiction, actor_id, evidence_ref, changed_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (audit_id, resolved_id, old_jur, clean_jur, clean_actor, clean_evidence, changed_at),
+            )
+            conn.execute("COMMIT")
+        except Exception:
+            if conn.in_transaction:
+                conn.execute("ROLLBACK")
+            raise
+        finally:
+            conn.close()
+        return {
+            "audit_id": audit_id,
+            "tenant_id": resolved_id,
+            "old_jurisdiction": old_jur,
+            "new_jurisdiction": clean_jur,
+            "actor_id": clean_actor,
+            "evidence_ref": clean_evidence,
+            "changed_at": changed_at,
+        }
+
+    def jurisdiction_for(self, org_id: str) -> str:
+        """Return the ISO 3166-1 alpha-2 jurisdiction governing *org_id* (fail-closed to VN)."""
+        return self.get_persisted_jurisdiction(org_id) or "VN"
 
     def list_tenants(self) -> List[Tenant]:
         """Return all active tenants ordered by creation date.
@@ -310,6 +392,21 @@ class TenantStore:
                 ).fetchone()
         except sqlite3.Error as exc:
             raise RuntimeError(f"Failed to check tenant existence: {exc}") from exc
+        return row is not None
+
+    def tenant_exists_by_id_or_name(self, org_id: str) -> bool:
+        """Return True if any tenant row (active or inactive, unique or duplicate) matches id or name."""
+        clean = (org_id or "").strip()
+        if not clean:
+            return False
+        try:
+            with self._connect() as conn:
+                row = conn.execute(
+                    "SELECT 1 FROM tenants WHERE id = ? OR name = ? LIMIT 1",
+                    (clean, clean),
+                ).fetchone()
+        except sqlite3.Error as exc:
+            raise RuntimeError(f"Failed to verify tenant existence: {exc}") from exc
         return row is not None
 
 

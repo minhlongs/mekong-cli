@@ -172,12 +172,22 @@ def _resolve_ipn_tenant_and_vn_flag(
         with closing(store._connect()) as conn:
             for candidate in dict.fromkeys(candidates):
                 row = conn.execute(
-                    "SELECT id, name, jurisdiction FROM tenants WHERE id = ? OR name = ?",
-                    (candidate, candidate),
+                    "SELECT id, name FROM tenants WHERE id = ? AND is_active = 1",
+                    (candidate,),
                 ).fetchone()
+                if row is None:
+                    name_rows = conn.execute(
+                        "SELECT id, name FROM tenants WHERE name = ? AND is_active = 1 LIMIT 2",
+                        (candidate,),
+                    ).fetchall()
+                    if len(name_rows) > 1:
+                        return (True, None)
+                    row = name_rows[0] if name_rows else None
                 if row is not None:
-                    jur = str(row["jurisdiction"] or "").strip().upper()
-                    if not jur or jur.startswith("VN"):
+                    from src.raas.checkout_router import rails_allowed_for_jurisdiction
+
+                    jur = store.get_persisted_jurisdiction(str(row["id"]))
+                    if not jur or "nowpayments" not in rails_allowed_for_jurisdiction(jur):
                         return (True, None)
                     resolved_non_vn = True
                     if matched_tenant_key is None:

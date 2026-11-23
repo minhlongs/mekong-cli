@@ -8,6 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from src.opc.currency_accounting import FxQuote, MultiCurrencyCostSummary, summarize_multicurrency_records
 from src.opc.models import CostAccounting, UsageRecord, UsageStage
 from src.opc.quota import QuotaReservationResult, WorkflowQuotaGuard
 
@@ -52,6 +53,8 @@ class UsageLedger:
 
     def record_usage(self, record: UsageRecord) -> bool:
         """Insert a usage record. Returns False if event_id already exists (idempotent)."""
+        raw_ccy = (record.currency or "").strip()
+        stored_ccy = raw_ccy.upper() if (len(raw_ccy) == 3 and raw_ccy.isascii() and raw_ccy.isalpha()) else raw_ccy
         with self._get_connection() as conn:
             try:
                 conn.execute(
@@ -64,7 +67,7 @@ class UsageLedger:
                     (
                         record.event_id, record.run_id, record.attempt, record.stage.value,
                         record.provider, record.model, record.tokens, record.tool_fee,
-                        record.amount, record.currency, record.payer, record.pricing_source,
+                        record.amount, stored_ccy, record.payer, record.pricing_source,
                         record.created_at,
                     ),
                 )
@@ -83,26 +86,32 @@ class UsageLedger:
         payer: str, now: int, hard_limit: str | None = None,
     ) -> bool:
         """Atomically reserve budget for an action in an IMMEDIATE transaction."""
+        norm_ccy = (currency or "").strip().upper()
+        if len(norm_ccy) != 3 or not norm_ccy.isascii() or not norm_ccy.isalpha():
+            return False
+        try:
+            req_amt = Decimal(str(max_budget_amount).strip())
+            lim_amt = Decimal(str(hard_limit).strip()) if hard_limit is not None else None
+        except Exception:
+            return False
+        if not req_amt.is_finite() or req_amt < Decimal("0") or (lim_amt is not None and (not lim_amt.is_finite() or lim_amt < Decimal("0"))):
+            return False
         with self._get_connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
             try:
-                if hard_limit is not None:
+                if lim_amt is not None:
                     cur = conn.execute(
-                        "SELECT amount FROM opc_usage_events WHERE run_id = ? AND stage IN ('reserved', 'actual')",
-                        (run_id,),
+                        "SELECT amount FROM opc_usage_events WHERE run_id = ? AND UPPER(TRIM(currency)) = ? AND stage IN ('reserved', 'actual')",
+                        (run_id, norm_ccy),
                     )
                     spent = sum(Decimal(r["amount"]) for r in cur.fetchall() if r["amount"] is not None)
-                    if spent + Decimal(max_budget_amount) > Decimal(hard_limit):
+                    if spent + req_amt > lim_amt:
                         conn.rollback()
                         return False
                 conn.execute(
-                    """
-                    INSERT INTO opc_usage_events (
-                        event_id, run_id, attempt, stage, provider, model,
-                        tokens, tool_fee, amount, currency, payer, pricing_source, created_at
-                    ) VALUES (?, ?, 1, 'reserved', 'pre_dispatch_guard', 'budget_lock', 0, '0', ?, ?, ?, 'policy_cap', ?)
-                    """,
-                    (event_id, run_id, max_budget_amount, currency, payer, now),
+                    "INSERT INTO opc_usage_events (event_id, run_id, attempt, stage, provider, model, tokens, tool_fee, amount, currency, payer, pricing_source, created_at) "
+                    "VALUES (?, ?, 1, 'reserved', 'pre_dispatch_guard', 'budget_lock', 0, '0', ?, ?, ?, 'policy_cap', ?)",
+                    (event_id, run_id, str(req_amt), norm_ccy, payer, now),
                 )
                 conn.commit()
                 return True
@@ -128,51 +137,48 @@ class UsageLedger:
                 for row in cursor.fetchall()
             ]
 
+    def summarize_currency_aware_costs(
+        self, run_id: str, *, target_currency: str | None = None,
+        fx_quotes: tuple[FxQuote, ...] | list[FxQuote] | None = None, now: int | None = None,
+    ) -> MultiCurrencyCostSummary:
+        """Aggregate run costs with strict Decimal currency separation and optional verified FX conversion."""
+        return summarize_multicurrency_records(self.get_run_records(run_id), target_currency=target_currency, fx_quotes=fx_quotes, now=now)
+
     def aggregate_run_costs(self, run_id: str) -> dict[str, Any]:
-        """Aggregate costs by stage. Unknown costs explicitly surfaced, never defaulted to zero."""
+        """Aggregate costs by currency and stage. Unknown or missing-currency rows are surfaced explicitly."""
         records = self.get_run_records(run_id)
-        totals: dict[str, Decimal] = {}
-        has_unknown = False
-        total_tokens = 0
-        for r in records:
-            if r.tokens:
-                total_tokens += r.tokens
-            if r.stage == UsageStage.UNKNOWN or r.amount is None:
-                has_unknown = True
-                continue
-            curr = r.currency
-            totals[curr] = totals.get(curr, Decimal("0.0")) + Decimal(r.amount)
+        summary = summarize_multicurrency_records(records)
+        known: dict[str, Decimal] = {}
+        for bucket in (summary.measured_by_currency, summary.estimated_by_currency):
+            for ccy, amt in bucket.items():
+                known[ccy] = known.get(ccy, Decimal("0")) + amt
         return {
-            "run_id": run_id, "total_tokens": total_tokens,
-            "known_amounts": {k: str(v) for k, v in totals.items()},
-            "has_unknown_costs": has_unknown, "event_count": len(records),
+            "run_id": run_id,
+            "total_tokens": sum(r.tokens for r in records if r.tokens),
+            "known_amounts": {k: str(v) for k, v in sorted(known.items())},
+            "measured_by_currency": {k: str(v) for k, v in sorted(summary.measured_by_currency.items())},
+            "estimated_by_currency": {k: str(v) for k, v in sorted(summary.estimated_by_currency.items())},
+            "has_unknown_costs": summary.has_unknown_costs or summary.has_missing_currency,
+            "has_missing_currency": summary.has_missing_currency,
+            "has_mixed_currencies": summary.has_mixed_currencies,
+            "accounting_status": summary.status,
+            "event_count": len(records),
         }
 
     def summarize_cost_accounting(self, run_id: str) -> CostAccounting:
-        """Build CostAccounting for run_id without fabricating 0.0 when cost is unknown."""
+        """Build CostAccounting without mixing currencies or fabricating 0.0 when cost/currency is missing."""
         records = self.get_run_records(run_id)
-        m_tok, e_tok, has_m_tok, has_e_tok = 0, 0, False, False
-        act_sum, est_sum, has_act, has_est, has_unk = Decimal("0"), Decimal("0"), False, False, False
-        for r in records:
-            if r.stage == UsageStage.ACTUAL:
-                if r.tokens is not None:
-                    m_tok, has_m_tok = m_tok + r.tokens, True
-                if r.amount is not None:
-                    act_sum, has_act = act_sum + Decimal(r.amount), True
-                else:
-                    has_unk = True
-            elif r.stage in (UsageStage.ESTIMATED, UsageStage.RESERVED):
-                if r.tokens is not None:
-                    e_tok, has_e_tok = e_tok + r.tokens, True
-                if r.amount is not None:
-                    est_sum, has_est = est_sum + Decimal(r.amount), True
-            elif r.stage == UsageStage.UNKNOWN:
-                has_unk = True
-                if r.tokens is not None:
-                    e_tok, has_e_tok = e_tok + r.tokens, True
+        summary = summarize_multicurrency_records(records)
+        m_tok = sum(r.tokens for r in records if r.stage == UsageStage.ACTUAL and r.tokens is not None)
+        e_tok = sum(r.tokens for r in records if r.stage != UsageStage.ACTUAL and r.tokens is not None)
+        has_m_tok = any(r.stage == UsageStage.ACTUAL and r.tokens is not None for r in records)
+        has_e_tok = any(r.stage != UsageStage.ACTUAL and r.tokens is not None for r in records)
+        clean = not summary.has_unknown_costs and not summary.has_missing_currency and not summary.has_mixed_currencies
+        act_scalar = float(next(iter(summary.measured_by_currency.values()))) if (clean and len(summary.measured_by_currency) == 1) else None
+        est_scalar = float(next(iter(summary.estimated_by_currency.values()))) if (clean and len(summary.estimated_by_currency) == 1) else None
         return CostAccounting.build(
             measured_tokens=m_tok if has_m_tok else None,
             estimated_tokens=e_tok if has_e_tok else None,
-            actual_cost=float(act_sum) if (has_act and not has_unk) else None,
-            estimated_cost=float(est_sum) if (has_est and not has_unk) else None,
+            actual_cost=act_scalar,
+            estimated_cost=est_scalar,
         )
