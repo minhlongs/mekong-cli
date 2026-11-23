@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import sqlite3
 import time
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Header, HTTPException, Query, Request, Response
 from fastapi.responses import HTMLResponse, PlainTextResponse
@@ -31,6 +31,7 @@ from src.opc.connectors.zalo_http import (
     ZaloWebhookMacError,
     verify_zalo_webhook_mac,
 )
+from src.opc.dr_backup import PilotAKillSwitchError, enforce_pilot_a_kill_switch
 from src.opc.misa_export import DraftExportComplianceError, export_draft_bundle
 from src.opc.models import ActionPayload, ApprovalDecision, BusinessProfile, WorkflowStatus
 from src.opc.pilot_a import (
@@ -87,7 +88,7 @@ class PilotAZaloWebhookRequest(BaseModel):
     currency: str = Field("VND", min_length=3, max_length=8)
     language: str = Field("vi", min_length=2, max_length=8)
     extraction_confidence: float | None = Field(None, ge=0.0, le=1.0, allow_inf_nan=False)
-    vat_rate_pct: int = Field(8)
+    vat_rate_pct: Literal[0, 5, 8, 10] = 8
     tenant_id: str = Field("default", min_length=2, max_length=63)
     sme_tier: str = Field("pilot_a")
     connector: str = Field("zalo_oa_sandbox")
@@ -311,6 +312,7 @@ def _build_workflow(
     custom_rates: dict[str, int] | None = None,
     require_existing_tenant: bool = True,
     require_webhook_mac: bool | None = None,
+    vat_rate_pct: int = 8,
 ) -> tuple[PilotAWorkflow, dict[str, Any] | None]:
     base_dir = _pilot_base_dir()
     db_path = resolve_tenant_db_path(base_dir, tenant_id, active_tenant_id=tenant_id)
@@ -337,6 +339,7 @@ def _build_workflow(
         require_webhook_mac=require_webhook_mac,
         runtime_engine=runtime_engine,
         handoff_on_low_confidence=True,
+        vat_rate_pct=vat_rate_pct,
     )
     return wf, tenant_cfg
 
@@ -378,6 +381,13 @@ async def receive_pilot_a_zalo_webhook(
 ) -> dict[str, Any]:
     """Ingest Zalo OA inbound message, run GovernedStateGraph stages 1-4, and emit 1-tap ApprovalCard or Handoff."""
     _apply_no_leak_headers(response)
+    try:
+        enforce_pilot_a_kill_switch("intake")
+    except PilotAKillSwitchError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "PILOT_A_KILL_SWITCH_ACTIVE", "stage": exc.stage, "message": str(exc)},
+        ) from exc
     raw_body = await request.body()
     now_ts = int(req.timestamp) if req.timestamp is not None else int(time.time())
     last_ts = int(req.last_user_interaction_ts) if req.last_user_interaction_ts is not None else (now_ts - 300)
@@ -407,12 +417,13 @@ async def receive_pilot_a_zalo_webhook(
                 req.grant_consent
                 or req.service_rates_vnd is not None
                 or req.sme_tier.strip().lower() != "pilot_a"
+                or req.vat_rate_pct != 8
             ):
                 raise HTTPException(
                     status_code=403,
                     detail={
                         "error": "privileged_webhook_fields_forbidden",
-                        "message": "Tenant API key required for consent, rate, or tier overrides.",
+                        "message": "Tenant API key required for consent, rate, tier, or VAT overrides.",
                     },
                 )
             if must_enforce_external_mac:
@@ -433,6 +444,7 @@ async def receive_pilot_a_zalo_webhook(
         allow_custom_rates = req.service_rates_vnd if is_owner_authed else None
         allow_grant_consent = bool(req.grant_consent and is_owner_authed)
         eff_sme_tier = req.sme_tier if is_owner_authed else "pilot_a"
+        eff_vat_rate_pct = req.vat_rate_pct if is_owner_authed else 8
 
         wf, _ = _build_workflow(
             tenant_id=req.tenant_id,
@@ -444,6 +456,7 @@ async def receive_pilot_a_zalo_webhook(
             custom_rates=allow_custom_rates,
             require_existing_tenant=not allow_unauth_dev_sandbox,
             require_webhook_mac=must_enforce_external_mac,
+            vat_rate_pct=eff_vat_rate_pct,
         )
         if allow_grant_consent:
             wf.privacy_guard.record_subject_consent(req.sender_id)
@@ -686,6 +699,14 @@ async def decide_pilot_a_run(
     norm_dec = req.decision.strip().lower()
     if norm_dec not in ("approve", "reject", "revise", "handoff"):
         raise HTTPException(status_code=400, detail={"error": "invalid_decision", "decision": req.decision})
+    if norm_dec == "approve":
+        try:
+            enforce_pilot_a_kill_switch("dispatch")
+        except PilotAKillSwitchError as exc:
+            raise HTTPException(
+                status_code=503,
+                detail={"error": "PILOT_A_KILL_SWITCH_ACTIVE", "stage": exc.stage, "message": str(exc)},
+            ) from exc
     try:
         base_dir, _ = _prepare_existing_tenant_for_owner_route(
             tenant_id=req.tenant_id,

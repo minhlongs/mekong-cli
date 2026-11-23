@@ -1,0 +1,112 @@
+name: Pilot A Container Smoke
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pilot-a-container-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  container-smoke:
+    name: Docker Container Smoke (Non-Deploying)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Pilot A gateway image
+        run: docker build -t mekong-pilot-a-smoke:ci .
+
+      - name: Start container on loopback with synthetic sandbox config
+        run: |
+          mkdir -p /tmp/pilot-a-ci-data
+          docker run -d \
+            --name mekong-pilot-a-smoke \
+            -p 127.0.0.1:18000:8000 \
+            -v /tmp/pilot-a-ci-data:/data/pilot_a_tenants \
+            -e MEKONG_ENV=ci-smoke \
+            -e MEKONG_PILOT_A_DB_DIR=/data/pilot_a_tenants \
+            mekong-pilot-a-smoke:ci
+
+      - name: Wait for /healthz and verify /health on loopback
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:18000/healthz; then
+              echo ""
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:18000/healthz | grep -q '"status":"ok"'
+          curl -fsS http://127.0.0.1:18000/health > /dev/null
+
+      - name: Run synthetic Pilot A workflow, VietQR CRC16, and SQLite DR smoke inside container
+        run: |
+          docker exec mekong-pilot-a-smoke python3 -c "
+          from decimal import Decimal
+          from pathlib import Path
+          import tempfile
+          from src.core.vietqr_engine import _crc16_ccitt
+          from src.opc.dr_backup import backup_tenant_directory, restore_tenant_directory
+          from src.opc.models import BusinessProfile
+          from src.opc.pilot_a import PilotAWorkflow, ZaloSandboxConnector, ZaloWebhookEvent
+
+          with tempfile.TemporaryDirectory(dir='/data/pilot_a_tenants') as td:
+              src_dir = Path(td) / 'tenants'
+              src_dir.mkdir()
+              db = src_dir / 'ci_smoke_tenant.db'
+              profile = BusinessProfile(
+                  business_name='CI Smoke SME',
+                  owner_name='Owner Smoke',
+                  locale='vi-VN',
+                  timezone='Asia/Ho_Chi_Minh',
+                  currency='VND',
+                  language='vi',
+                  services={'tu_van_ai': Decimal('1000000')},
+                  payment_terms='50% deposit',
+              )
+              wf = PilotAWorkflow(
+                  db_path=db,
+                  profile=profile,
+                  approval_secret='ci-smoke-ephemeral-secret-32bytes',
+                  zalo_connector=ZaloSandboxConnector(),
+              )
+              ev = ZaloWebhookEvent(
+                  event_id='evt_ci_smoke_001',
+                  oa_id='oa_ci_smoke',
+                  sender_id='user_ci_001',
+                  sender_name='Khach Hang Smoke',
+                  message_text='Bao gia dich vu tu van AI 5 gio',
+                  timestamp=1795000000,
+                  last_user_interaction_ts=1795000000,
+                  requested_services=['tu_van_ai'],
+                  estimated_hours=5,
+                  project_title='CI Smoke Quote',
+              )
+              card = wf.handle_webhook(ev)
+              assert card.subtotal_vnd == 5_000_000, card.subtotal_vnd
+              assert card.total_amount_vnd == 5_400_000, card.total_amount_vnd
+              qr = card.vietqr_emvco
+              assert qr and qr[-4:] == _crc16_ccitt(qr[:-4]), 'VietQR CRC16 mismatch'
+              bdir = Path(td) / 'backup'
+              rdir = Path(td) / 'restore'
+              bmeta = backup_tenant_directory(src_dir, bdir)
+              rmeta = restore_tenant_directory(bdir, rdir)
+              assert rmeta['ok'] is True and rmeta['checksums_verified'] >= 3, rmeta
+              print('PILOT_A_CONTAINER_SMOKE_OK', card.run_id, card.total_amount_vnd, rmeta['checksums_verified'])
+          "
+
+      - name: Cleanup container and print logs on failure
+        if: always()
+        run: |
+          if [ "${{ job.status }}" != "success" ]; then
+            docker logs mekong-pilot-a-smoke || true
+          fi
+          docker rm -f mekong-pilot-a-smoke || true
+          rm -rf /tmp/pilot-a-ci-data
