@@ -109,6 +109,10 @@ def reconcile_signed_vietqr_webhook(
         matched_order_id=expected_run_id, bin_code=bin_code,
     )
     if tx_record.get("conflict"):
+        if tx_record.get("conflict_reason") == "bank_tx_id_payload_mismatch":
+            raise VietQrWebhookError(
+                f"Cross-order bank_tx_id replay blocked: '{bank_tx_id}' already bound to '{tx_record.get('existing_matched_order_id')}'."
+            )
         raise VietQrSettlementConflictError(
             f"Run '{expected_run_id}' is already settled by bank_tx_id '{tx_record.get('existing_bank_tx_id')}'; rejecting conflicting '{bank_tx_id}'."
         )

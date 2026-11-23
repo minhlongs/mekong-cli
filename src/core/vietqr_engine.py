@@ -490,7 +490,7 @@ class VietQrEngine:
             mismatches.append("memo")
         if str(existing["bin_code"] or "") != str(bin_code or ""):
             mismatches.append("bin_code")
-        if (existing["matched_order_id"] or None) != (matched_order_id or None):
+        if matched_order_id is not None and (existing["matched_order_id"] or None) != matched_order_id:
             mismatches.append("matched_order_id")
         return mismatches
 
