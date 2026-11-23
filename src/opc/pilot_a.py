@@ -29,10 +29,7 @@ from src.opc.usage import UsageLedger
 from src.opc.verifier import MIN_EXTRACTION_CONFIDENCE
 
 ZALO_INTERACTION_WINDOW_SECONDS: Final[int] = 48 * 3600
-_RUN_STATUS_MAP: Final[dict[str, WorkflowStatus]] = {
-    "completed": WorkflowStatus.COMPLETED, "deduplicated": WorkflowStatus.COMPLETED,
-    "reconciliation_required": WorkflowStatus.RECONCILIATION_REQUIRED, "failed": WorkflowStatus.FAILED, "budget_exceeded": WorkflowStatus.FAILED,
-}
+_RUN_STATUS_MAP: Final[dict[str, WorkflowStatus]] = {"completed": WorkflowStatus.COMPLETED, "deduplicated": WorkflowStatus.COMPLETED, "reconciliation_required": WorkflowStatus.RECONCILIATION_REQUIRED, "failed": WorkflowStatus.FAILED, "budget_exceeded": WorkflowStatus.FAILED}
 
 
 class ZaloInteractionWindowError(PermissionError):
@@ -144,6 +141,7 @@ class PilotAWorkflow:
             raise WorkflowQuotaExceededError(f"Duplicate workflow event '{event.event_id}' is already reserved for {period_ym}.")
         try:
             run_id, draft, base_payload = self.engine.generate_draft(self.profile, intake)
+            self.usage.rebind_run_id(f"rt_{event.event_id}", run_id)
             subtotal_vnd, vat_amount_vnd, amount_vnd = compute_vnd_vat_breakdown(verify_confidence_and_math(draft.line_items, draft.total_amount, confidence=eff_conf), self.vat_rate_pct)
         except Exception:
             self.usage.quota_guard.release_workflow_slot(self.tenant_id, event.event_id, period_ym)
@@ -182,4 +180,5 @@ class PilotAWorkflow:
     def reconcile_payment_and_export_draft(self, card: ApprovalCard, raw_webhook: bytes, signature: str, secret: str, vat_rate_pct: int | None = None, target_provider: str = "misa_meinvoice") -> tuple[dict[str, Any], AccountingDraftExport]:
         eff_vat, subtotal_vnd = (card.vat_rate_pct if vat_rate_pct is None else vat_rate_pct), (card.subtotal_vnd if card.subtotal_vnd > 0 else card.total_amount_vnd)
         recon = reconcile_signed_vietqr_webhook(self.vietqr, raw_webhook, signature, secret, card.run_id, card.total_amount_vnd)
+        self.state.record_run_payment(card.run_id, recon["bank_tx_id"], int(recon["amount_vnd"]))
         return recon, build_accounting_draft_export(card.run_id, card.client_name, card.line_items, subtotal_vnd, eff_vat, target_provider, bank_tx_id=recon["bank_tx_id"], settled_amount_vnd=recon["amount_vnd"])
