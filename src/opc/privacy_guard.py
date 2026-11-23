@@ -1,16 +1,22 @@
 """VN Personal Data Protection (Law 91/2025/QH15, superseding Decree 13/2023/NĐ-CP) consent, DSAR erasure with accounting retention, PII redaction, and tenant DB guard."""
 from __future__ import annotations
 
-import json
 import re
 import sqlite3
 from pathlib import Path
 from typing import Any, Final
 
 from src.core.privacy_engine import PrivacyEngine
+from src.opc.dsar_identity import (
+    SubjectRef as SubjectRef,
+    _field_matches_ref,
+    extract_subject_redaction_tokens,
+    json_blob_matches_subject,
+    memo_matches_run_id,
+    parse_dsar_subject,
+)
 from src.opc.dsar_redaction import (
     RedactionResult as RedactionResult,
-    _escape_like,
     _expand_subject_tokens,
     _fold_vietnamese_ascii as _fold_vietnamese_ascii,
     _PII_PATTERNS as _PII_PATTERNS,
@@ -69,78 +75,101 @@ class PilotPrivacyGuard:
     def withdraw_subject_consent(self, subject_id: str, purpose: str = "zalo_lead_to_quote") -> dict[str, Any]:
         return self.engine.withdraw_consent(subject_id.strip(), purpose=purpose)
 
-    def erase_subject_under_72h(self, subject_id: str) -> dict[str, Any]:
-        """Execute DSAR RIGHT_TO_DELETE (internal 72h operational target; statutory review required) preserving accounting records."""
-        clean_sub = (subject_id or "").strip()
-        if len(clean_sub) < 3 or not any(ch.isalnum() for ch in clean_sub):
-            raise ValueError(f"Invalid subject_id '{subject_id}' for DSAR erasure.")
-        dsar = self.engine.handle_dsar_request("RIGHT_TO_DELETE", subject_id=clean_sub)
-        opc_erased = 0
-        escaped = clean_sub.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-        like_pat = f"%{escaped}%"
+    def erase_subject_under_72h(
+        self, subject_id: str, *, subject_type: str | None = None,
+    ) -> dict[str, Any]:
+        """Execute tenant-scoped DSAR RIGHT_TO_DELETE using exact structured identity matching, preserving financial legal holds."""
+        ref = parse_dsar_subject(subject_id, subject_type=subject_type)
+        opc_erased, consent_erased, financial_retained = 0, 0, 0
         run_ids: list[str] = []
-        subject_tokens: set[str] = {clean_sub}
+        subject_tokens: set[str] = {ref.raw, ref.normalized}
         if self.opc_db_path is not None and self.opc_db_path.exists():
             with sqlite3.connect(str(self.opc_db_path), timeout=10.0) as conn:
-                conn.execute("PRAGMA foreign_keys = ON")
-                matched_runs = conn.execute("SELECT run_id, proposal_input_json FROM opc_runs WHERE proposal_input_json LIKE ? ESCAPE '\\' OR action_payload_json LIKE ? ESCAPE '\\'", (like_pat, like_pat)).fetchall()
-                run_ids = [r[0] for r in matched_runs]
-                for _, raw_inp in matched_runs:
-                    inp = json.loads(raw_inp) if isinstance(raw_inp, str) and raw_inp.startswith("{") else {}
-                    subject_tokens.update(
-                        v for k in ("client_name", "sender_name", "sender_id", "client_contact")
-                        if (raw := inp.get(k)) is not None and len(v := str(raw).strip()) >= 3
-                    )
-                if run_ids:
-                    rows_param = [(rid,) for rid in run_ids]
-                    c0 = conn.executemany("DELETE FROM opc_approvals WHERE run_id = ?", rows_param)
-                    c1 = conn.executemany("DELETE FROM opc_actions WHERE run_id = ?", rows_param)
-                    c2 = conn.executemany("DELETE FROM opc_runs WHERE run_id = ?", rows_param)
-                    opc_erased += max(0, c0.rowcount) + max(0, c1.rowcount) + max(0, c2.rowcount)
-                c3 = conn.execute("DELETE FROM opc_actions WHERE payload_json LIKE ? ESCAPE '\\'", (like_pat,))
-                opc_erased += max(0, c3.rowcount)
-                tbls = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
-                if "opc_side_effect_journal" in tbls:
-                    if run_ids:
-                        opc_erased += max(0, conn.executemany("DELETE FROM opc_side_effect_journal WHERE thread_id = ?", [(r,) for r in run_ids]).rowcount)
-                    opc_erased += max(0, conn.execute("DELETE FROM opc_side_effect_journal WHERE result_json LIKE ? ESCAPE '\\'", (like_pat,)).rowcount)
-                if "opc_graph_checkpoints" in tbls:
-                    if run_ids:
-                        opc_erased += max(0, conn.executemany("DELETE FROM opc_graph_checkpoints WHERE thread_id = ?", [(r,) for r in run_ids]).rowcount)
-                    opc_erased += max(0, conn.execute("DELETE FROM opc_graph_checkpoints WHERE state_json LIKE ? ESCAPE '\\'", (like_pat,)).rowcount)
-                conn.commit()
+                for rid, raw_inp, raw_act in conn.execute("SELECT run_id, proposal_input_json, action_payload_json FROM opc_runs").fetchall():
+                    inp_match, parsed_inp = json_blob_matches_subject(raw_inp, ref)
+                    if inp_match or json_blob_matches_subject(raw_act, ref)[0]:
+                        run_ids.append(str(rid))
+                        subject_tokens.update(extract_subject_redaction_tokens(parsed_inp, ref))
+            # 1. Redact/purge VietQR FIRST so a crash before OPC commit never strands unredacted financial PII
             vqr_db = self.opc_db_path.parent / f"{self.opc_db_path.stem}_vietqr.db"
-            financial_retained = 0
-            if vqr_db.exists():
+            if vqr_db.exists() and run_ids:
                 ordered_tokens = _expand_subject_tokens(subject_tokens)
                 with sqlite3.connect(str(vqr_db), timeout=10.0) as vconn:
-                    for rid in run_ids:
-                        rid_pat = f"%{_escape_like(rid)}%"
-                        opc_erased += max(0, vconn.execute("DELETE FROM qr_codes WHERE memo = ? OR memo LIKE ? ESCAPE '\\'", (f"OPC {rid}", rid_pat)).rowcount)
-                    opc_erased += max(0, vconn.execute("DELETE FROM qr_codes WHERE memo LIKE ? ESCAPE '\\'", (like_pat,)).rowcount)
-                    tx_rows: dict[str, str] = {r[0]: str(r[1] or "") for r in vconn.execute("SELECT transaction_id, memo FROM transactions WHERE memo LIKE ? ESCAPE '\\'", (like_pat,)).fetchall()}
-                    for rid in run_ids:
-                        rid_pat = f"%{_escape_like(rid)}%"
-                        for tid, memo in vconn.execute("SELECT transaction_id, memo FROM transactions WHERE matched_order_id = ? OR memo LIKE ? ESCAPE '\\'", (rid, rid_pat)).fetchall():
-                            tx_rows[tid] = str(memo or "")
+                    qr_del = [
+                        (qr_id,) for qr_id, memo in vconn.execute("SELECT qr_id, memo FROM qr_codes").fetchall()
+                        if any(memo == f"OPC {rid}" or memo_matches_run_id(memo, rid) for rid in run_ids)
+                    ]
+                    if qr_del:
+                        opc_erased += max(0, vconn.executemany("DELETE FROM qr_codes WHERE qr_id = ?", qr_del).rowcount)
+                    tx_rows = {
+                        str(tid): str(memo or "")
+                        for tid, matched_oid, memo in vconn.execute("SELECT transaction_id, matched_order_id, memo FROM transactions").fetchall()
+                        if matched_oid in run_ids or any(memo_matches_run_id(memo, rid) for rid in run_ids)
+                    }
                     for tid, memo in tx_rows.items():
                         sanitized = _redact_memo_tokens(memo, ordered_tokens)
                         if sanitized != memo:
                             vconn.execute("UPDATE transactions SET memo = ? WHERE transaction_id = ?", (sanitized, tid))
                     financial_retained = len(tx_rows)
                     vconn.commit()
-        else:
-            financial_retained = 0
-        total_erased = int((dsar.get("erasure") or {}).get("total_erased", 0)) + opc_erased
-        if total_erased > 0 and dsar.get("status") != "COMPLETED":
-            dsar["status"] = "COMPLETED"
-            with sqlite3.connect(str(self.engine.db_path), timeout=10.0) as pconn:
+            # 2. Erase matched OPC rows + orphan rows in actions/checkpoints/journal/revocations atomically
+            with sqlite3.connect(str(self.opc_db_path), timeout=10.0) as conn:
+                conn.execute("PRAGMA foreign_keys = ON")
+                tbls = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+                if run_ids:
+                    rp = [(rid,) for rid in run_ids]
+                    for sql in ("DELETE FROM opc_approvals WHERE run_id = ?", "DELETE FROM opc_actions WHERE run_id = ?", "DELETE FROM opc_runs WHERE run_id = ?"):
+                        opc_erased += max(0, conn.executemany(sql, rp).rowcount)
+                    for tbl, sql in (
+                        ("opc_card_revocations", "DELETE FROM opc_card_revocations WHERE run_id = ?"),
+                        ("opc_side_effect_journal", "DELETE FROM opc_side_effect_journal WHERE thread_id = ?"),
+                        ("opc_graph_checkpoints", "DELETE FROM opc_graph_checkpoints WHERE thread_id = ?"),
+                    ):
+                        if tbl in tbls:
+                            opc_erased += max(0, conn.executemany(sql, rp).rowcount)
+                for tbl, sel_sql, del_sql in (
+                    ("opc_actions", "SELECT idempotency_key, payload_json FROM opc_actions", "DELETE FROM opc_actions WHERE idempotency_key = ?"),
+                    ("opc_graph_checkpoints", "SELECT thread_id, state_json FROM opc_graph_checkpoints", "DELETE FROM opc_graph_checkpoints WHERE thread_id = ?"),
+                    ("opc_side_effect_journal", "SELECT idempotency_key, result_json FROM opc_side_effect_journal", "DELETE FROM opc_side_effect_journal WHERE idempotency_key = ?"),
+                ):
+                    if tbl in tbls:
+                        orphans = [(str(r[0]),) for r in conn.execute(sel_sql).fetchall() if json_blob_matches_subject(r[1], ref)[0]]
+                        if orphans:
+                            opc_erased += max(0, conn.executemany(del_sql, orphans).rowcount)
+                conn.commit()
+        # 3. Record DSAR and purge tenant-scoped zalo/consent_log variants (never touching shared cross-tenant zalo.db)
+        zalo_db = (self.opc_db_path.parent / f"{self.opc_db_path.stem}_zalo.db") if self.opc_db_path else (self.engine.db_path.parent / f"{self.engine.db_path.stem}_zalo.db")
+        if zalo_db.is_file():
+            with sqlite3.connect(str(zalo_db), timeout=10.0) as zconn:
+                ztbls = {r[0] for r in zconn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+                uids = {str(u) for u, ph in (zconn.execute("SELECT user_id, phone FROM followers").fetchall() if "followers" in ztbls else []) if _field_matches_ref(u, ref) or _field_matches_ref(ph, ref)}
+                uids |= {str(u) for (u,) in (zconn.execute("SELECT DISTINCT user_id FROM messages").fetchall() if "messages" in ztbls else []) if _field_matches_ref(u, ref)}
+                if uids:
+                    up = [(u,) for u in sorted(uids)]
+                    if "followers" in ztbls:
+                        opc_erased += max(0, zconn.executemany("DELETE FROM followers WHERE user_id = ?", up).rowcount)
+                    if "messages" in ztbls:
+                        opc_erased += max(0, zconn.executemany("DELETE FROM messages WHERE user_id = ?", up).rowcount)
+                    zconn.commit()
+        dsar = self.engine.handle_dsar_request("RIGHT_TO_DELETE", subject_id=ref.normalized, save=True, zalo_db_path=zalo_db, match_by_name=False)
+        with sqlite3.connect(str(self.engine.db_path), timeout=10.0) as pconn:
+            cid_del = [(str(cid),) for cid, sid in pconn.execute("SELECT consent_id, subject_id FROM consent_log").fetchall() if _field_matches_ref(sid, ref)]
+            if cid_del:
+                consent_erased = max(0, pconn.executemany("DELETE FROM consent_log WHERE consent_id = ?", cid_del).rowcount)
+            prior_del = [(str(rid),) for rid, sid in pconn.execute("SELECT request_id, subject_id FROM dsar_requests WHERE request_id != ?", (dsar["request_id"],)).fetchall() if _field_matches_ref(sid, ref)]
+            if prior_del:
+                consent_erased += max(0, pconn.executemany("DELETE FROM dsar_requests WHERE request_id = ?", prior_del).rowcount)
+            total_erased = int((dsar.get("erasure") or {}).get("total_erased", 0)) + opc_erased + consent_erased
+            if total_erased > 0 and dsar.get("status") != "COMPLETED":
+                dsar["status"] = "COMPLETED"
                 pconn.execute("UPDATE dsar_requests SET status = 'COMPLETED' WHERE request_id = ?", (dsar["request_id"],))
-                pconn.commit()
+            pconn.commit()
         dsar.update({
-            "opc_rows_erased": opc_erased, "total_erased_combined": total_erased,
-            "vietqr_financial_records_retained": financial_retained, "legal_review_required": True,
-            "financial_retention_basis": "Law on Accounting 88/2015/QH13 Art. 41 & Tax Administration Law 38/2019/QH14 (PII redacted, ledger preserved)",
+            "opc_rows_erased": opc_erased, "consent_rows_erased": consent_erased, "total_erased_combined": total_erased,
+            "matched_subject_kind": ref.kind, "matched_run_ids": run_ids,
+            "vietqr_financial_records_retained": financial_retained, "financial_legal_hold_preserved": True,
+            "legal_review_required": True, "retention_policy_status": "PENDING_COUNSEL_DETERMINATION",
+            "financial_retention_basis": "Law on Accounting 88/2015/QH13 Art. 41 & Tax Administration Law 38/2019/QH14 (PII redacted, ledger preserved; counsel sign-off required)",
             "legal_framework": "VN PDPL 91/2025/QH15 (superseding Decree 13/2023/NĐ-CP)",
         })
         return dsar
