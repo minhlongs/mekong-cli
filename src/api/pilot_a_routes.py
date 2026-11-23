@@ -417,12 +417,13 @@ async def receive_pilot_a_zalo_webhook(
                 req.grant_consent
                 or req.service_rates_vnd is not None
                 or req.sme_tier.strip().lower() != "pilot_a"
+                or req.vat_rate_pct != 8
             ):
                 raise HTTPException(
                     status_code=403,
                     detail={
                         "error": "privileged_webhook_fields_forbidden",
-                        "message": "Tenant API key required for consent, rate, or tier overrides.",
+                        "message": "Tenant API key required for consent, rate, tier, or VAT overrides.",
                     },
                 )
             if must_enforce_external_mac:
@@ -443,6 +444,7 @@ async def receive_pilot_a_zalo_webhook(
         allow_custom_rates = req.service_rates_vnd if is_owner_authed else None
         allow_grant_consent = bool(req.grant_consent and is_owner_authed)
         eff_sme_tier = req.sme_tier if is_owner_authed else "pilot_a"
+        eff_vat_rate_pct = req.vat_rate_pct if is_owner_authed else 8
 
         wf, _ = _build_workflow(
             tenant_id=req.tenant_id,
@@ -454,7 +456,7 @@ async def receive_pilot_a_zalo_webhook(
             custom_rates=allow_custom_rates,
             require_existing_tenant=not allow_unauth_dev_sandbox,
             require_webhook_mac=must_enforce_external_mac,
-            vat_rate_pct=req.vat_rate_pct,
+            vat_rate_pct=eff_vat_rate_pct,
         )
         if allow_grant_consent:
             wf.privacy_guard.record_subject_consent(req.sender_id)

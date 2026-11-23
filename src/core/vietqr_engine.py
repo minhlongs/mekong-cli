@@ -504,6 +504,7 @@ class VietQrEngine:
     ) -> dict[str, typing.Any]:
         return {
             "ok": False,
+            "is_duplicate": True,
             "conflict": True,
             "conflict_reason": "bank_tx_id_payload_mismatch",
             "mismatched_fields": mismatched_fields,

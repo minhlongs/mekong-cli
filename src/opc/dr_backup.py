@@ -23,14 +23,15 @@ from src.opc.dr_helpers import (
 )
 
 
-def _sqlite_online_backup(src_db: Path, dst_db: Path) -> str:
+def _sqlite_online_backup(src_db: Path, dst_db: Path, *, immutable: bool = False) -> str:
     """Create a WAL-consistent snapshot using sqlite3.Connection.backup and run PRAGMA integrity_check."""
     dst_db.parent.mkdir(parents=True, exist_ok=True)
     chmod_safe(dst_db.parent, 0o700)
     if dst_db.exists():
         dst_db.unlink()
     purge_sqlite_sidecars(dst_db)
-    src_uri = f"file:{quote(str(src_db), safe='/')}?mode=ro"
+    mode_query = "mode=ro&immutable=1" if immutable else "mode=ro"
+    src_uri = f"file:{quote(str(src_db), safe='/')}?{mode_query}"
     src_conn = sqlite3.connect(src_uri, uri=True, timeout=30.0)
     dst_conn = sqlite3.connect(str(dst_db), timeout=30.0)
     try:
@@ -108,6 +109,10 @@ def restore_tenant_directory(backup_dir: Path, restore_dir: Path) -> dict[str, A
         b_file, r_file = validate_manifest_filename(fname, ".db", bdir, rdir)
         if not b_file.is_file():
             raise FileNotFoundError(f"Missing backup DB file: {fname}")
+        for suffix in ("-wal", "-shm"):
+            sidecar = Path(f"{b_file}{suffix}")
+            if sidecar.exists() or sidecar.is_symlink():
+                raise ValueError(f"Unexpected SQLite sidecar in backup directory: {sidecar.name!r}")
         if sha256_file(b_file) != entry["sha256"]:
             raise ValueError(f"SHA-256 checksum mismatch for backup DB: {fname}")
         validated_dbs.append((fname, b_file, r_file))
@@ -130,7 +135,7 @@ def restore_tenant_directory(backup_dir: Path, restore_dir: Path) -> dict[str, A
     try:
         for fname, b_file, _r_file in validated_dbs:
             staged_db = staging / fname
-            integrity = _sqlite_online_backup(b_file, staged_db)
+            integrity = _sqlite_online_backup(b_file, staged_db, immutable=True)
             if integrity.lower() != "ok":
                 raise RuntimeError(f"Restored DB failed integrity check: {fname} ({integrity})")
             restored_dbs.append(fname)
