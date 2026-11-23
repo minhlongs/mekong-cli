@@ -62,14 +62,23 @@ def test_create_checkout_vietqr() -> None:
     assert data["checkout_url"] != ""
 
 
-def test_create_checkout_nowpayments() -> None:
+def test_create_checkout_nowpayments(tmp_path, monkeypatch) -> None:
+    from src.raas.tenant import TenantStore
+
+    db_path = tmp_path / "tenants_sg.db"
+    monkeypatch.setenv("MEKONG_RAAS_DB", str(db_path))
+    store = TenantStore(db_path)
+    tenant = store.create_tenant("sg-enterprise-org")
+    store.update_jurisdiction_admin(
+        tenant.id, "SG", actor_id="compliance_admin", evidence_ref="ACRA-2026-001"
+    )
     payload = {
         "tier": "ENTERPRISE",
         "rail": "nowpayments",
         "email": "builder@mekong.ai",
-        "jurisdiction": "SG",
+        "org_id": tenant.id,
     }
-    res = client.post("/v1/checkout", json=payload)
+    res = client.post("/v1/checkout", json=payload, headers={"X-API-Key": tenant.api_key})
     assert res.status_code == 200
     data = res.json()
     assert data["tier"].upper() == "ENTERPRISE"
@@ -110,22 +119,28 @@ def test_unknown_jurisdiction_fails_closed() -> None:
     assert detail["allowed_rails"] == ["vietqr"]
 
 
-def test_non_vn_org_must_declare_jurisdiction_to_keep_crypto_rail() -> None:
-    """Overseas customers keep the crypto rail, but only by declaring it.
+def test_non_vn_org_must_declare_jurisdiction_to_keep_crypto_rail(tmp_path, monkeypatch) -> None:
+    """Verified overseas tenants keep the crypto rail only via persisted TenantStore jurisdiction.
 
-    An org label is not proof of nationality, so ``SG-overseas`` alone is not
-    enough — the request has to state its jurisdiction. Denying an overseas
-    buyer who declares a non-VN jurisdiction would break their legitimate
-    purchase, so the gate stays open for them.
+    An org label or client-supplied jurisdiction field alone is not proof of
+    nationality; the tenant record must be administratively verified as non-VN.
     """
+    from src.raas.tenant import TenantStore
+
+    db_path = tmp_path / "tenants_overseas.db"
+    monkeypatch.setenv("MEKONG_RAAS_DB", str(db_path))
+    store = TenantStore(db_path)
+    tenant = store.create_tenant("SG-overseas")
+    store.update_jurisdiction_admin(
+        tenant.id, "SG", actor_id="compliance_admin", evidence_ref="ACRA-2026-002"
+    )
     payload = {
         "tier": "BASIC",
         "rail": "nowpayments",
         "email": "ops@example.sg",
         "org_id": "SG-overseas",
-        "jurisdiction": "SG",
     }
-    res = client.post("/v1/checkout", json=payload)
+    res = client.post("/v1/checkout", json=payload, headers={"X-API-Key": tenant.api_key})
     assert res.status_code == 200
     assert res.json()["rail"] == "nowpayments"
 

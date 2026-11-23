@@ -79,9 +79,11 @@ _NON_VN_ALLOWED_RAILS = ["vietqr", "nowpayments"]
 
 
 def rails_allowed_for_jurisdiction(jurisdiction: str) -> list[str]:
-    """Return the payment rails permitted to *jurisdiction*."""
+    """Return the payment rails permitted to *jurisdiction*. Fails closed to VN-only on missing/malformed codes."""
     normalised = (jurisdiction or "").strip().upper()
-    return list(_VN_ALLOWED_RAILS) if not normalised or normalised.startswith("VN") else list(_NON_VN_ALLOWED_RAILS)
+    if len(normalised) != 2 or not normalised.isalpha() or normalised == "VN":
+        return list(_VN_ALLOWED_RAILS)
+    return list(_NON_VN_ALLOWED_RAILS)
 
 
 _BOOT_RAAS_DB = os.environ.get("MEKONG_RAAS_DB", "").strip()
@@ -116,17 +118,40 @@ def _normalize_checkout_org_id(raw_org_id: Optional[str], email: str) -> str:
     return raw_org
 
 
-def resolve_org_jurisdiction(req: CheckoutRequest) -> str:
-    """Resolve the jurisdiction governing a checkout request.
+def resolve_org_jurisdiction(
+    req: CheckoutRequest,
+    eff_org_id: Optional[str] = None,
+    *,
+    authenticated_tenant_id: Optional[str] = None,
+) -> str:
+    """Resolve authoritative jurisdiction from persisted TenantStore for an authenticated tenant only.
 
-    Order: an explicit request field, then the tenant record, then the ``org_id``
-    prefix, then ``VN``. The fallback is deliberately restrictive: a request we
-    cannot attribute to a non-Vietnamese organisation is treated as Vietnamese,
-    which denies the crypto rail rather than granting it.
+    Caller-supplied ``req.jurisdiction`` and unverified ``req.email`` are never trusted as
+    regulatory authority. Unauthenticated, unverified, missing, or ambiguous tenants fail closed
+    to ``VN`` so restricted payment rails cannot be unlocked without verified tenant authentication.
     """
-    if req.jurisdiction and req.jurisdiction.strip():
-        return req.jurisdiction.strip().upper()
-    return _get_tenant_store().jurisdiction_for(req.org_id)
+    clean_tid = (authenticated_tenant_id or "").strip()
+    if not clean_tid or clean_tid.lower() == "default":
+        return "VN"
+    store = _get_tenant_store()
+    persisted = store.get_persisted_jurisdiction(clean_tid)
+    return persisted if persisted is not None else "VN"
+
+
+class JurisdictionUpdateRequest(BaseModel):
+    jurisdiction: str = Field(..., description="New ISO 3166-1 alpha-2 jurisdiction code")
+    actor_id: str = Field(..., description="Authenticated compliance/admin actor identifier")
+    evidence_ref: str = Field(..., description="Supporting KYC/incorporation evidence reference")
+
+
+class JurisdictionUpdateResponse(BaseModel):
+    audit_id: str
+    tenant_id: str
+    old_jurisdiction: str
+    new_jurisdiction: str
+    actor_id: str
+    evidence_ref: str
+    changed_at: str
 
 
 class CheckoutResponse(BaseModel):
@@ -236,8 +261,53 @@ def _ensure_tenant_for_activation(tenant_store: TenantStore, exact_tenant_id: st
         conn.close()
 
 
+@router.post("/v1/admin/tenants/{tenant_id}/jurisdiction", response_model=JurisdictionUpdateResponse)
+async def admin_update_tenant_jurisdiction(
+    tenant_id: str,
+    req: JurisdictionUpdateRequest,
+    x_admin_secret: Optional[str] = Header(default=None, alias="X-Admin-Secret"),
+) -> JurisdictionUpdateResponse:
+    """Separately authenticated administrative workflow for updating persisted tenant jurisdiction."""
+    configured = os.environ.get("MEKONG_JURISDICTION_ADMIN_SECRET", "").strip()
+    if len(configured) < 16:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "error": "jurisdiction_admin_unconfigured",
+                "message": "MEKONG_JURISDICTION_ADMIN_SECRET (>= 16 chars) is required for jurisdiction updates.",
+            },
+        )
+    if not x_admin_secret or not hmac.compare_digest(x_admin_secret.strip(), configured):
+        raise HTTPException(
+            status_code=401,
+            detail={"error": "admin_auth_required", "message": "Valid X-Admin-Secret header is required."},
+        )
+    store = _get_tenant_store()
+    try:
+        audit = store.update_jurisdiction_admin(
+            tenant_id,
+            req.jurisdiction,
+            actor_id=req.actor_id,
+            evidence_ref=req.evidence_ref,
+        )
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail={"error": "tenant_not_found", "message": str(exc)}) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail={"error": "invalid_jurisdiction_update", "message": str(exc)}) from exc
+    except (sqlite3.Error, RuntimeError, OSError) as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "tenant_store_unavailable", "message": "Tenant store unavailable (fail-closed)."},
+        ) from exc
+    return JurisdictionUpdateResponse(**audit)
+
+
 @router.post("/v1/checkout", response_model=CheckoutResponse)
-async def create_checkout(req: CheckoutRequest) -> CheckoutResponse:
+async def create_checkout(
+    req: CheckoutRequest,
+    authorization: Optional[str] = Header(default=None, alias="Authorization"),
+    x_api_key: Optional[str] = Header(default=None, alias="X-API-Key"),
+) -> CheckoutResponse:
     raw_tier = req.tier.strip().lower()
     order_id = f"mk-{uuid.uuid4().hex[:16]}"
     checkout_secret = f"chk_{secrets.token_urlsafe(24)}"
@@ -245,9 +315,54 @@ async def create_checkout(req: CheckoutRequest) -> CheckoutResponse:
     clean_email = str(req.email).strip().lower()
     eff_org_id = _normalize_checkout_org_id(req.org_id, clean_email)
     app_base = os.environ.get("APP_BASE_URL", "https://mekongmind.com")
-
     requested_rail = req.rail.strip().lower()
-    jurisdiction = resolve_org_jurisdiction(req)
+
+    # Enforce tenant authentication and prevent cross-tenant checkout / jurisdiction hijacking
+    presented_key = (x_api_key or "").strip()
+    if not presented_key and authorization and authorization.strip().lower().startswith("bearer "):
+        presented_key = authorization.strip()[7:].strip()
+    store = _get_tenant_store()
+    authenticated_tenant_id: Optional[str] = None
+    if presented_key:
+        caller_tenant = store.get_by_api_key(presented_key)
+        if caller_tenant is None or not caller_tenant.is_active:
+            raise HTTPException(
+                status_code=401,
+                detail={"error": "invalid_tenant_api_key", "message": "Presented tenant API key is invalid or inactive."},
+            )
+        if eff_org_id not in (caller_tenant.id, caller_tenant.name):
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "cross_tenant_checkout_forbidden",
+                    "message": "Authenticated tenant cannot create a checkout session for another tenant.",
+                },
+            )
+        authenticated_tenant_id = caller_tenant.id
+        eff_org_id = caller_tenant.id
+    elif requested_rail != "nowpayments":
+        try:
+            exists = store.tenant_exists_by_id_or_name(eff_org_id)
+        except (sqlite3.Error, RuntimeError, OSError) as exc:
+            logger.error("Tenant store lookup failed during checkout (fail-closed): %s", exc)
+            raise HTTPException(
+                status_code=503,
+                detail={"error": "tenant_store_unavailable", "message": "Tenant store unavailable (fail-closed)."},
+            ) from exc
+        if exists:
+            raise HTTPException(
+                status_code=401,
+                detail={
+                    "error": "tenant_auth_required",
+                    "message": "Authenticated tenant API key is required to create a checkout session for an existing tenant.",
+                },
+            )
+
+    jurisdiction = resolve_org_jurisdiction(
+        req,
+        eff_org_id=eff_org_id,
+        authenticated_tenant_id=authenticated_tenant_id,
+    )
 
     if raw_tier in VN_SME_WORKFLOW_TIERS:
         if requested_rail != "vietqr":

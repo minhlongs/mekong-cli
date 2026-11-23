@@ -99,6 +99,7 @@ def test_2_checkout_status_caller_authorization_matrix(isolated_env: dict[str, P
     co = client.post(
         "/v1/checkout",
         json={"tier": "pilot_a", "rail": "vietqr", "email": "owner@sme.vn", "org_id": owner_tenant.id},
+        headers={"X-API-Key": owner_tenant.api_key},
     ).json()
     order_id = co["order_id"]
     secret = co["checkout_secret"]
@@ -519,6 +520,7 @@ def test_10_nowpayments_mk_email_attribution_and_replay_idempotency(
                 "org_id": sg_tenant.id,
                 "jurisdiction": "SG",
             },
+            headers={"X-API-Key": sg_tenant.api_key},
         ).json()
 
     with patch.object(handler_mod, "CreditAccountRepository", return_value=repo), patch.object(
@@ -604,6 +606,7 @@ def test_nowpayments_ipn_secret_required_master_tier_credits_and_deferred_licens
                 "org_id": sg_tenant.id,
                 "jurisdiction": "SG",
             },
+            headers={"X-API-Key": sg_tenant.api_key},
         ).json()
     order_id = co["order_id"]
 
