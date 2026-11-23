@@ -16,6 +16,15 @@ from fastapi import APIRouter, Header, HTTPException, Query, Request, Response
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from pydantic import BaseModel, Field
 
+from src.api.pilot_a_approval_tokens import (
+    derive_dispatch_idempotency_key,
+    get_latest_approve_token_for_run,
+    is_run_card_revoked,
+    issue_signed_card_token,
+    resolve_persisted_approve_token,
+    revoke_run_approvals_and_cards,
+    verify_signed_card_token,
+)
 from src.api.pilot_a_card_view import build_owner_notification_cards, render_mobile_approval_card_html
 from src.opc.accounting_draft import (
     DRAFT_STATUS_PENDING_TVAN,
@@ -107,7 +116,14 @@ class PilotADecideRequest(BaseModel):
     action_digest: str = Field(..., min_length=16, max_length=128)
     revision_notes: str = Field("", max_length=1000)
     idempotency_key: str | None = None
-    card_sig: str = Field("", max_length=128)
+    card_sig: str = Field("", max_length=160)
+    approval_token_id: str | None = Field(default=None, max_length=128)
+
+
+class PilotARevokeRequest(BaseModel):
+    run_id: str = Field(..., min_length=1, max_length=128)
+    tenant_id: str = Field("default", min_length=2, max_length=63)
+    reason: str = Field("owner_revoked", max_length=128)
 
 
 _CARD_CSP = (
@@ -188,18 +204,32 @@ def _resolve_approval_secret() -> bytes:
     return secret_bytes
 
 
-def _compute_card_sig(tenant_id: str, run_id: str, action_digest: str) -> str:
+def _compute_card_sig(
+    tenant_id: str,
+    run_id: str,
+    action_digest: str,
+    *,
+    now: int | None = None,
+    max_expires_at: int | None = None,
+) -> str:
     secret_bytes = _resolve_approval_secret()
-    msg = f"{tenant_id.strip()}:{run_id.strip()}:{action_digest.strip()}".encode("utf-8")
-    return hmac.new(secret_bytes, msg, hashlib.sha256).hexdigest()
+    token, _ = issue_signed_card_token(
+        tenant_id,
+        run_id,
+        action_digest,
+        secret_bytes,
+        now=int(time.time()) if now is None else now,
+        max_expires_at=max_expires_at,
+    )
+    return token
 
 
-def _unauthorized_owner_error() -> HTTPException:
+def _unauthorized_owner_error(reason: str = "unauthorized_pilot_a_owner") -> HTTPException:
     return HTTPException(
         status_code=401,
         detail={
-            "error": "unauthorized_pilot_a_owner",
-            "message": "Valid tenant API key (X-API-Key / Bearer) or signed card token (X-Card-Sig / sig) is required.",
+            "error": reason,
+            "message": "Valid tenant API key (X-API-Key / Bearer) or non-expired, non-revoked signed card token (X-Card-Sig / sig) is required.",
         },
     )
 
@@ -242,19 +272,42 @@ def _verify_owner_access(
     x_api_key: str | None,
     x_card_sig: str | None = None,
     card_sig: str = "",
-) -> bool:
-    """Require valid tenant API key or HMAC card signature (preferring X-Card-Sig header) across all environments."""
+    state: Any | None = None,
+    now: int | None = None,
+) -> str:
+    """Require valid tenant API key or non-expired, non-revoked HMAC card signature; return auth mode."""
     api_key = _extract_presented_api_key(authorization, x_api_key)
     if api_key:
         if verify_tenant_api_key(base_dir, tenant_id, api_key):
-            return True
+            return "api_key"
         raise _unauthorized_owner_error()
     presented_sig = _resolve_presented_card_sig(x_card_sig, card_sig)
     if presented_sig and action_digest:
-        expected_sig = _compute_card_sig(tenant_id, run_id, action_digest)
-        if hmac.compare_digest(expected_sig, presented_sig):
-            return True
+        now_s = int(time.time()) if now is None else int(now)
+        ok, reason = verify_signed_card_token(
+            presented_sig,
+            tenant_id,
+            run_id,
+            action_digest,
+            _resolve_approval_secret(),
+            now=now_s,
+        )
+        if not ok:
+            raise _unauthorized_owner_error(reason)
+        if state is not None and is_run_card_revoked(state, run_id):
+            raise _unauthorized_owner_error("card_sig_revoked")
+        return "card_sig"
     raise _unauthorized_owner_error()
+
+
+def _extract_card_sig_expiry(token: str) -> int | None:
+    parts = token.strip().split(".")
+    if len(parts) == 3 and parts[0] == "v2":
+        try:
+            return int(parts[1])
+        except ValueError:
+            return None
+    return None
 
 
 def _build_profile(
@@ -527,9 +580,17 @@ async def receive_pilot_a_zalo_webhook(
         "redacted_notes": outcome.redacted_notes,
     }
     if is_owner_authed:
-        card_sig = _compute_card_sig(req.tenant_id, outcome.run_id, digest)
+        card_sig, card_sig_exp = issue_signed_card_token(
+            req.tenant_id,
+            outcome.run_id,
+            digest,
+            _resolve_approval_secret(),
+            now=int(time.time()),
+            max_expires_at=outcome.approval_token.expires_at,
+        )
         signed_card_url = f"{base_card_url}&sig={card_sig}"
         resp_body["card_sig"] = card_sig
+        resp_body["card_sig_expires_at"] = card_sig_exp
         resp_body["card_url"] = signed_card_url
         resp_body["notification_cards"] = build_owner_notification_cards(
             run_id=outcome.run_id,
@@ -575,7 +636,7 @@ async def get_pilot_a_run(
 
     action_dict = run_data.get("action_payload") or {}
     digest = compute_action_digest(_reconstruct_action_payload(action_dict)) if action_dict else ""
-    _verify_owner_access(
+    auth_mode = _verify_owner_access(
         base_dir=base_dir,
         tenant_id=tenant_id,
         run_id=run_id,
@@ -584,8 +645,24 @@ async def get_pilot_a_run(
         x_api_key=x_api_key,
         x_card_sig=x_card_sig,
         card_sig=sig,
+        state=wf.state,
     )
-    eff_sig = _compute_card_sig(tenant_id, run_id, digest) if digest else ""
+    intake_tok = get_latest_approve_token_for_run(wf.state, run_id)
+    if digest and not is_run_card_revoked(wf.state, run_id):
+        if auth_mode == "api_key":
+            eff_sig, eff_sig_exp = issue_signed_card_token(
+                tenant_id,
+                run_id,
+                digest,
+                _resolve_approval_secret(),
+                now=int(time.time()),
+                max_expires_at=intake_tok.expires_at if intake_tok is not None else None,
+            )
+        else:
+            eff_sig = _resolve_presented_card_sig(x_card_sig, sig)
+            eff_sig_exp = _extract_card_sig_expiry(eff_sig)
+    else:
+        eff_sig, eff_sig_exp = "", None
     cp = wf.checkpointer.get(run_id) if wf.checkpointer is not None else None
     costs = wf.usage.aggregate_run_costs(run_id)
     cost_acct = dataclasses.asdict(wf.usage.summarize_cost_accounting(run_id))
@@ -601,7 +678,9 @@ async def get_pilot_a_run(
         "checkpoint_stage": cp.current_stage.value if cp else None,
         "checkpoint_interrupted": cp.interrupted if cp else False,
         "action_digest": digest,
+        "approval_token_id": intake_tok.token_id if intake_tok is not None else None,
         "card_sig": eff_sig,
+        "card_sig_expires_at": eff_sig_exp,
         "card_url": f"/v1/opc/pilot-a/card/{run_id}?tenant_id={tenant_id}&sig={eff_sig}" if eff_sig else "",
         "proposal_draft": draft_info,
         "amount_vnd": action_dict.get("parameters", {}).get("amount_vnd", 0),
@@ -643,7 +722,7 @@ async def get_pilot_a_mobile_card(
     action_dict = run_data.get("action_payload") or {}
     payload = _reconstruct_action_payload(action_dict)
     digest = compute_action_digest(payload)
-    _verify_owner_access(
+    auth_mode = _verify_owner_access(
         base_dir=base_dir,
         tenant_id=tenant_id,
         run_id=run_id,
@@ -652,8 +731,21 @@ async def get_pilot_a_mobile_card(
         x_api_key=x_api_key,
         x_card_sig=x_card_sig,
         card_sig=sig,
+        state=wf.state,
     )
-    eff_sig = _compute_card_sig(tenant_id, run_id, digest)
+    intake_tok = get_latest_approve_token_for_run(wf.state, run_id)
+    if digest and not is_run_card_revoked(wf.state, run_id):
+        if auth_mode == "api_key":
+            eff_sig = _compute_card_sig(
+                tenant_id,
+                run_id,
+                digest,
+                max_expires_at=intake_tok.expires_at if intake_tok is not None else None,
+            )
+        else:
+            eff_sig = _resolve_presented_card_sig(x_card_sig, sig)
+    else:
+        eff_sig = ""
     params = payload.parameters
     intake = run_data.get("proposal_input") or {}
     draft = run_data.get("proposal_draft") or {}
@@ -716,12 +808,17 @@ async def decide_pilot_a_run(
             card_sig=req.card_sig,
         )
         wf_probe, _ = _build_workflow(tenant_id=req.tenant_id, require_existing_tenant=True)
+        run_data = wf_probe.state.get_run(req.run_id)
     except TenantIsolationError as exc:
         raise HTTPException(status_code=403, detail={"error": type(exc).__name__, "message": str(exc)}) from exc
     except ApprovalSecurityError as exc:
         raise HTTPException(status_code=503, detail={"error": "approval_security_error", "message": str(exc)}) from exc
+    except (sqlite3.Error, OSError) as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "state_store_unavailable", "message": "Persistent state store unavailable (fail-closed)."},
+        ) from exc
 
-    run_data = wf_probe.state.get_run(req.run_id)
     if not run_data:
         raise HTTPException(status_code=404, detail={"error": "run_not_found", "run_id": req.run_id})
     action_dict = run_data.get("action_payload")
@@ -739,6 +836,7 @@ async def decide_pilot_a_run(
         x_api_key=x_api_key,
         x_card_sig=x_card_sig,
         card_sig=req.card_sig,
+        state=wf_probe.state,
     )
     if not hmac.compare_digest(expected_digest, req.action_digest.strip()):
         raise HTTPException(
@@ -755,13 +853,18 @@ async def decide_pilot_a_run(
             connector_name=payload.connector,
             require_existing_tenant=True,
         )
+        cp_cur = wf.checkpointer.get(req.run_id) if wf.checkpointer is not None else None
     except (ZaloTierPolicyError, TenantIsolationError) as exc:
         raise HTTPException(status_code=403, detail={"error": type(exc).__name__, "message": str(exc)}) from exc
     except ApprovalSecurityError as exc:
         raise HTTPException(status_code=503, detail={"error": "approval_security_error", "message": str(exc)}) from exc
+    except (sqlite3.Error, OSError) as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "state_store_unavailable", "message": "Persistent state store unavailable (fail-closed)."},
+        ) from exc
 
     cur_status: WorkflowStatus = run_data["status"]
-    cp_cur = wf.checkpointer.get(req.run_id) if wf.checkpointer is not None else None
     if cp_cur is not None and cp_cur.current_stage == GraphStage.HANDOFF_ZALO_OA_MANAGER and norm_dec == "approve":
         raise HTTPException(status_code=409, detail={"error": "run_already_handed_off", "run_id": req.run_id})
 
@@ -771,47 +874,57 @@ async def decide_pilot_a_run(
                 status_code=409,
                 detail={"error": "invalid_run_state_transition", "current_status": cur_status.value},
             )
-        if norm_dec == "handoff":
+        try:
+            if norm_dec == "handoff":
+                now_h = int(time.time())
+                revoke_run_approvals_and_cards(wf.state, req.run_id, reason="handoff", now=now_h)
+                wf.state.save_run(
+                    req.run_id,
+                    run_data["pack_id"],
+                    WorkflowStatus.REJECTED,
+                    run_data["business_profile"],
+                    run_data["proposal_input"],
+                    now_h,
+                    run_data.get("proposal_draft"),
+                    action_dict,
+                )
+                if wf.checkpointer is not None:
+                    wf.checkpointer.put(
+                        req.run_id,
+                        GraphStage.HANDOFF_ZALO_OA_MANAGER,
+                        {"run_id": req.run_id, "notes": redact_vietnamese_pii(req.revision_notes).redacted_text},
+                        interrupted=False,
+                        payload_sha256=expected_digest,
+                    )
+                return {
+                    "run_id": req.run_id,
+                    "status": GraphStage.HANDOFF_ZALO_OA_MANAGER.value,
+                    "handoff_status": GraphStage.HANDOFF_ZALO_OA_MANAGER.value,
+                    "action_digest": expected_digest,
+                }
+
+            dec_enum = ApprovalDecision.REJECT if norm_dec == "reject" else ApprovalDecision.REVISE
+            if norm_dec == "reject":
+                revoke_run_approvals_and_cards(wf.state, req.run_id, reason="reject", now=int(time.time()))
+            tok = wf.engine.approval_engine.issue_token(req.run_id, payload, decision=dec_enum, revision_notes=req.revision_notes)
+            wf.state.save_approval(tok)
+            new_st = WorkflowStatus.REJECTED if norm_dec == "reject" else WorkflowStatus.REVISE_REQUESTED
             wf.state.save_run(
                 req.run_id,
                 run_data["pack_id"],
-                WorkflowStatus.REJECTED,
+                new_st,
                 run_data["business_profile"],
                 run_data["proposal_input"],
-                int(time.time()),
+                int(tok.created_at),
                 run_data.get("proposal_draft"),
                 action_dict,
             )
-            if wf.checkpointer is not None:
-                wf.checkpointer.put(
-                    req.run_id,
-                    GraphStage.HANDOFF_ZALO_OA_MANAGER,
-                    {"run_id": req.run_id, "notes": redact_vietnamese_pii(req.revision_notes).redacted_text},
-                    interrupted=False,
-                    payload_sha256=expected_digest,
-                )
-            return {
-                "run_id": req.run_id,
-                "status": GraphStage.HANDOFF_ZALO_OA_MANAGER.value,
-                "handoff_status": GraphStage.HANDOFF_ZALO_OA_MANAGER.value,
-                "action_digest": expected_digest,
-            }
-
-        dec_enum = ApprovalDecision.REJECT if norm_dec == "reject" else ApprovalDecision.REVISE
-        tok = wf.engine.approval_engine.issue_token(req.run_id, payload, decision=dec_enum, revision_notes=req.revision_notes)
-        wf.state.save_approval(tok)
-        new_st = WorkflowStatus.REJECTED if norm_dec == "reject" else WorkflowStatus.REVISE_REQUESTED
-        wf.state.save_run(
-            req.run_id,
-            run_data["pack_id"],
-            new_st,
-            run_data["business_profile"],
-            run_data["proposal_input"],
-            int(tok.created_at),
-            run_data.get("proposal_draft"),
-            action_dict,
-        )
-        return {"run_id": req.run_id, "status": new_st.value, "action_digest": expected_digest}
+            return {"run_id": req.run_id, "status": new_st.value, "action_digest": expected_digest}
+        except (sqlite3.Error, OSError) as exc:
+            raise HTTPException(
+                status_code=503,
+                detail={"error": "state_store_unavailable", "message": "Persistent state store unavailable (fail-closed)."},
+            ) from exc
 
     if cur_status == WorkflowStatus.REJECTED:
         raise HTTPException(status_code=409, detail={"error": "run_already_rejected", "run_id": req.run_id})
@@ -825,6 +938,15 @@ async def decide_pilot_a_run(
             },
         )
     if cur_status == WorkflowStatus.COMPLETED:
+        if req.approval_token_id and req.approval_token_id.strip():
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "error": "approval_token_replay_rejected",
+                    "run_id": req.run_id,
+                    "message": "Persisted approval token has already been consumed; single-use replay rejected.",
+                },
+            )
         return {
             "run_id": req.run_id,
             "status": "deduplicated",
@@ -843,9 +965,24 @@ async def decide_pilot_a_run(
                 detail={"error": "ZaloInteractionWindowError", "message": f"Zalo OA 48h window expired (age={live_age}s)."},
             )
 
-    idem_key = req.idempotency_key or f"pilot_a_{req.run_id}"
-    tok_approve = wf.engine.approval_engine.issue_token(req.run_id, payload, decision=ApprovalDecision.APPROVE)
-    wf.state.save_approval(tok_approve)
+    idem_key = derive_dispatch_idempotency_key(req.tenant_id, req.run_id, expected_digest)
+    try:
+        tok_approve = resolve_persisted_approve_token(
+            wf.state,
+            req.run_id,
+            payload,
+            _resolve_approval_secret(),
+            approval_token_id=req.approval_token_id,
+            now=now_s,
+        )
+    except ApprovalSecurityError as exc:
+        raise HTTPException(status_code=409, detail={"error": "approval_security_error", "message": str(exc)}) from exc
+    except (sqlite3.Error, OSError) as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "state_store_unavailable", "message": "Persistent state store unavailable (fail-closed)."},
+        ) from exc
+
     try:
         if wf.checkpointer is not None and wf.checkpointer.get(req.run_id) is not None:
             graph = GovernedStateGraph(wf.checkpointer)
@@ -869,9 +1006,24 @@ async def decide_pilot_a_run(
         raise HTTPException(status_code=409, detail={"error": "approval_security_error", "message": str(exc)}) from exc
     except ValueError as exc:
         raise HTTPException(status_code=400, detail={"error": "connector_dispatch_error", "message": str(exc)}) from exc
+    except (sqlite3.Error, OSError) as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "state_store_unavailable", "message": "Persistent state store unavailable (fail-closed)."},
+        ) from exc
 
     if out_status == "in_flight":
         raise HTTPException(status_code=409, detail={"error": "action_in_flight", "run_id": req.run_id})
+
+    if dedup and req.approval_token_id and req.approval_token_id.strip():
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "approval_token_replay_rejected",
+                "run_id": req.run_id,
+                "message": "Persisted approval token has already been consumed; single-use replay rejected.",
+            },
+        )
 
     final_wf_status = (
         WorkflowStatus.COMPLETED
@@ -882,22 +1034,74 @@ async def decide_pilot_a_run(
             else WorkflowStatus.FAILED
         )
     )
-    wf.state.save_run(
-        req.run_id,
-        run_data["pack_id"],
-        final_wf_status,
-        run_data["business_profile"],
-        run_data["proposal_input"],
-        now_s,
-        run_data.get("proposal_draft"),
-        action_dict,
-    )
+    try:
+        wf.state.save_run(
+            req.run_id,
+            run_data["pack_id"],
+            final_wf_status,
+            run_data["business_profile"],
+            run_data["proposal_input"],
+            now_s,
+            run_data.get("proposal_draft"),
+            action_dict,
+        )
+    except (sqlite3.Error, OSError) as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "state_store_unavailable", "message": "Persistent state store unavailable (fail-closed)."},
+        ) from exc
     return {
         "run_id": req.run_id,
         "status": out_status,
         "workflow_status": final_wf_status.value,
         "side_effect_deduplicated": dedup,
         "action_digest": expected_digest,
+        "approval_token_id": tok_approve.token_id,
+    }
+
+
+@router.post("/revoke")
+async def revoke_pilot_a_run_approval(
+    req: PilotARevokeRequest,
+    response: Response,
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+) -> dict[str, Any]:
+    """Revoke pending intake approval tokens and signed card URLs for a run (tenant API key required)."""
+    _apply_no_leak_headers(response)
+    try:
+        base_dir = _pilot_base_dir()
+        resolve_tenant_db_path(base_dir, req.tenant_id, active_tenant_id=req.tenant_id)
+        _resolve_approval_secret()
+        api_key = _extract_presented_api_key(authorization, x_api_key)
+        if not api_key or not verify_tenant_api_key(base_dir, req.tenant_id, api_key):
+            raise _unauthorized_owner_error()
+        wf, _ = _build_workflow(tenant_id=req.tenant_id, require_existing_tenant=True)
+        run_data = wf.state.get_run(req.run_id)
+    except TenantIsolationError as exc:
+        raise HTTPException(status_code=403, detail={"error": type(exc).__name__, "message": str(exc)}) from exc
+    except ApprovalSecurityError as exc:
+        raise HTTPException(status_code=503, detail={"error": "approval_security_error", "message": str(exc)}) from exc
+    except (sqlite3.Error, OSError) as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "state_store_unavailable", "message": "Persistent state store unavailable (fail-closed)."},
+        ) from exc
+
+    if not run_data:
+        raise HTTPException(status_code=404, detail={"error": "run_not_found", "run_id": req.run_id})
+    try:
+        revoked_count = revoke_run_approvals_and_cards(wf.state, req.run_id, reason=req.reason, now=int(time.time()))
+    except (sqlite3.Error, OSError) as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "state_store_unavailable", "message": "Persistent state store unavailable (fail-closed)."},
+        ) from exc
+    return {
+        "run_id": req.run_id,
+        "tenant_id": req.tenant_id,
+        "status": "revoked",
+        "revoked_approvals": revoked_count,
     }
 
 
@@ -1016,6 +1220,7 @@ async def export_pilot_a_misa_sapo_draft(
         x_api_key=x_api_key,
         x_card_sig=x_card_sig,
         card_sig=sig,
+        state=wf.state,
     )
     params = action_dict.get("parameters", {})
     expected_vnd = int(params.get("amount_vnd", 0))
