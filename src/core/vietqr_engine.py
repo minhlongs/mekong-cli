@@ -474,6 +474,46 @@ class VietQrEngine:
         expected = hmac.new(secret.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
         return hmac.compare_digest(expected.lower(), received_signature.strip().lower())
 
+    @staticmethod
+    def _existing_tx_mismatches(
+        existing: sqlite3.Row,
+        *,
+        amount_vnd: int,
+        memo: str,
+        bin_code: str,
+        matched_order_id: str | None,
+    ) -> list[str]:
+        mismatches: list[str] = []
+        if int(existing["amount_vnd"]) != int(amount_vnd):
+            mismatches.append("amount_vnd")
+        if str(existing["memo"] or "") != str(memo or ""):
+            mismatches.append("memo")
+        if str(existing["bin_code"] or "") != str(bin_code or ""):
+            mismatches.append("bin_code")
+        if (existing["matched_order_id"] or None) != (matched_order_id or None):
+            mismatches.append("matched_order_id")
+        return mismatches
+
+    @staticmethod
+    def _bank_tx_conflict_payload(
+        existing: sqlite3.Row,
+        *,
+        bank_tx_id: str,
+        matched_order_id: str | None,
+        mismatched_fields: list[str],
+    ) -> dict[str, typing.Any]:
+        return {
+            "ok": False,
+            "conflict": True,
+            "conflict_reason": "bank_tx_id_payload_mismatch",
+            "mismatched_fields": mismatched_fields,
+            "bank_tx_id": bank_tx_id,
+            "existing_bank_tx_id": str(existing["bank_tx_id"]),
+            "existing_amount_vnd": int(existing["amount_vnd"]),
+            "existing_matched_order_id": existing["matched_order_id"],
+            "matched_order_id": matched_order_id,
+        }
+
     def _record_transaction_atomic(
         self,
         bank_tx_id: str,
@@ -501,6 +541,20 @@ class VietQrEngine:
             ).fetchone()
             if existing:
                 conn.execute("ROLLBACK")
+                mismatches = self._existing_tx_mismatches(
+                    existing,
+                    amount_vnd=amount_vnd,
+                    memo=memo,
+                    bin_code=bin_code,
+                    matched_order_id=matched_order_id,
+                )
+                if mismatches:
+                    return self._bank_tx_conflict_payload(
+                        existing,
+                        bank_tx_id=bank_tx_id,
+                        matched_order_id=matched_order_id,
+                        mismatched_fields=mismatches,
+                    )
                 d = dict(existing)
                 d["ok"] = True
                 d["is_duplicate"] = True
@@ -549,6 +603,20 @@ class VietQrEngine:
                         "SELECT * FROM transactions WHERE bank_tx_id = ?", (bank_tx_id,)
                     ).fetchone()
                     if dup:
+                        mismatches = self._existing_tx_mismatches(
+                            dup,
+                            amount_vnd=amount_vnd,
+                            memo=memo,
+                            bin_code=bin_code,
+                            matched_order_id=matched_order_id,
+                        )
+                        if mismatches:
+                            return self._bank_tx_conflict_payload(
+                                dup,
+                                bank_tx_id=bank_tx_id,
+                                matched_order_id=matched_order_id,
+                                mismatched_fields=mismatches,
+                            )
                         d = dict(dup)
                         d["ok"] = True
                         d["is_duplicate"] = True

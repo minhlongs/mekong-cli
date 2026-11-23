@@ -172,6 +172,11 @@ def vietqr_record_reconciled_payment(
         reconciliation_intent=proposed_intent,
     )
     if transaction.get("conflict") or not transaction.get("ok", True):
+        if transaction.get("conflict_reason") == "bank_tx_id_payload_mismatch":
+            fields = ", ".join(str(f) for f in transaction.get("mismatched_fields", []))
+            raise ValueError(
+                f"Bank transaction '{bank_tx_id}' conflicts with existing persisted record: {fields}"
+            )
         raise ValueError(
             f"Order '{matched_order_id}' already settled by bank transaction "
             f"'{transaction.get('existing_bank_tx_id')}' — rejecting conflicting '{bank_tx_id}'"

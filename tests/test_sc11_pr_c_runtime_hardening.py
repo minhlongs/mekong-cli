@@ -230,3 +230,146 @@ def test_rt06_dr_online_backup_and_isolated_restore_rehearsal(tmp_path: Path) ->
     (trav_backup / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(ValueError, match="Unsafe backup manifest filename"):
         restore_tenant_directory(trav_backup, tmp_path / "trav_restore")
+
+
+def test_dr_restore_atomic_staging_and_stale_wal_sidecar_cleanup(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """DR restore purges stale -wal/-shm sidecars, leaves target untouched on manifest error, and rejects source symlinks."""
+    from src.opc.dr_backup import is_pilot_a_kill_switch_active
+
+    # Unknown kill-switch mode must fail-closed
+    monkeypatch.setenv("MEKONG_PILOT_A_KILL_SWITCH", "1")
+    monkeypatch.setenv("MEKONG_PILOT_A_KILL_SWITCH_MODE", "typo_mode")
+    assert is_pilot_a_kill_switch_active("intake") is True
+    assert is_pilot_a_kill_switch_active("dispatch") is True
+    monkeypatch.delenv("MEKONG_PILOT_A_KILL_SWITCH", raising=False)
+    monkeypatch.delenv("MEKONG_PILOT_A_KILL_SWITCH_MODE", raising=False)
+
+    live_dir = tmp_path / "live"
+    provision_isolated_tenant(live_dir, "tenant_atom", "Mekong Agency", "Lan Anh", sme_tier="pilot_a")
+    backup_dir = tmp_path / "backup"
+    backup_tenant_directory(live_dir, backup_dir)
+
+    # Plant stale WAL/SHM sidecars in existing restore target; restore must purge them
+    target_dir = tmp_path / "target"
+    target_dir.mkdir()
+    stale_wal = target_dir / "tenant_atom.db-wal"
+    stale_shm = target_dir / "tenant_atom.db-shm"
+    stale_wal.write_bytes(b"stale-wal-garbage")
+    stale_shm.write_bytes(b"stale-shm-garbage")
+    res = restore_tenant_directory(backup_dir, target_dir)
+    assert res["ok"] is True
+    assert not stale_wal.exists()
+    assert not stale_shm.exists()
+
+    # Partial failure (corrupted config checksum) must NOT overwrite existing DBs in target_dir
+    marker_bytes = (target_dir / "tenant_atom.db").read_bytes()
+    bad_backup = tmp_path / "bad_backup"
+    backup_tenant_directory(live_dir, bad_backup)
+    (bad_backup / "tenant_atom.tenant.json").write_text('{"tampered": true}', encoding="utf-8")
+    with pytest.raises(ValueError, match="checksum mismatch"):
+        restore_tenant_directory(bad_backup, target_dir)
+    assert (target_dir / "tenant_atom.db").read_bytes() == marker_bytes
+
+    # Symlink in backup source directory must be rejected
+    outside = tmp_path / "outside.txt"
+    outside.write_text("secret", encoding="utf-8")
+    (live_dir / "evil.tenant.json").symlink_to(outside)
+    with pytest.raises(ValueError, match="Symlinks are not allowed"):
+        backup_tenant_directory(live_dir, tmp_path / "symlink_backup")
+
+
+def test_vietqr_bank_tx_id_payload_mismatch_returns_conflict(tmp_path: Path) -> None:
+    """Replaying the same bank_tx_id with altered amount or matched_order_id must return conflict, not duplicate."""
+    from src.core.vietqr_engine import VietQrEngine
+
+    ve = VietQrEngine(db_path=tmp_path / "vietqr_conflict.db")
+    r1 = ve.record_unique_order_transaction("TX-MISMATCH-1", 1_000_000, "OPC run_A", "run_A", "970436")
+    assert r1["ok"] is True and r1["is_duplicate"] is False
+
+    # Exact replay -> benign duplicate
+    r_dup = ve.record_unique_order_transaction("TX-MISMATCH-1", 1_000_000, "OPC run_A", "run_A", "970436")
+    assert r_dup["ok"] is True and r_dup["is_duplicate"] is True
+
+    # Altered amount -> conflict
+    r_amt = ve.record_unique_order_transaction("TX-MISMATCH-1", 5_000_000, "OPC run_A", "run_A", "970436")
+    assert r_amt["ok"] is False and r_amt["conflict"] is True
+    assert r_amt["conflict_reason"] == "bank_tx_id_payload_mismatch"
+
+    # Cross-order replay -> conflict
+    r_ord = ve.record_unique_order_transaction("TX-MISMATCH-1", 1_000_000, "OPC run_B", "run_B", "970436")
+    assert r_ord["ok"] is False and r_ord["conflict"] is True
+
+
+def test_pilot_a_zalo_webhook_forwards_and_validates_vat_rate_pct(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Zalo webhook must forward valid vat_rate_pct (0/5/8/10) to PilotAWorkflow and reject invalid rates."""
+    tenants_dir = tmp_path / "tenants_vat"
+    monkeypatch.setenv("MEKONG_PILOT_A_DB_DIR", str(tenants_dir))
+    monkeypatch.setenv("MEKONG_APPROVAL_SECRET", _SECRET)
+    monkeypatch.delenv("MEKONG_PILOT_A_KILL_SWITCH", raising=False)
+    prov = provision_isolated_tenant(tenants_dir, "tenant_vat", "Mekong Agency", "Lan Anh", sme_tier="pilot_a")
+    client = TestClient(app)
+    hdr = {"X-API-Key": prov.tenant_api_key}
+    now = int(time.time())
+
+    r10 = client.post(
+        "/v1/opc/pilot-a/webhook/zalo",
+        headers=hdr,
+        json={
+            "tenant_id": "tenant_vat",
+            "event_id": "evt_vat_10",
+            "sender_id": "u_vat_1",
+            "sender_name": "Minh",
+            "message_text": "Báo giá tư vấn AI 2 giờ",
+            "requested_services": ["tu_van_ai"],
+            "estimated_hours": 2,
+            "service_rates_vnd": {"tu_van_ai": 1_000_000},
+            "vat_rate_pct": 10,
+            "extraction_confidence": 0.96,
+            "timestamp": now,
+            "last_user_interaction_ts": now - 30,
+        },
+    )
+    assert r10.status_code == 200, r10.text
+    b10 = r10.json()
+    assert b10["total_amount_vnd"] == 2_200_000
+
+    r0 = client.post(
+        "/v1/opc/pilot-a/webhook/zalo",
+        headers=hdr,
+        json={
+            "tenant_id": "tenant_vat",
+            "event_id": "evt_vat_0",
+            "sender_id": "u_vat_0",
+            "sender_name": "Minh",
+            "message_text": "Báo giá tư vấn AI 2 giờ",
+            "requested_services": ["tu_van_ai"],
+            "estimated_hours": 2,
+            "service_rates_vnd": {"tu_van_ai": 1_000_000},
+            "vat_rate_pct": 0,
+            "extraction_confidence": 0.96,
+            "timestamp": now,
+            "last_user_interaction_ts": now - 30,
+        },
+    )
+    assert r0.status_code == 200, r0.text
+    assert r0.json()["total_amount_vnd"] == 2_000_000
+
+    r_bad = client.post(
+        "/v1/opc/pilot-a/webhook/zalo",
+        headers=hdr,
+        json={
+            "tenant_id": "tenant_vat",
+            "event_id": "evt_vat_99",
+            "sender_id": "u_vat_2",
+            "sender_name": "Minh",
+            "message_text": "Báo giá tư vấn AI 2 giờ",
+            "requested_services": ["tu_van_ai"],
+            "estimated_hours": 2,
+            "vat_rate_pct": 99,
+            "extraction_confidence": 0.96,
+            "timestamp": now,
+            "last_user_interaction_ts": now - 30,
+        },
+    )
+    assert r_bad.status_code == 422
+

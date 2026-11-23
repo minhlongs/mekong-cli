@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import sqlite3
 import time
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Header, HTTPException, Query, Request, Response
 from fastapi.responses import HTMLResponse, PlainTextResponse
@@ -88,7 +88,7 @@ class PilotAZaloWebhookRequest(BaseModel):
     currency: str = Field("VND", min_length=3, max_length=8)
     language: str = Field("vi", min_length=2, max_length=8)
     extraction_confidence: float | None = Field(None, ge=0.0, le=1.0, allow_inf_nan=False)
-    vat_rate_pct: int = Field(8)
+    vat_rate_pct: Literal[0, 5, 8, 10] = 8
     tenant_id: str = Field("default", min_length=2, max_length=63)
     sme_tier: str = Field("pilot_a")
     connector: str = Field("zalo_oa_sandbox")
@@ -312,6 +312,7 @@ def _build_workflow(
     custom_rates: dict[str, int] | None = None,
     require_existing_tenant: bool = True,
     require_webhook_mac: bool | None = None,
+    vat_rate_pct: int = 8,
 ) -> tuple[PilotAWorkflow, dict[str, Any] | None]:
     base_dir = _pilot_base_dir()
     db_path = resolve_tenant_db_path(base_dir, tenant_id, active_tenant_id=tenant_id)
@@ -338,6 +339,7 @@ def _build_workflow(
         require_webhook_mac=require_webhook_mac,
         runtime_engine=runtime_engine,
         handoff_on_low_confidence=True,
+        vat_rate_pct=vat_rate_pct,
     )
     return wf, tenant_cfg
 
@@ -452,6 +454,7 @@ async def receive_pilot_a_zalo_webhook(
             custom_rates=allow_custom_rates,
             require_existing_tenant=not allow_unauth_dev_sandbox,
             require_webhook_mac=must_enforce_external_mac,
+            vat_rate_pct=req.vat_rate_pct,
         )
         if allow_grant_consent:
             wf.privacy_guard.record_subject_consent(req.sender_id)
