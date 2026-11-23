@@ -102,7 +102,7 @@ def test_cli_opc_quarantine_pilot_a_bench_and_decide_pack_preservation(tmp_path:
     p_res = runner.invoke(app, ["opc", "pilot-a", "--db", str(tmp_path / "cli_pilot_a.db"), "--approve-and-send", "--json"])
     assert p_res.exit_code == 0
     p_data = json.loads(p_res.stdout)
-    assert p_data["total_amount_vnd"] == 5_000_000 and p_data["dispatch"]["status"] == "completed"
+    assert p_data["total_amount_vnd"] == 5_400_000 and p_data["dispatch"]["status"] == "completed"
 
     b_res = runner.invoke(app, ["opc", "bench", "--json"])
     b_data = json.loads(b_res.stdout)
@@ -115,7 +115,7 @@ def test_cli_opc_quarantine_pilot_a_bench_and_decide_pack_preservation(tmp_path:
     vn_db = tmp_path / "vn_decide.db"
     wf = PilotAWorkflow(db_path=vn_db, profile=_sample_profile(), pack_manifest_path=VN_PACK / "pack.json")
     now_ts = 1_760_000_000
-    card = wf.handle_webhook(ZaloWebhookEvent("evt_vn_cli_01", "oa_vn", "84909998877", "Công ty TNHH Ánh Dương", "Nhờ báo giá gói tư vấn AI và tích hợp VietQR.", now_ts, now_ts - 600, ("tu_van_ai", "tich_hop_vietqr"), 10, "Tư vấn AI & VietQR"))
+    card = wf.handle_webhook(ZaloWebhookEvent("evt_vn_cli_01", "oa_vn", "84909998877", "Công ty TNHH Ánh Dương", "Nhờ báo giá gói tư vấn AI và tích hợp VietQR 10 giờ.", now_ts, now_ts - 600, ("tu_van_ai", "tich_hop_vietqr"), 10, "Tư vấn AI & VietQR"))
     dec_res = runner.invoke(app, ["opc", "decide", "--run-id", card.run_id, "--decision", "approve", "--db", str(vn_db)])
     assert dec_res.exit_code == 0, dec_res.stdout
     after_run = StateStore(vn_db).get_run(card.run_id)
@@ -130,6 +130,6 @@ def test_domain_handler_opc_dispatches_all_actions(tmp_path: Path) -> None:
     res_q, v_q = _handle_opc({"action": "quarantine", "text": "Báo giá gói tư vấn 5 giờ"})
     assert v_q["status"] == "PASSED" and res_q["is_safe"] is True
     res_p, v_p = _handle_opc({"action": "pilot_a", "db_path": str(tmp_path / "dom_pilot.db"), "approve": True})
-    assert v_p["status"] == "PASSED" and res_p["total_amount_vnd"] == 5_000_000 and res_p["dispatch"]["status"] == "completed"
+    assert v_p["status"] == "PASSED" and res_p["total_amount_vnd"] == 5_400_000 and res_p["dispatch"]["status"] == "completed"
     res_b, v_b = _handle_opc({"action": "bench"})
     assert v_b["status"] == "PASSED" and res_b["passed_count"] == 15 and res_b["total_count"] == 15

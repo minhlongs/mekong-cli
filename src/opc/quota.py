@@ -59,11 +59,20 @@ class WorkflowQuotaGuard:
                     period_ym TEXT NOT NULL,
                     workflow_id TEXT NOT NULL,
                     tier TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'reserved',
                     created_at INTEGER NOT NULL,
                     PRIMARY KEY (tenant_id, period_ym, workflow_id)
                 );
                 """
             )
+            cols = {
+                row["name"]
+                for row in conn.execute("PRAGMA table_info(opc_workflow_quota_reservations)").fetchall()
+            }
+            if "status" not in cols:
+                conn.execute(
+                    "ALTER TABLE opc_workflow_quota_reservations ADD COLUMN status TEXT NOT NULL DEFAULT 'committed'"
+                )
 
     def reserve_workflow_slot(
         self,
@@ -105,8 +114,8 @@ class WorkflowQuotaGuard:
                     return QuotaReservationResult(False, clean_tenant, clean_ym, clean_wf, cur_count, max_slots, False)
                 conn.execute(
                     """
-                    INSERT INTO opc_workflow_quota_reservations (tenant_id, period_ym, workflow_id, tier, created_at)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO opc_workflow_quota_reservations (tenant_id, period_ym, workflow_id, tier, status, created_at)
+                    VALUES (?, ?, ?, ?, 'reserved', ?)
                     """,
                     (clean_tenant, clean_ym, clean_wf, norm_tier, int(now)),
                 )
@@ -117,14 +126,29 @@ class WorkflowQuotaGuard:
                     conn.execute("ROLLBACK")
                 raise
 
+    def mark_workflow_committed(self, tenant_id: str, workflow_id: str, period_ym: str) -> bool:
+        """Mark a reserved workflow slot as committed so duplicate/late failures cannot release it."""
+        with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            cur = conn.execute(
+                """
+                UPDATE opc_workflow_quota_reservations
+                SET status = 'committed'
+                WHERE tenant_id = ? AND period_ym = ? AND workflow_id = ? AND status = 'reserved'
+                """,
+                (tenant_id.strip(), period_ym.strip(), workflow_id.strip()),
+            )
+            conn.execute("COMMIT")
+            return cur.rowcount > 0
+
     def release_workflow_slot(self, tenant_id: str, workflow_id: str, period_ym: str) -> bool:
-        """Release a reserved slot on cancellation/timeout before external side effects."""
+        """Release an uncommitted ('reserved') slot on intake failure; never releases committed slots."""
         with self._connect() as conn:
             conn.execute("BEGIN IMMEDIATE")
             cur = conn.execute(
                 """
                 DELETE FROM opc_workflow_quota_reservations
-                WHERE tenant_id = ? AND period_ym = ? AND workflow_id = ?
+                WHERE tenant_id = ? AND period_ym = ? AND workflow_id = ? AND status = 'reserved'
                 """,
                 (tenant_id.strip(), period_ym.strip(), workflow_id.strip()),
             )

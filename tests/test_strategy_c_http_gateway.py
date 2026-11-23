@@ -47,7 +47,7 @@ def test_pilot_a_gateway_full_lifecycle_card_toctou_dedup_and_misa_export(
     r_in = gateway_client.post("/v1/opc/pilot-a/webhook/zalo", json=webhook_body, headers=auth_hdr)
     assert r_in.status_code == 200, r_in.text
     body = r_in.json()
-    assert body["status"] == "INTERRUPT_AUTHORIZE" and body["total_amount_vnd"] == 5_000_000
+    assert body["status"] == "INTERRUPT_AUTHORIZE" and body["total_amount_vnd"] == 5_400_000
     assert "970436" in body["vietqr_emvco"] and "9999111122" in body["vietqr_emvco"]
     assert "0909888777" not in body["redacted_notes"]
     run_id, digest, card_sig = body["run_id"], body["action_digest"], body["card_sig"]
@@ -91,7 +91,7 @@ def test_pilot_a_gateway_full_lifecycle_card_toctou_dedup_and_misa_export(
     assert r_clobber.status_code == 409
 
     # Signed VietQR reconciliation + MISA CSV/XML/JSON export
-    vqr_raw = json.dumps({"bank_tx_id": "NAPAS-GW-001", "amount_vnd": 5_000_000, "memo": f"Thanh toan OPC {run_id}"}).encode("utf-8")
+    vqr_raw = json.dumps({"bank_tx_id": "NAPAS-GW-001", "amount_vnd": 5_400_000, "memo": f"Thanh toan OPC {run_id}"}).encode("utf-8")
     good_sig = hmac.new(b"vietqr-http-gateway-secret-key-2026", vqr_raw, hashlib.sha256).hexdigest()
     ok_vqr = gateway_client.post(
         f"/v1/opc/pilot-a/webhook/vietqr?run_id={run_id}&tenant_id=sadec_01&vat_rate_pct=8",

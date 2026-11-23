@@ -11,6 +11,7 @@ postconditions -> evidence -> signed receipt).
 
 from __future__ import annotations
 
+import json
 import sqlite3
 
 import pytest
@@ -133,20 +134,31 @@ def test_opc_pilot_a_persists_quote_and_blocks_prompt_injection(service):
         },
     )
     assert_passed(benign, "output_fields", "value_bounds", "enum_member", "record_persisted")
-    # 10 hours split across 2 services (5h * 600,000 + 5h * 400,000) = 5,000,000 VND
-    assert benign["output"]["total_amount_vnd"] == 5_000_000
+    # 5h * 600,000 + 5h * 400,000 = 5,000,000 VND subtotal;
+    # default 8% VAT adds 400,000 VND to the payable VietQR total.
+    assert benign["output"]["total_amount_vnd"] == 5_400_000
     assert benign["output"]["vietqr_emvco"].startswith("000201010212")
     assert benign["output"]["quarantine_safe"] is True
     assert benign["output"]["status"] == "PENDING_APPROVAL"
 
     db_path = benign["verification"]["engine_db_path"]
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(f"file:{db_path}?mode=ro", uri=True) as conn:
         row = conn.execute(
-            "SELECT status FROM opc_runs WHERE run_id = ?",
+            "SELECT status, proposal_draft_json, action_payload_json FROM opc_runs WHERE run_id = ?",
             (benign["output"]["run_id"],),
         ).fetchone()
     assert row is not None
     assert row[0] == "pending_approval"
+    draft = json.loads(row[1])
+    payload = json.loads(row[2])["parameters"]
+    for breakdown in (draft, payload):
+        assert breakdown["subtotal_vnd"] == 5_000_000
+        assert breakdown["vat_rate_pct"] == 8
+        assert breakdown["vat_amount_vnd"] == 400_000
+    assert int(draft["total_amount"]) == 5_400_000
+    assert payload["amount_vnd"] == 5_400_000
+    assert int(draft["total_amount"]) == payload["amount_vnd"] == benign["output"]["total_amount_vnd"]
+    assert payload["amount_vnd"] == payload["subtotal_vnd"] + payload["vat_amount_vnd"]
 
     injected = run(
         service,

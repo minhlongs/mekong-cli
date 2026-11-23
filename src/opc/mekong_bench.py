@@ -68,7 +68,8 @@ class MekongBenchRunner:
         c1, c2 = wf.handle_webhook(_bench_event("l1_a")), wf.handle_webhook(_bench_event("l1_b"))
         emv = c1.vietqr_emvco
         passed = (
-            c1.total_amount_vnd == 5_000_000 and c2.total_amount_vnd == 5_000_000
+            c1.subtotal_vnd == 5_000_000 and c1.total_amount_vnd == 5_400_000
+            and c2.total_amount_vnd == 5_400_000
             and emv.startswith("000201010212") and emv[-4:] == _crc16_ccitt(emv[:-4])
         )
         return BenchLayerResult("L1", "Single-Step Deterministic Quote + EMVCo CRC16", passed, 4,

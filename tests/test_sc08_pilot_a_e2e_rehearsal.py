@@ -139,8 +139,8 @@ def test_sc08_realistic_golden_e2e_workflow_and_metrics(e2e_env: tuple[TestClien
         # PII redacted (phone & MST never persisted raw in notes)
         assert "0909382910" not in wh_body["redacted_notes"]
         assert "0312345678" not in wh_body["redacted_notes"]
-        # Deterministic math: 5h * 600,000 + 5h * 400,000 = 5,000,000 VND
-        assert wh_body["total_amount_vnd"] == 5_000_000
+        # Deterministic math: 5h * 600,000 + 5h * 400,000 = 5,000,000 subtotal + 8% VAT (400,000) = 5,400,000 VND
+        assert wh_body["total_amount_vnd"] == 5_400_000
         assert wh_body["vietqr_emvco"].startswith("000201010212")
         assert wh_body["accounting_draft_status"] == DRAFT_STATUS_PENDING_TVAN
         assert len(dispatched_zalo) == 0  # Zero external messages sent prior to owner approval
@@ -175,7 +175,7 @@ def test_sc08_realistic_golden_e2e_workflow_and_metrics(e2e_env: tuple[TestClien
 
         # 3. Verified mock bank VietQR settlement -> accounting draft -> audit trail verification
         vqr_body = json.dumps(
-            {"bank_tx_id": "NAPAS-E2E-GOLD-01", "amount_vnd": 5_000_000, "memo": f"Thanh toan OPC {run_id}"}
+            {"bank_tx_id": "NAPAS-E2E-GOLD-01", "amount_vnd": 5_400_000, "memo": f"Thanh toan OPC {run_id}"}
         ).encode("utf-8")
         vqr_res = client.post(
             f"/v1/opc/pilot-a/webhook/vietqr?run_id={run_id}&tenant_id=sme_minhlong_01&vat_rate_pct=8&target_provider=misa_meinvoice",

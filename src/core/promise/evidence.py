@@ -18,6 +18,8 @@ a free-text string can never seal a gate.
 
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
+import hashlib
 import json
 import pathlib
 import sqlite3
@@ -108,6 +110,14 @@ class EvidenceStore:
         conn = sqlite3.connect(str(self.db_path), timeout=30.0)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA synchronous = NORMAL")
+        return conn
+
+    def _connect_manual(self) -> sqlite3.Connection:
+        """Open a connection with explicit transaction control for BEGIN IMMEDIATE."""
+        conn = sqlite3.connect(str(self.db_path), timeout=30.0, isolation_level=None)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA busy_timeout = 30000")
         conn.execute("PRAGMA synchronous = NORMAL")
         return conn
 
@@ -265,6 +275,318 @@ class EvidenceStore:
                 ),
             )
         return {"tx_id": tx_id, "status": status}
+
+    @staticmethod
+    def stable_bank_revenue_tx_id(workspace_id: str, bank_tx_id: str) -> str:
+        """Derive a deterministic, workspace-scoped revenue tx_id for a bank transfer."""
+        clean_ws = str(workspace_id or "").strip()
+        clean_bank_tx = str(bank_tx_id or "").strip()
+        if not clean_ws or not clean_bank_tx:
+            raise EvidenceIntegrityError(
+                "workspace_id and bank_tx_id are required to derive a stable revenue tx_id"
+            )
+        identity = json.dumps(
+            [clean_ws, clean_bank_tx], separators=(",", ":"), ensure_ascii=False
+        )
+        digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:24].upper()
+        return f"TX-BANK-{digest}"
+
+    @staticmethod
+    def _parse_positive_amount(raw_amount: typing.Any) -> Decimal:
+        try:
+            amount = Decimal(str(raw_amount).replace(",", "").strip())
+        except (InvalidOperation, ValueError) as exc:
+            raise EvidenceIntegrityError(f"amount must be numeric: {exc}") from exc
+        if not amount.is_finite() or amount <= 0:
+            raise EvidenceIntegrityError("a revenue transaction must have a positive amount")
+        return amount
+
+    @staticmethod
+    def _normalize_optional_str(value: typing.Any) -> str | None:
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text if text else None
+
+    @staticmethod
+    def _parse_confirmation_json(raw: typing.Any) -> dict[str, typing.Any]:
+        if not isinstance(raw, str) or not raw.strip():
+            return {}
+        try:
+            parsed = json.loads(raw)
+        except ValueError:
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+
+    @classmethod
+    def _assert_revenue_payload_matches(
+        cls,
+        existing: sqlite3.Row,
+        *,
+        workspace_id: str,
+        bank_tx_id: str,
+        provider: str,
+        method: str,
+        amount_dec: Decimal,
+        currency: str,
+        invoice_ref: str | None,
+        status: str,
+        confirmation: dict[str, typing.Any],
+    ) -> None:
+        mismatches: list[str] = []
+        if str(existing["workspace_id"] or "") != workspace_id:
+            mismatches.append("workspace_id")
+        if str(existing["provider"] or "") != provider:
+            mismatches.append("provider")
+        if str(existing["method"] or "") != method:
+            mismatches.append("method")
+        try:
+            existing_amount = Decimal(str(existing["amount"] or "").replace(",", "").strip())
+            if existing_amount != amount_dec:
+                mismatches.append("amount")
+        except (InvalidOperation, ValueError):
+            mismatches.append("amount")
+        if str(existing["currency"] or "").upper() != currency:
+            mismatches.append("currency")
+        if cls._normalize_optional_str(existing["invoice_ref"]) != cls._normalize_optional_str(
+            invoice_ref
+        ):
+            mismatches.append("invoice_ref")
+        if str(existing["status"] or "").upper() != status:
+            mismatches.append("status")
+
+        existing_conf = cls._parse_confirmation_json(existing["provider_confirmation_json"])
+        if str(existing_conf.get("bank_tx_id") or "").strip() != bank_tx_id:
+            mismatches.append("bank_tx_id")
+        if str(existing_conf.get("provider") or "") != provider:
+            mismatches.append("confirmation.provider")
+        if cls._normalize_optional_str(
+            existing_conf.get("reference")
+        ) != cls._normalize_optional_str(confirmation.get("reference")):
+            mismatches.append("provider_reference")
+        if cls._normalize_optional_str(
+            existing_conf.get("matched_order_id")
+        ) != cls._normalize_optional_str(confirmation.get("matched_order_id")):
+            mismatches.append("matched_order_id")
+        if "memo" in confirmation or "memo" in existing_conf:
+            if str(existing_conf.get("memo") or "") != str(confirmation.get("memo") or ""):
+                mismatches.append("memo")
+        if (
+            existing_conf.get("amount_vnd") is not None
+            and confirmation.get("amount_vnd") is not None
+        ):
+            try:
+                ex_amt = Decimal(str(existing_conf["amount_vnd"]).replace(",", "").strip())
+                in_amt = Decimal(str(confirmation["amount_vnd"]).replace(",", "").strip())
+                if ex_amt != in_amt:
+                    mismatches.append("confirmation.amount_vnd")
+            except (InvalidOperation, ValueError):
+                mismatches.append("confirmation.amount_vnd")
+        if (
+            existing_conf.get("currency") is not None
+            and confirmation.get("currency") is not None
+            and str(existing_conf["currency"]).upper() != str(confirmation["currency"]).upper()
+        ):
+            mismatches.append("confirmation.currency")
+
+        # Old confirmations did not store the bank BIN; the handler verifies it
+        # against the bank row. New confirmations must preserve it on retries.
+        if "bin_code" in existing_conf and existing_conf["bin_code"] != confirmation.get("bin_code"):
+            mismatches.append("bin_code")
+        if mismatches:
+            raise EvidenceIntegrityError(
+                f"conflicting revenue evidence for bank_tx_id '{bank_tx_id}' in workspace "
+                f"'{workspace_id}' (existing tx_id='{existing['tx_id']}'): "
+                f"mismatched {', '.join(mismatches)}"
+            )
+
+    def record_revenue_transaction_once(
+        self,
+        *,
+        workspace_id: str,
+        bank_tx_id: str,
+        provider: str,
+        amount: int | float | str | Decimal,
+        currency: str,
+        status: str = "RECONCILED",
+        method: str = "vietqr_bank_transfer",
+        run_id: str | None = None,
+        invoice_ref: str | None = None,
+        provider_confirmation: dict[str, typing.Any] | None = None,
+        confirmed_at: str | None = None,
+        reconciled_by: str | None = None,
+        reconciled_at: str | None = None,
+        require_existing: bool = False,
+    ) -> dict[str, typing.Any]:
+        """Write-once revenue fact keyed by (workspace_id, bank_tx_id) under BEGIN IMMEDIATE.
+
+        Preserves existing evidence without overwriting it: if a row already exists under the
+        stable key or as a legacy random-ID row matching ``bank_tx_id`` in the same workspace,
+        validates that the finance payload matches and returns ``created=False``; raises
+        ``EvidenceIntegrityError`` on any conflicting payload.
+        """
+        clean_ws = str(workspace_id or "").strip()
+        clean_bank_tx = str(bank_tx_id or "").strip()
+        clean_provider = str(provider or "").strip()
+        clean_status = str(status or "PENDING").upper()
+        clean_currency = str(currency or "").upper()
+        if not clean_ws:
+            raise EvidenceIntegrityError("workspace_id is required")
+        if not clean_bank_tx:
+            raise EvidenceIntegrityError("bank_tx_id is required")
+        if not clean_provider:
+            raise EvidenceIntegrityError("provider is required")
+        if clean_status == "RECONCILED" and not provider_confirmation:
+            raise EvidenceIntegrityError(
+                "a revenue transaction cannot be marked RECONCILED without provider confirmation data"
+            )
+        amount_dec = self._parse_positive_amount(amount)
+        if len(clean_currency) != 3:
+            raise EvidenceIntegrityError("currency must be an ISO-4217 code")
+
+        confirmation_payload: dict[str, typing.Any] = (
+            dict(provider_confirmation) if provider_confirmation else {}
+        )
+        if confirmation_payload:
+            embedded_bank_tx = confirmation_payload.get("bank_tx_id")
+            if embedded_bank_tx is not None and str(embedded_bank_tx).strip() != clean_bank_tx:
+                raise EvidenceIntegrityError(
+                    f"provider_confirmation.bank_tx_id '{embedded_bank_tx}' != '{clean_bank_tx}'"
+                )
+            confirmation_payload["bank_tx_id"] = clean_bank_tx
+        redacted_confirmation = redact(confirmation_payload) if confirmation_payload else {}
+
+        tx_id = self.stable_bank_revenue_tx_id(clean_ws, clean_bank_tx)
+        now = utc_now_iso()
+
+        conn = self._connect_manual()
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+
+            existing = conn.execute(
+                "SELECT * FROM revenue_transactions WHERE tx_id = ? AND workspace_id = ?",
+                (tx_id, clean_ws),
+            ).fetchone()
+            if existing is not None:
+                self._assert_revenue_payload_matches(
+                    existing,
+                    workspace_id=clean_ws,
+                    bank_tx_id=clean_bank_tx,
+                    provider=clean_provider,
+                    method=method,
+                    amount_dec=amount_dec,
+                    currency=clean_currency,
+                    invoice_ref=invoice_ref,
+                    status=clean_status,
+                    confirmation=redacted_confirmation,
+                )
+                conn.execute("ROLLBACK")
+                return {
+                    "tx_id": str(existing["tx_id"]),
+                    "status": str(existing["status"]),
+                    "created": False,
+                    "legacy_match": False,
+                    "record": dict(existing),
+                }
+
+            # Check legacy random-ID rows in the same workspace matching this bank_tx_id
+            # to avoid doubling old revenue.
+            ws_rows = conn.execute(
+                """
+                SELECT * FROM revenue_transactions
+                WHERE workspace_id = ? AND provider_confirmation_json IS NOT NULL
+                ORDER BY created_at ASC, rowid ASC
+                """,
+                (clean_ws,),
+            ).fetchall()
+            legacy_matches = [
+                row
+                for row in ws_rows
+                if str(
+                    self._parse_confirmation_json(row["provider_confirmation_json"]).get(
+                        "bank_tx_id"
+                    )
+                    or ""
+                ).strip()
+                == clean_bank_tx
+            ]
+            if legacy_matches:
+                for legacy_row in legacy_matches:
+                    self._assert_revenue_payload_matches(
+                        legacy_row,
+                        workspace_id=clean_ws,
+                        bank_tx_id=clean_bank_tx,
+                        provider=clean_provider,
+                        method=method,
+                        amount_dec=amount_dec,
+                        currency=clean_currency,
+                        invoice_ref=invoice_ref,
+                        status=clean_status,
+                        confirmation=redacted_confirmation,
+                    )
+                canonical = legacy_matches[0]
+                conn.execute("ROLLBACK")
+                return {
+                    "tx_id": str(canonical["tx_id"]),
+                    "status": str(canonical["status"]),
+                    "created": False,
+                    "legacy_match": True,
+                    "record": dict(canonical),
+                }
+
+            if require_existing:
+                raise EvidenceIntegrityError(
+                    f"Bank transaction '{clean_bank_tx}' has no durable reconciliation intent "
+                    "or matching revenue evidence; manual reconciliation required"
+                )
+
+            conn.execute(
+                """
+                INSERT INTO revenue_transactions (
+                    tx_id, workspace_id, run_id, provider, method, amount, currency, invoice_ref,
+                    status, provider_confirmation_json, confirmed_at, reconciled_by, reconciled_at,
+                    created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    tx_id,
+                    clean_ws,
+                    run_id,
+                    clean_provider,
+                    method,
+                    str(amount),
+                    clean_currency,
+                    invoice_ref,
+                    clean_status,
+                    json.dumps(
+                        redacted_confirmation, sort_keys=True, ensure_ascii=False, default=str
+                    )
+                    if redacted_confirmation
+                    else None,
+                    confirmed_at or (now if redacted_confirmation else None),
+                    reconciled_by,
+                    reconciled_at or (now if clean_status == "RECONCILED" else None),
+                    now,
+                ),
+            )
+            inserted_row = conn.execute(
+                "SELECT * FROM revenue_transactions WHERE tx_id = ? AND workspace_id = ?",
+                (tx_id, clean_ws),
+            ).fetchone()
+            conn.execute("COMMIT")
+            return {
+                "tx_id": tx_id,
+                "status": clean_status,
+                "created": True,
+                "legacy_match": False,
+                "record": dict(inserted_row) if inserted_row is not None else None,
+            }
+        except Exception:
+            if conn.in_transaction:
+                conn.execute("ROLLBACK")
+            raise
+        finally:
+            conn.close()
 
     def record_deployment_proof(self, **fields: typing.Any) -> dict[str, typing.Any]:
         if not str(fields.get("target_url", "")).startswith(("https://", "http://")):

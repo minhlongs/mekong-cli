@@ -47,7 +47,7 @@ def _profile() -> BusinessProfile:
 
 def _event(
     event_id: str = "evt_se_01",
-    message: str = "Chào shop, mình là Hùng (SĐT 0909 123 456, CCCD 079090001234, email hung@abc.vn), báo giá gói 10 giờ.",
+    message: str = "Chào shop, mình là Hùng (SĐT 0909 123 456, CCCD 079090001234, email hung@abc.vn), báo giá tư vấn AI và tích hợp VietQR gói 10 giờ.",
     confidence: float = 0.96,
     sender_id: str = "84909123456",
 ) -> ZaloWebhookEvent:

@@ -50,6 +50,7 @@ from src.core.promise.jobs import (
     STATUS_QUEUED,
     STATUS_REJECTED,
     STATUS_RUNNING,
+    DuplicateSubmissionError,
     JobStore,
     JobStoreError,
     new_run_id,
@@ -228,34 +229,46 @@ class PromiseRunService:
                 principal, entry, requested_sub, run_id=run_id, idempotency_key=idempotency_key
             )
 
-        active_key = idempotency_key or self._derive_idempotency_key(principal, spec, raw_params)
-        if active_key:
-            existing = self.jobs.find_by_idempotency_key(principal.workspace_id, active_key)
-            if existing:
-                return self._outcome_from_job(existing, idempotent_replay=True)
-
         try:
             clean_params = validate_params(spec.input_schema, raw_params)
         except SchemaValidationError as exc:
+            # Invalid submissions must neither replay nor reserve a valid run's key.
             return self._record_failure(
                 principal, entry, spec, raw_params, "INPUT_INVALID", str(exc),
-                detail={"field_errors": exc.errors}, run_id=run_id, idempotency_key=active_key,
+                detail={"field_errors": exc.errors}, run_id=run_id,
             )
 
-        job = self.jobs.create_job(
-            workspace_id=principal.workspace_id,
-            principal_id=principal.principal_id,
-            command_id=canonical,
-            op_id=spec.op_id,
-            subcommand=spec.subcommand,
-            params=clean_params,
-            params_digest=sha256_of(clean_params),
-            idempotency_key=active_key,
-            status=STATUS_QUEUED,
-            external_effect=spec.external_effect,
-            code_version=self.code_version,
-            run_id=run_id,
-        )
+        active_key = idempotency_key or self._derive_idempotency_key(principal, spec, clean_params)
+        if active_key:
+            existing = self.jobs.find_by_idempotency_key(principal.workspace_id, active_key)
+            if existing:
+                return self._replay_or_conflict(principal, entry, spec, clean_params, existing)
+
+        try:
+            job = self.jobs.create_job(
+                workspace_id=principal.workspace_id,
+                principal_id=principal.principal_id,
+                command_id=canonical,
+                op_id=spec.op_id,
+                subcommand=spec.subcommand,
+                params=clean_params,
+                params_digest=sha256_of(clean_params),
+                idempotency_key=active_key,
+                status=STATUS_QUEUED,
+                external_effect=spec.external_effect,
+                code_version=self.code_version,
+                run_id=run_id,
+            )
+        except DuplicateSubmissionError:
+            # Another submit can win between lookup and INSERT. Never execute the
+            # loser, and do not mistake a run-id collision for an identical key.
+            existing = (
+                self.jobs.find_by_idempotency_key(principal.workspace_id, active_key)
+                if active_key else None
+            )
+            if existing is None:
+                raise
+            return self._replay_or_conflict(principal, entry, spec, clean_params, existing)
 
         if spec.approval_policy != "AUTO":
             decision = self._require_approval(principal, job, spec, clean_params, approval_token_id)
@@ -263,6 +276,29 @@ class PromiseRunService:
                 return decision
 
         return self._execute_job(principal, job, spec, entry, clean_params)
+
+    def _replay_or_conflict(
+        self,
+        principal: Principal,
+        entry: dict[str, typing.Any],
+        spec: OperationSpec,
+        params: dict[str, typing.Any],
+        existing: dict[str, typing.Any],
+    ) -> RunOutcome:
+        """Only the same operation and canonical payload may reuse a keyed run."""
+        if (
+            existing.get("command_id") == entry["name"]
+            and existing.get("op_id") == spec.op_id
+            and existing.get("subcommand") == spec.subcommand
+            and existing.get("params_digest") == sha256_of(params)
+        ):
+            return self._outcome_from_job(existing, idempotent_replay=True)
+        # Persist the rejection separately; leave the key and winning job intact.
+        return self._record_failure(
+            principal, entry, spec, params, "IDEMPOTENCY_CONFLICT",
+            "Idempotency key is already bound to a different operation or payload",
+            detail={"existing_run_id": existing["run_id"]},
+        )
 
     # ------------------------------------------------------------------
     # Approval handling
