@@ -573,6 +573,9 @@ class PrivacyEngine:
         subject_id: str,
         details: str = "Request under Article 9 PDPD",
         save: bool = True,
+        *,
+        zalo_db_path: pathlib.Path | str | None = None,
+        match_by_name: bool = False,
     ) -> dict[str, typing.Any]:
         """Process Data Subject Access Request (DSAR) under Article 9 of Decree 13/2023/ND-CP."""
         clean_type = request_type.upper().strip()
@@ -628,7 +631,10 @@ class PrivacyEngine:
         # holding a receipt for a right they never received.
         if clean_type == "RIGHT_TO_DELETE":
             erasure = self.erase_subject_data(
-                subject_id, exclude_request_id=request_id if save else None
+                subject_id,
+                exclude_request_id=request_id if save else None,
+                zalo_db_path=zalo_db_path,
+                match_by_name=match_by_name,
             )
             result["erasure"] = erasure
             # "COMPLETED" is a claim that the subject's data is gone. When the
@@ -822,6 +828,8 @@ class PrivacyEngine:
         exclude_request_id: str | None = None,
         zalo_db_path: typing.Optional[typing.Union[str, pathlib.Path]] = None,
         save: bool = True,
+        *,
+        match_by_name: bool = False,
     ) -> dict[str, typing.Any]:
         """Delete every row identifying *subject_id* across the live PII stores.
 
@@ -853,7 +861,7 @@ class PrivacyEngine:
         # under a CCCD, an email or a phone number. Matching only `user_id` would
         # report a clean zero for exactly the subjects whose rows do exist, so
         # resolve every Zalo UID that identifies this subject first.
-        zalo_user_ids = self._resolve_zalo_user_ids(zalo_path, subject_id)
+        zalo_user_ids = self._resolve_zalo_user_ids(zalo_path, subject_id, match_by_name=match_by_name)
         # The identifier the subject arrived under is also a key the store may use
         # directly: a message sent to a raw UID leaves no follower row to resolve
         # from. Leaving it out would erase nothing and still report success.
@@ -892,7 +900,9 @@ class PrivacyEngine:
             "pending_external_stores": ["cloudflare_d1:mekong-d1.leads"],
         }
 
-    def _resolve_zalo_user_ids(self, zalo_path: pathlib.Path, subject_id: str) -> list[str]:
+    def _resolve_zalo_user_ids(
+        self, zalo_path: pathlib.Path, subject_id: str, *, match_by_name: bool = False
+    ) -> list[str]:
         """Return every Zalo UID that identifies *subject_id*.
 
         The Zalo store keys rows by its own UID and keeps name and phone on the
@@ -904,10 +914,16 @@ class PrivacyEngine:
         with contextlib.closing(self._get_foreign_connection(zalo_path)) as conn:
             if "followers" not in self._existing_tables(conn):
                 return []
-            rows = conn.execute(
-                "SELECT user_id FROM followers WHERE user_id = ? OR phone = ? OR name = ?",
-                (subject_id, subject_id, subject_id),
-            ).fetchall()
+            if match_by_name:
+                rows = conn.execute(
+                    "SELECT user_id FROM followers WHERE user_id = ? OR phone = ? OR name = ?",
+                    (subject_id, subject_id, subject_id),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT user_id FROM followers WHERE user_id = ? OR phone = ?",
+                    (subject_id, subject_id),
+                ).fetchall()
             return [str(r["user_id"]) for r in rows]
 
     def _delete_where(
